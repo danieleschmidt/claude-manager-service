@@ -10,6 +10,18 @@
 
 ---
 
+## Critical Security Issues
+
+### 🚨 ✅ Fix Command Injection Vulnerability in Orchestrator - COMPLETED
+**WSJF Score: 12.0** | Business Value: 5 | Time Criticality: 5 | Risk Reduction: 5 | Job Size: 1.25
+- **Description**: Fix command injection vulnerability in Claude Flow task execution where issue title is passed unsanitized to subprocess
+- **Rationale**: Critical security vulnerability that could allow malicious actors to execute arbitrary commands
+- **Effort**: 0.5 days
+- **Files**: `src/orchestrator.py`, security tests
+- **Status**: Completed with comprehensive security fix - issue.title now passed as separate argument preventing shell interpretation, includes full test suite covering multiple attack vectors
+
+---
+
 ## High Priority (WSJF ≥ 7.0)
 
 ### 1. ✅ Add Unit Testing Framework and Core Tests - COMPLETED
