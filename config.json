@@ -1,0 +1,17 @@
+{
+  "github": {
+    "username": "your-github-username",
+    "managerRepo": "your-github-username/claude-manager-service",
+    "reposToScan": [
+      "your-github-username/project-alpha",
+      "your-github-username/project-beta"
+    ]
+  },
+  "analyzer": {
+    "scanForTodos": true,
+    "scanOpenIssues": true
+  },
+  "executor": {
+    "terragonUsername": "@terragon-labs"
+  }
+}

@@ -1,0 +1,47 @@
+Task: Code Refactoring
+
+**Title:** {issue_title}
+**Issue Number:** #{issue_number}
+**Repository:** {repository}
+**Labels:** {labels}
+
+**Context:**
+{issue_body}
+
+**Refactoring Objectives:**
+Please perform a comprehensive code refactoring based on the context above. Focus on:
+
+1. **Code Quality Improvements:**
+   - Improve readability and maintainability
+   - Remove code duplication
+   - Simplify complex logic
+   - Apply consistent naming conventions
+
+2. **Performance Optimization:**
+   - Identify and fix performance bottlenecks
+   - Optimize algorithms and data structures
+   - Reduce memory usage where applicable
+
+3. **Best Practices:**
+   - Apply design patterns where appropriate
+   - Improve error handling
+   - Enhance code modularity
+   - Follow language-specific best practices
+
+4. **Testing:**
+   - Ensure all existing functionality remains intact
+   - Add unit tests for refactored components
+   - Verify performance improvements with benchmarks
+
+5. **Documentation:**
+   - Update code comments and documentation
+   - Document any architectural changes
+   - Create migration guide if needed
+
+**Deliverables:**
+- Refactored code following project standards
+- Updated tests covering the refactored functionality
+- Pull request with detailed explanation of changes
+- Before/after comparison highlighting improvements
+
+**Reference:** {issue_url}

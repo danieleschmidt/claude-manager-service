@@ -1,0 +1,32 @@
+Task: Address GitHub Issue
+
+**Title:** {issue_title}
+**Issue Number:** #{issue_number}
+**Repository:** {repository}
+**Labels:** {labels}
+
+**Description:**
+{issue_body}
+
+**Instructions:**
+Please analyze the issue description and associated code. Follow these steps:
+
+1. **Investigation:** Thoroughly examine the issue, related code, and any referenced files
+2. **Solution Design:** Propose a clear, well-thought-out solution
+3. **Implementation:** Implement the fix with clean, maintainable code
+4. **Testing:** Ensure all existing tests pass and add new tests if necessary
+5. **Documentation:** Update relevant documentation if needed
+6. **Pull Request:** Create a pull request with:
+   - Clear title and description
+   - Summary of changes made
+   - Any breaking changes or migration notes
+   - Link to this issue
+
+**Quality Standards:**
+- Follow the project's coding standards and conventions
+- Write clear, self-documenting code
+- Include appropriate error handling
+- Consider edge cases and potential side effects
+- Maintain backward compatibility where possible
+
+**Reference:** {issue_url}
