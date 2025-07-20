@@ -3,6 +3,7 @@ import datetime
 from github_api import GitHubAPI
 from logger import get_logger, log_performance
 from task_tracker import get_task_tracker
+from config_validator import get_validated_config
 
 logger = get_logger(__name__)
 
@@ -165,9 +166,7 @@ if __name__ == "__main__":
     logger.info("Starting task analysis cycle")
     
     try:
-        logger.debug("Loading configuration from config.json")
-        with open('config.json') as f:
-            config = json.load(f)
+        config = get_validated_config('config.json')
         
         logger.info("Initializing GitHub API")
         api = GitHubAPI()
@@ -200,11 +199,8 @@ if __name__ == "__main__":
 
         logger.info("Task analysis cycle completed successfully")
         
-    except FileNotFoundError:
-        logger.error("Configuration file 'config.json' not found")
-        raise
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in config.json: {e}")
+    except SystemExit:
+        # Configuration validation error already logged
         raise
     except Exception as e:
         logger.error(f"Fatal error in task analyzer: {e}")
