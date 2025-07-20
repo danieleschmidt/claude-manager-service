@@ -10,6 +10,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
+from typing import Optional, Dict
 
 
 class ColoredFormatter(logging.Formatter):
@@ -49,8 +50,8 @@ class ServiceLogger:
     - Component-specific loggers
     """
     
-    _instance = None
-    _loggers = {}
+    _instance: Optional['ServiceLogger'] = None
+    _loggers: Dict[str, logging.Logger] = {}
     
     def __new__(cls):
         if cls._instance is None:

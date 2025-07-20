@@ -1,11 +1,12 @@
 import os
-from github import Github, GithubException
+from typing import Optional, List
+from github import Github, GithubException, Repository, Issue
 from logger import get_logger, log_performance
 from security import get_secure_config, validate_repo_name, sanitize_issue_content
 from error_handler import with_error_recovery, safe_github_operation
 
 class GitHubAPI:
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = get_logger(__name__)
         
         # Use secure config to get token
@@ -24,7 +25,7 @@ class GitHubAPI:
 
     @log_performance
     @with_error_recovery("get_repository", max_attempts=3, delay=2.0)
-    def get_repo(self, repo_name):
+    def get_repo(self, repo_name: str) -> Optional[Repository.Repository]:
         """Get repository object from GitHub API with security validation"""
         # Validate repository name for security
         if not validate_repo_name(repo_name):
@@ -40,7 +41,7 @@ class GitHubAPI:
 
     @log_performance
     @with_error_recovery("create_issue", max_attempts=3, delay=1.0)
-    def create_issue(self, repo_name, title, body, labels):
+    def create_issue(self, repo_name: str, title: str, body: Optional[str], labels: List[str]) -> None:
         """Create a new issue in the specified repository with duplicate checking and content sanitization"""
         # Sanitize inputs for security
         title = sanitize_issue_content(title)
@@ -74,7 +75,7 @@ class GitHubAPI:
         except Exception as e:
             self.logger.error(f"Unexpected error creating issue '{title}': {e}")
 
-    def get_issue(self, repo_name, issue_number):
+    def get_issue(self, repo_name: str, issue_number: int) -> Optional[Issue.Issue]:
         """Get a specific issue from the repository"""
         self.logger.debug(f"Fetching issue #{issue_number} from {repo_name}")
         
@@ -92,7 +93,7 @@ class GitHubAPI:
             return None
 
     @log_performance
-    def add_comment_to_issue(self, repo_name, issue_number, comment_body):
+    def add_comment_to_issue(self, repo_name: str, issue_number: int, comment_body: str) -> None:
         """Add a comment to the specified issue"""
         self.logger.info(f"Adding comment to issue #{issue_number} in {repo_name}")
         self.logger.debug(f"Comment length: {len(comment_body)} characters")

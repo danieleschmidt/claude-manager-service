@@ -1,9 +1,10 @@
 import os
+from typing import Dict, Any, List
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-def build_prompt(template_file, context):
+def build_prompt(template_file: str, context: Dict[str, Any]) -> str:
     """
     Builds a detailed prompt from a template file and a context dictionary.
     
@@ -62,7 +63,7 @@ def _build_fallback_prompt(context):
     logger.debug(f"Fallback prompt length: {len(fallback)} characters")
     return fallback
 
-def get_template_for_labels(labels):
+def get_template_for_labels(labels: List[str]) -> str:
     """
     Returns the appropriate template file based on issue labels.
     

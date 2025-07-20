@@ -1,5 +1,7 @@
 import json
 import datetime
+from typing import Optional
+from github import Repository
 from github_api import GitHubAPI
 from logger import get_logger, log_performance
 from task_tracker import get_task_tracker
@@ -10,7 +12,7 @@ logger = get_logger(__name__)
 
 @log_performance
 @with_error_recovery("find_todo_comments", max_attempts=2, delay=3.0)
-def find_todo_comments(github_api, repo, manager_repo_name):
+def find_todo_comments(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
     """Scan repository for TODO and FIXME comments and create issues for them"""
     logger.info(f"Scanning {repo.full_name} for TODO comments")
     todo_count = 0
@@ -106,7 +108,7 @@ def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):
 
 @log_performance
 @with_error_recovery("analyze_open_issues", max_attempts=2, delay=2.0)
-def analyze_open_issues(github_api, repo, manager_repo_name):
+def analyze_open_issues(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
     """Analyze open issues in repository and identify stale ones for potential action"""
     logger.info(f"Analyzing open issues in {repo.full_name}")
     stale_count = 0
