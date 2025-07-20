@@ -1,10 +1,9 @@
 {
   "github": {
-    "username": "your-github-username",
-    "managerRepo": "your-github-username/claude-manager-service",
+    "username": "danieleschmidt",
+    "managerRepo": "danieleschmidt/claude-manager-service",
     "reposToScan": [
-      "your-github-username/project-alpha",
-      "your-github-username/project-beta"
+      "danieleschmidt/claude-manager-service",
     ]
   },
   "analyzer": {
