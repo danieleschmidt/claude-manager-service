@@ -3,6 +3,8 @@ import json
 import subprocess
 import tempfile
 import shutil
+from typing import Dict, Any
+from github import Issue
 from github_api import GitHubAPI
 from prompt_builder import build_prompt, get_template_for_labels
 from logger import get_logger, log_performance
@@ -12,7 +14,7 @@ from config_validator import get_validated_config
 logger = get_logger(__name__)
 
 @log_performance
-def trigger_terragon_task(api, repo_name, issue, config):
+def trigger_terragon_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue, config: Dict[str, Any]) -> None:
     """Trigger a Terragon task by posting a formatted comment to the issue"""
     logger.info(f"Orchestrating Terragon task for issue #{issue.number} in {repo_name}")
     logger.debug(f"Issue title: {issue.title}")
@@ -65,7 +67,7 @@ def trigger_terragon_task(api, repo_name, issue, config):
         raise
 
 @log_performance
-def trigger_claude_flow_task(api, repo_name, issue):
+def trigger_claude_flow_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue) -> None:
     """Trigger a Claude Flow task by cloning repository and executing command"""
     logger.info(f"Orchestrating Claude Flow task for issue #{issue.number} in {repo_name}")
     logger.debug(f"Issue title: {issue.title}")
