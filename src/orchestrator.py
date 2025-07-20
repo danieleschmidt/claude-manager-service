@@ -3,6 +3,7 @@ import json
 import subprocess
 import tempfile
 import shutil
+import shlex
 from typing import Dict, Any
 from github import Issue
 from github_api import GitHubAPI
@@ -110,11 +111,11 @@ def trigger_claude_flow_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue)
             
             logger.info(f"Successfully cloned repository {target_repo}")
             
-            # Prepare the Claude Flow command
-            task_description = f'"{issue.title}"'
+            # Prepare the Claude Flow command - properly escape the issue title to prevent command injection
+            # Use issue.title directly as a list argument (no shell interpretation needed)
             claude_flow_command = [
                 "npx", "claude-flow@alpha", "hive-mind", "spawn", 
-                task_description, "--claude"
+                issue.title, "--claude"
             ]
             
             logger.info(f"Executing Claude Flow command in {target_repo}")
