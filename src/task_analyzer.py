@@ -4,10 +4,12 @@ from github_api import GitHubAPI
 from logger import get_logger, log_performance
 from task_tracker import get_task_tracker
 from config_validator import get_validated_config
+from error_handler import with_error_recovery, safe_github_operation
 
 logger = get_logger(__name__)
 
 @log_performance
+@with_error_recovery("find_todo_comments", max_attempts=2, delay=3.0)
 def find_todo_comments(github_api, repo, manager_repo_name):
     """Scan repository for TODO and FIXME comments and create issues for them"""
     logger.info(f"Scanning {repo.full_name} for TODO comments")
@@ -103,6 +105,7 @@ def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):
     return find_todo_comments(github_api, repo, manager_repo_name)
 
 @log_performance
+@with_error_recovery("analyze_open_issues", max_attempts=2, delay=2.0)
 def analyze_open_issues(github_api, repo, manager_repo_name):
     """Analyze open issues in repository and identify stale ones for potential action"""
     logger.info(f"Analyzing open issues in {repo.full_name}")
