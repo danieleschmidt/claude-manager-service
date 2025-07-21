@@ -1,0 +1,128 @@
+{# @title: Feature Implementation Template #}
+{# @description: Template for implementing new features with comprehensive requirements #}
+{# @version: 2.0 #}
+{# @variables: issue_title, issue_number, repository, labels, issue_body, issue_url, assignees, milestone #}
+
+Task: Feature Implementation
+
+**Title:** {{ issue_title }}
+**Issue Number:** #{{ issue_number }}
+**Repository:** {{ repository }}
+**Labels:** {{ labels | format_list }}
+{% if assignees != "None assigned" -%}
+**Assignees:** {{ assignees }}
+{% endif -%}
+{% if milestone != "No milestone" -%}
+**Milestone:** {{ milestone }}
+{% endif -%}
+
+**Feature Requirements:**
+{{ issue_body | truncate_lines(30) }}
+
+{% if is_urgent -%}
+⚠️ **HIGH PRIORITY FEATURE** - This feature has been marked as urgent or critical for the next release.
+
+{% endif -%}
+**Implementation Guidelines:**
+
+1. **Architecture & Design:**
+   - Follow existing architectural patterns and conventions
+   - Design for extensibility and future enhancements
+   - Consider integration points with existing systems
+   - Plan for proper error handling and edge cases
+   - Design with testability in mind
+
+2. **Development Approach:**
+   - Start with comprehensive planning and design
+   - Implement incrementally with frequent testing
+   - Follow TDD (Test-Driven Development) where appropriate
+   - Ensure code follows project style guidelines
+   - Include appropriate logging and monitoring
+
+3. **User Experience:**
+   - Focus on intuitive and consistent user interface
+   - Ensure accessibility compliance (WCAG guidelines)
+   - Optimize for performance and responsiveness
+   - Include proper validation and error messages
+   - Consider internationalization if applicable
+
+4. **Quality Assurance:**
+   - Write comprehensive unit tests (aim for >90% coverage)
+   - Include integration tests for critical workflows
+   - Add end-to-end tests for user-facing features
+   - Perform security testing and vulnerability assessment
+   - Test across different environments and browsers
+
+{% if has_label('api') -%}
+**API Design Considerations:**
+📡 **API Feature:** This feature involves API development. Please:
+- Follow RESTful design principles
+- Include comprehensive API documentation
+- Implement proper versioning strategy
+- Add rate limiting and authentication
+- Include examples and SDK support
+- Follow OpenAPI/Swagger specification
+
+{% endif -%}
+{% if has_label('database') -%}
+**Database Considerations:**
+🗄️ **Database Changes:** This feature involves database modifications. Please:
+- Design efficient database schema
+- Include migration scripts
+- Consider indexing strategy for performance
+- Plan for data backup and rollback procedures
+- Test with realistic data volumes
+- Document database changes
+
+{% endif -%}
+{% if has_label('security') -%}
+**Security Requirements:**
+🔒 **Security Critical:** This feature has security implications. Please:
+- Implement proper authentication and authorization
+- Validate and sanitize all inputs
+- Follow OWASP security guidelines
+- Include security testing
+- Document security considerations
+- Consider data privacy implications
+
+{% endif -%}
+**Documentation Requirements:**
+- User-facing documentation for new features
+- Technical documentation for developers
+- API documentation (if applicable)
+- Configuration and deployment guides
+- Troubleshooting and FAQ sections
+- Update changelog and release notes
+
+**Testing Strategy:**
+- Unit tests for all new components
+- Integration tests for feature workflows
+- Performance tests for critical paths
+- Security tests for sensitive operations
+- User acceptance testing scenarios
+- Regression tests to ensure no existing functionality breaks
+
+**Deliverables:**
+- ✅ Fully implemented feature meeting all requirements
+- ✅ Comprehensive test suite with high coverage
+- ✅ Complete documentation (user and technical)
+- ✅ Updated configuration and deployment scripts
+- ✅ Performance benchmarks and optimization
+- ✅ Security review and testing results
+- ✅ Pull request with detailed implementation notes
+
+**Acceptance Criteria:**
+{% if has_label('performance') -%}
+- ⚡ Performance targets met (specify metrics)
+{% endif -%}
+- All functional requirements implemented
+- Non-functional requirements satisfied
+- Security requirements met
+- Accessibility standards complied with
+- Documentation complete and accurate
+- All tests passing with adequate coverage
+
+**Reference:** {{ issue_url }}
+
+---
+*Feature implementation for: {{ repository | safe_filename }}*
