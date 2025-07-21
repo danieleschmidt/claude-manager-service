@@ -1,0 +1,97 @@
+{# @title: GitHub Issue Resolution Template #}
+{# @description: Template for addressing various types of GitHub issues with conditional content #}
+{# @version: 2.0 #}
+{# @variables: issue_title, issue_number, repository, labels, issue_body, issue_url, assignees, milestone, created_at, updated_at #}
+
+Task: Address GitHub Issue
+
+**Title:** {{ issue_title }}
+**Issue Number:** #{{ issue_number }}
+**Repository:** {{ repository }}
+**Labels:** {{ labels | format_list }}
+{% if assignees != "None assigned" -%}
+**Assignees:** {{ assignees }}
+{% endif -%}
+{% if milestone != "No milestone" -%}
+**Milestone:** {{ milestone }}
+{% endif -%}
+
+**Description:**
+{{ issue_body | truncate_lines(30) }}
+
+{% if is_urgent -%}
+⚠️ **URGENT ISSUE** - This issue has been marked as urgent or critical. Please prioritize accordingly.
+
+{% endif -%}
+**Instructions:**
+Please analyze the issue description and associated code. Follow these steps:
+
+1. **Investigation:** Thoroughly examine the issue, related code, and any referenced files
+2. **Solution Design:** Propose a clear, well-thought-out solution
+3. **Implementation:** Implement the fix with clean, maintainable code
+4. **Testing:** Ensure all existing tests pass and add new tests if necessary
+5. **Documentation:** Update relevant documentation if needed
+6. **Pull Request:** Create a pull request with:
+   - Clear title and description
+   - Summary of changes made
+   - Any breaking changes or migration notes
+   - Link to this issue
+
+{% if is_bug -%}
+**Bug Fix Guidelines:**
+- Identify the root cause of the issue
+- Implement minimal changes to fix the specific problem
+- Add regression tests to prevent similar issues
+- Consider edge cases and error conditions
+- Test thoroughly across different environments
+
+{% elif is_feature -%}
+**Feature Implementation Guidelines:**
+- Follow existing architectural patterns
+- Consider backward compatibility
+- Design with extensibility in mind
+- Include comprehensive documentation
+- Add appropriate configuration options
+
+{% else -%}
+**General Guidelines:**
+- Follow the project's coding standards and conventions
+- Write clear, self-documenting code
+- Include appropriate error handling
+- Consider edge cases and potential side effects
+- Maintain backward compatibility where possible
+
+{% endif -%}
+**Quality Standards:**
+- Follow the project's coding standards and conventions
+- Write clear, self-documenting code
+- Include appropriate error handling
+- Consider edge cases and potential side effects
+- Maintain backward compatibility where possible
+- Ensure accessibility and performance considerations
+- Include security best practices
+
+{% if has_label('security') -%}
+**Security Considerations:**
+⚠️ This issue involves security concerns. Please:
+- Review for potential vulnerabilities
+- Follow secure coding practices
+- Consider attack vectors and edge cases
+- Perform security testing
+- Document security implications
+
+{% endif -%}
+{% if has_label('performance') -%}
+**Performance Considerations:**
+⚡ This issue involves performance concerns. Please:
+- Profile before and after changes
+- Consider scalability implications
+- Optimize for common use cases
+- Document performance improvements
+- Include performance tests
+
+{% endif -%}
+**Reference:** {{ issue_url }}
+
+---
+*Issue created: {{ created_at }} | Last updated: {{ updated_at }}*

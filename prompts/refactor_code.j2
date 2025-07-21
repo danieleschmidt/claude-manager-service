@@ -1,0 +1,108 @@
+{# @title: Code Refactoring Template #}
+{# @description: Template for comprehensive code refactoring tasks with quality focus #}
+{# @version: 2.0 #}
+{# @variables: issue_title, issue_number, repository, labels, issue_body, issue_url, assignees, milestone #}
+
+Task: Code Refactoring
+
+**Title:** {{ issue_title }}
+**Issue Number:** #{{ issue_number }}
+**Repository:** {{ repository }}
+**Labels:** {{ labels | format_list }}
+{% if assignees != "None assigned" -%}
+**Assignees:** {{ assignees }}
+{% endif -%}
+
+**Context:**
+{{ issue_body | truncate_lines(25) }}
+
+{% if is_urgent -%}
+⚠️ **HIGH PRIORITY REFACTORING** - This refactoring has been marked as urgent.
+
+{% endif -%}
+**Refactoring Objectives:**
+Please perform a comprehensive code refactoring based on the context above. Focus on:
+
+1. **Code Quality Improvements:**
+   - Improve readability and maintainability
+   - Remove code duplication (DRY principle)
+   - Simplify complex logic and reduce cognitive load
+   - Apply consistent naming conventions
+   - Improve code organization and structure
+
+2. **Performance Optimization:**
+{% if has_label('performance') -%}
+   - ⚡ **Priority:** Identify and fix performance bottlenecks
+   - Profile code before and after changes
+{% else -%}
+   - Identify potential performance improvements
+{% endif -%}
+   - Optimize algorithms and data structures
+   - Reduce memory usage where applicable
+   - Minimize computational complexity
+
+3. **Best Practices:**
+   - Apply appropriate design patterns
+   - Improve error handling and robustness
+   - Enhance code modularity and separation of concerns
+   - Follow language-specific best practices
+   - Implement SOLID principles where applicable
+
+4. **Testing & Validation:**
+   - Ensure all existing functionality remains intact
+   - Add comprehensive unit tests for refactored components
+   - Include integration tests where appropriate
+{% if has_label('performance') -%}
+   - Add performance benchmarks to measure improvements
+{% endif -%}
+   - Verify edge cases and error conditions
+
+5. **Documentation & Communication:**
+   - Update code comments and inline documentation
+   - Document any architectural changes
+   - Create migration guide if breaking changes are introduced
+   - Update README or other project documentation
+
+{% if has_label('security') -%}
+**Security Considerations:**
+🔒 **Security Focus:** This refactoring involves security-sensitive code. Please:
+- Review for potential security vulnerabilities
+- Apply security best practices
+- Validate input/output handling
+- Consider authentication and authorization implications
+- Document security-related changes
+
+{% endif -%}
+{% if has_label('api') or has_label('breaking') -%}
+**API Compatibility:**
+⚠️ **Breaking Changes:** Be cautious about API changes. Please:
+- Maintain backward compatibility where possible
+- Document any breaking changes clearly
+- Provide migration path for users
+- Consider deprecation strategy for removed features
+- Update API documentation
+
+{% endif -%}
+**Deliverables:**
+- Refactored code following project standards
+- Updated and comprehensive test suite
+- Performance benchmarks (if applicable)
+- Updated documentation
+- Pull request with detailed explanation of changes
+- Before/after comparison highlighting improvements
+{% if has_label('migration') -%}
+- Migration guide for any breaking changes
+{% endif -%}
+
+**Success Criteria:**
+- ✅ All existing tests pass
+- ✅ Code coverage maintained or improved
+- ✅ Performance metrics show improvement (if applicable)
+- ✅ Code complexity reduced (measurable via static analysis)
+- ✅ No new security vulnerabilities introduced
+- ✅ Documentation is complete and accurate
+
+**Reference:** {{ issue_url }}
+
+---
+*Refactoring task for: {{ repository | safe_filename }}*
