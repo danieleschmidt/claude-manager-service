@@ -331,8 +331,13 @@ def sanitize_issue_content(content: str) -> str:
     # Basic sanitization - remove null bytes and control characters
     sanitized = content.replace('\x00', '').replace('\r', '\n')
     
-    # Limit length to prevent DoS
-    max_length = 50000  # 50KB limit
+    # Limit length to prevent DoS (configurable via environment variable)
+    try:
+        from config_env import get_env_config
+        config = get_env_config()
+        max_length = config.security_max_content_length
+    except ImportError:
+        max_length = int(os.getenv('SECURITY_MAX_CONTENT_LENGTH', '50000'))  # 50KB default limit
     if len(sanitized) > max_length:
         logger = get_logger(f"{__name__}.sanitize_issue_content")
         logger.warning(f"Issue content truncated from {len(sanitized)} to {max_length} characters")
