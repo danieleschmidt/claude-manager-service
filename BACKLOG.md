@@ -124,12 +124,40 @@
 - **Files**: `src/enhanced_error_handler.py`, `src/enhanced_security.py`, `src/enhanced_validation.py`, updated `src/github_api.py`, comprehensive test suite (35+ tests)
 - **Status**: Completed with specific exception types for different error categories, enhanced token validation with service-specific patterns, path traversal prevention, rate limiting system, circuit breaker patterns, schema-based configuration validation, and comprehensive integration with existing modules
 
+### 13. ✅ Environment Variable Configuration System - COMPLETED
+**WSJF Score: 9.0** | Business Value: 4 | Time Criticality: 3 | Risk Reduction: 5 | Job Size: 1.5
+- **Description**: Replace all hardcoded configuration values with environment variables and add comprehensive validation system
+- **Rationale**: Critical for deployment flexibility, configuration management, and production readiness - enables runtime configuration without code changes
+- **Effort**: 1-2 days
+- **Files**: `src/config_env.py` (new), `src/performance_monitor.py`, `src/enhanced_error_handler.py`, `src/security.py`, `src/enhanced_security.py`, `ENVIRONMENT_VARIABLES.md` (new), updated `README.md`
+- **Status**: Completed with comprehensive environment variable system including validation, defaults, feature flags, backward compatibility, and extensive documentation. All hardcoded performance thresholds, rate limits, and security settings now configurable via environment variables with proper validation and error handling.
+
 ---
 
-## Lower Priority (WSJF < 4.0)
+## High Priority (WSJF 7.0+) - Updated Based on Technical Debt Scan
 
-### 13. Implement Async Operations
-**WSJF Score: 3.8** | Business Value: 3 | Time Criticality: 1 | Risk Reduction: 2 | Job Size: 1.6
+### 14. Implement Concurrent Repository Scanning
+**WSJF Score: 9.0** | Business Value: 4 | Time Criticality: 3 | Risk Reduction: 5 | Job Size: 1.5
+- **Description**: Replace sequential repository scanning with concurrent/parallel scanning using threading or asyncio
+- **Rationale**: Major performance bottleneck identified in technical debt scan - scanning multiple repositories sequentially is extremely slow and blocks the entire process
+- **Effort**: 1-2 days
+- **Files**: `src/task_analyzer.py`, `src/concurrent_repository_scanner.py` (enhance existing)
+- **Impact**: Could reduce scan time by 70%+ for multiple repositories, dramatically improving user experience
+
+### 15. ✅ Optimize TODO Search Query Performance - COMPLETED
+**WSJF Score: 7.5** | Business Value: 3 | Time Criticality: 2 | Risk Reduction: 3 | Job Size: 1.2
+- **Description**: Combine multiple sequential TODO/FIXME search queries into single optimized search
+- **Rationale**: Previously performed 4 separate API calls for 'TODO:', 'FIXME:', etc. - combined with OR operator for massive performance improvement
+- **Effort**: 0.5 days
+- **Files**: `src/task_analyzer.py`
+- **Status**: Completed with 75% reduction in GitHub API calls using combined query `(TODO: OR FIXME: OR TODO OR FIXME)`. Added deduplication logic, file-level processing limits, and improved logging. Maintains all existing functionality while dramatically reducing API usage and rate limit pressure.
+
+---
+
+## Medium Priority (WSJF 4.0-6.9)
+
+### 16. Implement Async Operations
+**WSJF Score: 8.5** | Business Value: 3 | Time Criticality: 2 | Risk Reduction: 4 | Job Size: 1.6
 - **Description**: Convert GitHub API calls and file operations to async
 - **Rationale**: Improves performance for multiple repository scanning
 - **Effort**: 2-3 days
