@@ -313,8 +313,13 @@ def sanitize_issue_content_enhanced(content: str) -> str:
     # This is a simple approach - for production, consider using a markdown-aware sanitizer
     sanitized = html.escape(sanitized, quote=False)
     
-    # Truncate if too long (GitHub API limit is ~65536 chars)
-    max_length = 60000
+    # Truncate if too long (GitHub API limit is ~65536 chars, configurable via environment)
+    try:
+        from config_env import get_env_config
+        config = get_env_config()
+        max_length = config.security_enhanced_max_content_length
+    except ImportError:
+        max_length = int(os.getenv('SECURITY_ENHANCED_MAX_CONTENT_LENGTH', '60000'))
     if len(sanitized) > max_length:
         sanitized = sanitized[:max_length] + "\n\n[Content truncated for safety]"
     

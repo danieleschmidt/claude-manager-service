@@ -100,6 +100,27 @@ claude-manager-service/
 }
 ```
 
+## 🌍 Environment Configuration
+
+The service supports extensive configuration through environment variables for performance tuning, security settings, and feature flags. See [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) for complete documentation.
+
+**Key Configuration Categories:**
+- **Performance Monitoring**: Adjust thresholds, retention, and alerting
+- **Rate Limiting**: Configure API request limits and time windows  
+- **Security**: Set content length limits and security features
+- **Feature Flags**: Enable/disable monitoring, rate limiting, and enhanced security
+
+**Quick Example:**
+```bash
+# Performance tuning
+export PERF_ALERT_DURATION=15.0
+export PERF_MAX_OPERATIONS=20000
+
+# Security configuration  
+export SECURITY_MAX_CONTENT_LENGTH=75000
+export LOG_LEVEL=INFO
+```
+
 ---
 
 ## 🔄 GitHub Workflows

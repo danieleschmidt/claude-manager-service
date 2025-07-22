@@ -206,16 +206,30 @@ class RateLimiter:
     Rate limiter for API operations to prevent hitting API limits
     """
     
-    def __init__(self, max_requests: int = 5000, time_window: float = 3600.0):
+    def __init__(self, max_requests: int = None, time_window: float = None):
         """
         Initialize rate limiter
         
         Args:
-            max_requests: Maximum requests allowed in time window
-            time_window: Time window in seconds
+            max_requests: Maximum requests allowed in time window (configurable via RATE_LIMIT_MAX_REQUESTS env var)
+            time_window: Time window in seconds (configurable via RATE_LIMIT_TIME_WINDOW env var)
         """
-        self.max_requests = max_requests
-        self.time_window = time_window
+        # Use environment variables with validation, fallback to parameters or defaults
+        if max_requests is not None or time_window is not None:
+            # Use provided parameters
+            self.max_requests = max_requests or int(os.getenv('RATE_LIMIT_MAX_REQUESTS', '5000'))
+            self.time_window = time_window or float(os.getenv('RATE_LIMIT_TIME_WINDOW', '3600.0'))
+        else:
+            # Use validated configuration
+            try:
+                from config_env import get_env_config
+                config = get_env_config()
+                self.max_requests = config.rate_limit_max_requests
+                self.time_window = config.rate_limit_time_window
+            except ImportError:
+                # Fallback to direct environment variable access
+                self.max_requests = int(os.getenv('RATE_LIMIT_MAX_REQUESTS', '5000'))
+                self.time_window = float(os.getenv('RATE_LIMIT_TIME_WINDOW', '3600.0'))
         self.request_history: Dict[str, deque] = defaultdict(deque)
         self.lock = threading.Lock()
         self.logger = get_logger(__name__)

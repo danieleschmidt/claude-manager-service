@@ -94,11 +94,20 @@ class PerformanceMonitor:
         
         self.logger = get_logger(__name__)
         
-        # Configuration
-        self.max_operations_in_memory = 10000
-        self.retention_days = 30
-        self.alert_threshold_duration = 30.0  # seconds
-        self.alert_threshold_error_rate = 0.1  # 10%
+        # Configuration (configurable via environment variables)
+        try:
+            from config_env import get_env_config
+            config = get_env_config()
+            self.max_operations_in_memory = config.perf_max_operations
+            self.retention_days = config.perf_retention_days
+            self.alert_threshold_duration = config.perf_alert_duration
+            self.alert_threshold_error_rate = config.perf_alert_error_rate
+        except ImportError:
+            # Fallback to direct environment variable access
+            self.max_operations_in_memory = int(os.getenv('PERF_MAX_OPERATIONS', '10000'))
+            self.retention_days = int(os.getenv('PERF_RETENTION_DAYS', '30'))
+            self.alert_threshold_duration = float(os.getenv('PERF_ALERT_DURATION', '30.0'))  # seconds
+            self.alert_threshold_error_rate = float(os.getenv('PERF_ALERT_ERROR_RATE', '0.1'))  # 10%
         self.data_dir = Path(__file__).parent.parent / 'performance_data'
         self.data_dir.mkdir(exist_ok=True)
         
