@@ -2,6 +2,7 @@ import os
 from typing import Optional, List
 from github import Github, GithubException, Repository, Issue
 from logger import get_logger, log_performance
+from performance_monitor import monitor_api_call
 from security import get_secure_config, validate_repo_name, sanitize_issue_content
 from error_handler import with_error_recovery, safe_github_operation
 
@@ -23,6 +24,7 @@ class GitHubAPI:
             self.logger.error(f"Failed to initialize GitHub API client: {e}")
             raise
 
+    @monitor_api_call("github_get_repository")
     @log_performance
     @with_error_recovery("get_repository", max_attempts=3, delay=2.0)
     def get_repo(self, repo_name: str) -> Optional[Repository.Repository]:
@@ -39,6 +41,7 @@ class GitHubAPI:
             repo_name
         )
 
+    @monitor_api_call("github_create_issue")
     @log_performance
     @with_error_recovery("create_issue", max_attempts=3, delay=1.0)
     def create_issue(self, repo_name: str, title: str, body: Optional[str], labels: List[str]) -> None:
@@ -92,6 +95,7 @@ class GitHubAPI:
             self.logger.error(f"Failed to get issue #{issue_number}: {e.status} - {e.data}")
             return None
 
+    @monitor_api_call("github_add_comment")
     @log_performance
     def add_comment_to_issue(self, repo_name: str, issue_number: int, comment_body: str) -> None:
         """Add a comment to the specified issue"""
