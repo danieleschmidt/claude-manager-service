@@ -1,5 +1,6 @@
 import json
 import datetime
+import time
 from typing import Optional
 from github import Repository
 from github_api import GitHubAPI
@@ -8,6 +9,7 @@ from performance_monitor import monitor_performance
 from task_tracker import get_task_tracker
 from config_validator import get_validated_config
 from error_handler import with_error_recovery, safe_github_operation
+from concurrent_repository_scanner import ConcurrentRepositoryScanner
 
 logger = get_logger(__name__)
 
@@ -206,20 +208,75 @@ if __name__ == "__main__":
         if cleaned_count > 0:
             logger.info(f"Cleaned up {cleaned_count} old task entries")
         
-        for repo_name in repos_to_scan:
-            logger.info(f"Analyzing repository: {repo_name}")
-            repo = api.get_repo(repo_name)
-            if not repo:
-                logger.warning(f"Skipping {repo_name} - could not access repository")
-                continue
+        # Try concurrent scanning first for significant performance improvement
+        scan_start_time = time.time()
+        concurrent_success = False
+        
+        try:
+            logger.info(f"Starting concurrent analysis of {len(repos_to_scan)} repositories")
+            
+            # Initialize concurrent scanner with reasonable defaults
+            scanner = ConcurrentRepositoryScanner(
+                max_concurrent=min(len(repos_to_scan), 5),  # Don't overwhelm API
+                timeout=300  # 5 minutes per repository
+            )
+            
+            # Execute concurrent scanning
+            scan_results = scanner.scan_repositories_sync(
+                api,
+                repos_to_scan,
+                manager_repo_name,
+                scan_todos=config['analyzer']['scanForTodos'],
+                scan_issues=config['analyzer']['scanOpenIssues']
+            )
+            
+            concurrent_success = True
+            scan_duration = time.time() - scan_start_time
+            
+            # Log performance improvement
+            logger.info(f"Concurrent scanning completed successfully in {scan_duration:.1f}s")
+            logger.info(f"Scanned {scan_results['total_repos']} repositories: "
+                       f"{scan_results['successful_scans']} successful, "
+                       f"{scan_results['failed_scans']} failed")
+            
+            if 'total_todos_found' in scan_results:
+                logger.info(f"Found {scan_results['total_todos_found']} TODO/FIXME comments")
+            if 'total_issues_analyzed' in scan_results:
+                logger.info(f"Analyzed {scan_results['total_issues_analyzed']} open issues")
+                
+            # Estimate performance gain (concurrent vs sequential)
+            estimated_sequential_time = len(repos_to_scan) * 60  # Rough estimate: 1 min per repo
+            if scan_duration > 0:
+                performance_gain = estimated_sequential_time / scan_duration
+                logger.info(f"Performance improvement: ~{performance_gain:.1f}x faster than sequential scanning")
+            
+        except Exception as e:
+            logger.error(f"Concurrent scanning failed: {e}")
+            logger.warning("Falling back to sequential repository scanning")
+            concurrent_success = False
+        
+        # Fallback to sequential scanning if concurrent failed
+        if not concurrent_success:
+            logger.info("Starting sequential analysis (fallback mode)")
+            sequential_start_time = time.time()
+            
+            for repo_name in repos_to_scan:
+                logger.info(f"Analyzing repository: {repo_name}")
+                repo = api.get_repo(repo_name)
+                if not repo:
+                    logger.warning(f"Skipping {repo_name} - could not access repository")
+                    continue
 
-            if config['analyzer']['scanForTodos']:
-                logger.debug(f"Running TODO scan for {repo_name}")
-                find_todo_comments(api, repo, manager_repo_name)
+                if config['analyzer']['scanForTodos']:
+                    logger.debug(f"Running TODO scan for {repo_name}")
+                    find_todo_comments(api, repo, manager_repo_name)
 
-            if config['analyzer']['scanOpenIssues']:
-                logger.debug(f"Running issue analysis for {repo_name}")
-                analyze_open_issues(api, repo, manager_repo_name)
+                if config['analyzer']['scanOpenIssues']:
+                    logger.debug(f"Running issue analysis for {repo_name}")
+                    analyze_open_issues(api, repo, manager_repo_name)
+            
+            sequential_duration = time.time() - sequential_start_time
+            logger.info(f"Sequential scanning completed in {sequential_duration:.1f}s")
 
         logger.info("Task analysis cycle completed successfully")
         

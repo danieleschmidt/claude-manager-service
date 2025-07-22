@@ -389,6 +389,77 @@ class ConcurrentRepositoryScanner:
             
             return stats_dict
     
+    def scan_repositories_sync(
+        self,
+        github_api,
+        repo_names: List[str],
+        manager_repo_name: str,
+        scan_todos: bool = True,
+        scan_issues: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Synchronous wrapper for concurrent repository scanning
+        
+        This method provides a synchronous interface to the async scan_repositories
+        method, making it easier to integrate with existing synchronous code.
+        
+        Args:
+            github_api: GitHub API client
+            repo_names: List of repository names to scan
+            manager_repo_name: Manager repository name for issue creation
+            scan_todos: Whether to scan for TODO comments
+            scan_issues: Whether to analyze open issues
+            
+        Returns:
+            Dict with scan statistics and results summary
+        """
+        import asyncio
+        
+        # Run the async scanning method
+        try:
+            # Handle different event loop scenarios
+            try:
+                loop = asyncio.get_running_loop()
+                # If there's already a running loop, we need to use run_in_executor
+                # This is more complex but handles nested async calls
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(
+                        lambda: asyncio.run(self.scan_repositories(
+                            github_api, repo_names, manager_repo_name, scan_todos, scan_issues
+                        ))
+                    )
+                    scan_results = future.result()
+            except RuntimeError:
+                # No running loop, safe to use asyncio.run()
+                scan_results = asyncio.run(self.scan_repositories(
+                    github_api, repo_names, manager_repo_name, scan_todos, scan_issues
+                ))
+            
+            # Process results into summary statistics
+            total_repos = len(repo_names)
+            successful_scans = sum(1 for result in scan_results if result.get('success', False))
+            failed_scans = total_repos - successful_scans
+            total_todos_found = sum(result.get('todos_found', 0) for result in scan_results)
+            total_issues_analyzed = sum(result.get('issues_analyzed', 0) for result in scan_results)
+            
+            # Calculate total scan duration
+            scan_duration = sum(result.get('duration', 0) for result in scan_results)
+            
+            return {
+                'total_repos': total_repos,
+                'successful_scans': successful_scans,
+                'failed_scans': failed_scans,
+                'total_todos_found': total_todos_found,
+                'total_issues_analyzed': total_issues_analyzed,
+                'scan_duration': scan_duration,
+                'detailed_results': scan_results
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error in synchronous repository scanning: {e}")
+            raise
+    
     def cleanup(self):
         """Clean up resources used by the scanner"""
         if self.executor:
