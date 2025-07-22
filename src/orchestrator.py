@@ -9,11 +9,13 @@ from github import Issue
 from github_api import GitHubAPI
 from prompt_builder import build_prompt, get_template_for_labels
 from logger import get_logger, log_performance
+from performance_monitor import monitor_performance
 from security import get_secure_subprocess, SecureTempDir, validate_repo_name
 from config_validator import get_validated_config
 
 logger = get_logger(__name__)
 
+@monitor_performance(track_memory=True, custom_name="terragon_task_orchestration")
 @log_performance
 def trigger_terragon_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue, config: Dict[str, Any]) -> None:
     """Trigger a Terragon task by posting a formatted comment to the issue"""
@@ -67,6 +69,7 @@ def trigger_terragon_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue, co
         logger.error(f"Error triggering Terragon task for issue #{issue.number}: {e}")
         raise
 
+@monitor_performance(track_memory=True, custom_name="claude_flow_task_orchestration")
 @log_performance
 def trigger_claude_flow_task(api: GitHubAPI, repo_name: str, issue: Issue.Issue) -> None:
     """Trigger a Claude Flow task by cloning repository and executing command"""

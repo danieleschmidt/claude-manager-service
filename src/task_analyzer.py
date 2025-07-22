@@ -4,12 +4,14 @@ from typing import Optional
 from github import Repository
 from github_api import GitHubAPI
 from logger import get_logger, log_performance
+from performance_monitor import monitor_performance
 from task_tracker import get_task_tracker
 from config_validator import get_validated_config
 from error_handler import with_error_recovery, safe_github_operation
 
 logger = get_logger(__name__)
 
+@monitor_performance(track_memory=True, custom_name="scan_todo_comments")
 @log_performance
 @with_error_recovery("find_todo_comments", max_attempts=2, delay=3.0)
 def find_todo_comments(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
@@ -96,6 +98,7 @@ def find_todo_comments(github_api: GitHubAPI, repo: Repository.Repository, manag
         logger.error(f"Fatal error in find_todo_comments for {repo.full_name}: {e}")
 
 
+@monitor_performance(track_memory=True, custom_name="scan_todos_with_tracking")
 @log_performance
 def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):
     """
@@ -106,6 +109,7 @@ def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):
     """
     return find_todo_comments(github_api, repo, manager_repo_name)
 
+@monitor_performance(track_memory=True, custom_name="analyze_open_issues")
 @log_performance
 @with_error_recovery("analyze_open_issues", max_attempts=2, delay=2.0)
 def analyze_open_issues(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
