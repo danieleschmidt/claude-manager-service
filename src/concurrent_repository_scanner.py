@@ -22,7 +22,7 @@ from dataclasses import dataclass, asdict
 import functools
 
 from logger import get_logger
-from enhanced_error_handler import get_error_tracker, NetworkError
+from error_handler import get_error_tracker, NetworkError
 from performance_monitor import monitor_performance
 from task_analyzer import find_todo_comments, analyze_open_issues
 

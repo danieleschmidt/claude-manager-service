@@ -1,539 +1,552 @@
 """
-Enhanced error handling and recovery module for Claude Manager Service
+Enhanced Error Handling System for Claude Manager Service
 
-This module provides comprehensive error handling including:
-- Retry mechanisms with exponential backoff
-- Graceful error recovery
-- Circuit breaker pattern
-- Detailed error reporting and metrics
+This module provides specific exception handling, rate limiting, circuit breaker patterns,
+and enhanced error reporting to replace generic exception handling throughout the codebase.
+
+Features:
+- Specific exception types for different error categories
+- Rate limiting for API operations
+- Enhanced circuit breaker patterns
+- Error context collection and metrics
+- Structured error reporting
 """
+
 import time
-import sys
-import traceback
+import json
+import os
+import threading
+from collections import defaultdict, deque
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Callable, Union
+from dataclasses import dataclass, asdict
+from pathlib import Path
+import logging
 import functools
-from typing import Dict, Any, Callable, Optional, Type, Union, List
-from datetime import datetime, timezone
-from collections import defaultdict
+
 from logger import get_logger
 
-logger = get_logger(__name__)
+
+# Custom Exception Classes
+class EnhancedError(Exception):
+    """Base class for enhanced error handling"""
+    def __init__(self, message: str, error_type: str = None, context: Dict = None):
+        super().__init__(message)
+        self.message = message
+        self.error_type = error_type or self.__class__.__name__
+        self.context = context or {}
+        self.timestamp = datetime.now().isoformat()
 
 
-class CircuitBreakerError(Exception):
-    """Exception raised when circuit breaker is open"""
-    pass
+class FileOperationError(EnhancedError):
+    """Specific error for file operation failures"""
+    def __init__(self, message: str, file_path: str, operation: str, original_error: Exception):
+        super().__init__(
+            f"File operation '{operation}' failed for {file_path}: {message}",
+            original_error.__class__.__name__,
+            {"file_path": file_path, "operation": operation}
+        )
+        self.file_path = file_path
+        self.operation = operation
+        self.original_error = original_error
 
 
-class CircuitBreaker:
+class JsonParsingError(EnhancedError):
+    """Specific error for JSON parsing failures"""
+    def __init__(self, message: str, file_path: str, original_error: Exception):
+        super().__init__(
+            f"JSON parsing failed for {file_path}: {message}",
+            original_error.__class__.__name__,
+            {"file_path": file_path, "json_error": str(original_error)}
+        )
+        self.file_path = file_path
+        self.original_error = original_error
+
+
+class NetworkError(EnhancedError):
+    """Specific error for network operation failures"""
+    def __init__(self, message: str, operation: str, original_error: Exception):
+        super().__init__(
+            f"Network operation '{operation}' failed: {message}",
+            original_error.__class__.__name__,
+            {"operation": operation, "network_error": str(original_error)}
+        )
+        self.operation = operation
+        self.original_error = original_error
+
+
+class RateLimitError(EnhancedError):
+    """Specific error for API rate limiting"""
+    def __init__(self, message: str, operation: str, retry_after: Optional[int] = None):
+        super().__init__(
+            f"Rate limit exceeded for operation '{operation}': {message}",
+            "RateLimitError",
+            {"operation": operation, "retry_after": retry_after}
+        )
+        self.operation = operation
+        self.retry_after = retry_after
+
+
+class AuthenticationError(EnhancedError):
+    """Specific error for authentication failures"""
+    def __init__(self, message: str, operation: str):
+        super().__init__(
+            f"Authentication failed for operation '{operation}': {message}",
+            "AuthenticationError",
+            {"operation": operation}
+        )
+        self.operation = operation
+
+
+class ErrorContext(Exception):
+    """Enhanced exception with full context information"""
+    def __init__(self, original_exception: Exception, context: Dict[str, Any]):
+        self.original_exception = original_exception
+        self.operation = context.get("operation", "unknown")
+        self.parameters = context.get("parameters", {})
+        self.timestamp = context.get("timestamp", time.time())
+        self.module = context.get("module", "unknown")
+        self.function = context.get("function", "unknown")
+        
+        message = f"Operation '{self.operation}' failed: {str(original_exception)}"
+        super().__init__(message)
+
+
+# Safe Operation Functions
+def safe_file_read(file_path: str, encoding: str = 'utf-8') -> str:
     """
-    Circuit breaker pattern implementation to prevent cascading failures
+    Safely read file with specific exception handling
     
-    States:
-    - CLOSED: Normal operation, calls pass through
-    - OPEN: Failures exceeded threshold, calls fail fast
-    - HALF_OPEN: Testing if service has recovered
+    Args:
+        file_path: Path to file to read
+        encoding: File encoding
+        
+    Returns:
+        File contents as string
+        
+    Raises:
+        FileOperationError: For specific file operation failures
+    """
+    try:
+        with open(file_path, 'r', encoding=encoding) as f:
+            return f.read()
+    except FileNotFoundError as e:
+        raise FileOperationError(str(e), file_path, "read", e)
+    except PermissionError as e:
+        raise FileOperationError(str(e), file_path, "read", e)
+    except UnicodeDecodeError as e:
+        raise FileOperationError(f"Encoding error: {str(e)}", file_path, "read", e)
+    except OSError as e:
+        raise FileOperationError(f"OS error: {str(e)}", file_path, "read", e)
+
+
+def safe_json_load(file_path: str) -> Dict[str, Any]:
+    """
+    Safely load JSON file with specific exception handling
+    
+    Args:
+        file_path: Path to JSON file
+        
+    Returns:
+        Parsed JSON data
+        
+    Raises:
+        FileOperationError: For file access issues
+        JsonParsingError: For JSON parsing issues
+    """
+    try:
+        content = safe_file_read(file_path)
+        return json.loads(content)
+    except json.JSONDecodeError as e:
+        raise JsonParsingError(str(e), file_path, e)
+    except FileOperationError:
+        raise  # Re-raise file operation errors
+
+
+def safe_api_call(func: Callable, operation: str, *args, **kwargs) -> Any:
+    """
+    Safely execute API call with specific exception handling
+    
+    Args:
+        func: Function to call
+        operation: Name of operation for error context
+        *args, **kwargs: Arguments to pass to function
+        
+    Returns:
+        Function result
+        
+    Raises:
+        NetworkError: For network-related failures
+        RateLimitError: For rate limiting
+        AuthenticationError: For auth failures
+    """
+    try:
+        return func(*args, **kwargs)
+    except ConnectionError as e:
+        raise NetworkError(str(e), operation, e)
+    except TimeoutError as e:
+        raise NetworkError(f"Timeout: {str(e)}", operation, e)
+    except Exception as e:
+        # Check for rate limiting patterns
+        if hasattr(e, 'response') and hasattr(e.response, 'status_code'):
+            if e.response.status_code == 403:
+                # Check for rate limit headers
+                headers = getattr(e.response, 'headers', {})
+                if 'X-RateLimit-Remaining' in headers and headers['X-RateLimit-Remaining'] == '0':
+                    retry_after = int(headers.get('X-RateLimit-Reset', 3600)) - int(time.time())
+                    raise RateLimitError(str(e), operation, max(retry_after, 60))
+            elif e.response.status_code == 401:
+                raise AuthenticationError(str(e), operation)
+        
+        # Default to network error for unhandled cases
+        raise NetworkError(str(e), operation, e)
+
+
+class RateLimiter:
+    """
+    Rate limiter for API operations to prevent hitting API limits
     """
     
-    def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 60.0):
+    def __init__(self, max_requests: int = None, time_window: float = None):
+        """
+        Initialize rate limiter
+        
+        Args:
+            max_requests: Maximum requests allowed in time window (configurable via RATE_LIMIT_MAX_REQUESTS env var)
+            time_window: Time window in seconds (configurable via RATE_LIMIT_TIME_WINDOW env var)
+        """
+        # Use environment variables with validation, fallback to parameters or defaults
+        if max_requests is not None or time_window is not None:
+            # Use provided parameters
+            self.max_requests = max_requests or int(os.getenv('RATE_LIMIT_MAX_REQUESTS', '5000'))
+            self.time_window = time_window or float(os.getenv('RATE_LIMIT_TIME_WINDOW', '3600.0'))
+        else:
+            # Use validated configuration
+            try:
+                from config_env import get_env_config
+                config = get_env_config()
+                self.max_requests = config.rate_limit_max_requests
+                self.time_window = config.rate_limit_time_window
+            except ImportError:
+                # Fallback to direct environment variable access
+                self.max_requests = int(os.getenv('RATE_LIMIT_MAX_REQUESTS', '5000'))
+                self.time_window = float(os.getenv('RATE_LIMIT_TIME_WINDOW', '3600.0'))
+        self.request_history: Dict[str, deque] = defaultdict(deque)
+        self.lock = threading.Lock()
+        self.logger = get_logger(__name__)
+    
+    def can_proceed(self, key: str) -> bool:
+        """
+        Check if request can proceed without hitting rate limit
+        
+        Args:
+            key: Identifier for rate limiting (e.g., 'github_api')
+            
+        Returns:
+            True if request can proceed, False if rate limited
+        """
+        current_time = time.time()
+        
+        with self.lock:
+            # Clean old entries
+            history = self.request_history[key]
+            cutoff_time = current_time - self.time_window
+            
+            while history and history[0] < cutoff_time:
+                history.popleft()
+            
+            # Check if we can proceed
+            if len(history) >= self.max_requests:
+                self.logger.warning(f"Rate limit exceeded for key '{key}': {len(history)}/{self.max_requests}")
+                return False
+            
+            # Record this request
+            history.append(current_time)
+            return True
+    
+    def get_remaining_quota(self, key: str) -> int:
+        """Get remaining requests in current window"""
+        with self.lock:
+            current_time = time.time()
+            history = self.request_history[key]
+            cutoff_time = current_time - self.time_window
+            
+            # Clean old entries
+            while history and history[0] < cutoff_time:
+                history.popleft()
+            
+            return max(0, self.max_requests - len(history))
+
+
+class OperationCircuitBreaker:
+    """
+    Enhanced circuit breaker with operation-specific state tracking
+    """
+    
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 300.0):
         """
         Initialize circuit breaker
         
         Args:
-            failure_threshold (int): Number of failures before opening circuit
-            recovery_timeout (float): Time to wait before attempting recovery
+            failure_threshold: Number of failures before opening circuit
+            recovery_timeout: Time before attempting recovery
         """
         self.failure_threshold = failure_threshold
         self.recovery_timeout = recovery_timeout
-        self.failure_count = 0
-        self.last_failure_time = None
-        self.state = "CLOSED"  # CLOSED, OPEN, HALF_OPEN
-        
-    def call(self, func: Callable, *args, **kwargs):
+        self.operation_states: Dict[str, Dict[str, Any]] = defaultdict(
+            lambda: {
+                "failure_count": 0,
+                "last_failure": None,
+                "state": "closed"  # closed, open, half-open
+            }
+        )
+        self.lock = threading.Lock()
+        self.logger = get_logger(__name__)
+    
+    def can_proceed(self, module: str, operation: str) -> bool:
         """
-        Call function through circuit breaker
+        Check if operation can proceed based on circuit breaker state
         
         Args:
-            func (Callable): Function to call
-            *args: Function arguments
-            **kwargs: Function keyword arguments
+            module: Module name (e.g., 'github_api')
+            operation: Operation name (e.g., 'create_issue')
             
         Returns:
-            Function result
-            
-        Raises:
-            CircuitBreakerError: If circuit is open
+            True if operation can proceed
         """
-        if self.state == "OPEN":
-            if self._should_attempt_reset():
-                self.state = "HALF_OPEN"
-                logger.debug("Circuit breaker entering HALF_OPEN state")
-            else:
-                raise CircuitBreakerError("Circuit breaker is OPEN")
+        key = f"{module}.{operation}"
+        current_time = time.time()
         
-        try:
-            result = func(*args, **kwargs)
-            self._on_success()
-            return result
-        except Exception as e:
-            self._on_failure()
-            raise
-    
-    def _should_attempt_reset(self) -> bool:
-        """Check if enough time has passed to attempt reset"""
-        if self.last_failure_time is None:
+        with self.lock:
+            state = self.operation_states[key]
+            
+            # If circuit is closed, allow operation
+            if state["state"] == "closed":
+                return True
+            
+            # If circuit is open, check if recovery timeout has passed
+            if state["state"] == "open":
+                if (current_time - state["last_failure"]) > self.recovery_timeout:
+                    state["state"] = "half-open"
+                    self.logger.info(f"Circuit breaker for {key} moving to half-open state")
+                    return True
+                return False
+            
+            # If half-open, allow one test request
+            if state["state"] == "half-open":
+                return True
+            
             return False
-        return time.time() - self.last_failure_time >= self.recovery_timeout
     
-    def _on_success(self):
-        """Handle successful operation"""
-        self.failure_count = 0
-        if self.state == "HALF_OPEN":
-            self.state = "CLOSED"
-            logger.info("Circuit breaker reset to CLOSED state")
-    
-    def _on_failure(self):
-        """Handle failed operation"""
-        self.failure_count += 1
-        self.last_failure_time = time.time()
+    def record_success(self, module: str, operation: str):
+        """Record successful operation"""
+        key = f"{module}.{operation}"
         
-        if self.failure_count >= self.failure_threshold:
-            self.state = "OPEN"
-            logger.warning(f"Circuit breaker opened after {self.failure_count} failures")
-
-
-def retry_on_failure(
-    max_attempts: int = 3,
-    delay: float = 1.0,
-    backoff_multiplier: float = 1.0,
-    exceptions: tuple = (Exception,)
-):
-    """
-    Decorator to retry function calls on failure with exponential backoff
-    
-    Args:
-        max_attempts (int): Maximum number of retry attempts
-        delay (float): Initial delay between retries in seconds
-        backoff_multiplier (float): Multiplier for exponential backoff
-        exceptions (tuple): Tuple of exception types to retry on
-        
-    Returns:
-        Decorated function
-    """
-    def decorator(func: Callable):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            last_exception = None
-            current_delay = delay
+        with self.lock:
+            state = self.operation_states[key]
             
-            for attempt in range(max_attempts):
-                try:
-                    result = func(*args, **kwargs)
-                    if attempt > 0:
-                        logger.info(f"{func.__name__} succeeded on attempt {attempt + 1}")
-                    return result
-                except exceptions as e:
-                    last_exception = e
-                    
-                    if attempt < max_attempts - 1:  # Don't sleep on last attempt
-                        logger.warning(
-                            f"{func.__name__} failed on attempt {attempt + 1}/{max_attempts}: {e}. "
-                            f"Retrying in {current_delay:.2f} seconds..."
-                        )
-                        time.sleep(current_delay)
-                        current_delay *= backoff_multiplier
-                    else:
-                        logger.error(
-                            f"{func.__name__} failed after {max_attempts} attempts. "
-                            f"Final error: {e}"
-                        )
+            if state["state"] == "half-open":
+                # Recovery successful, close circuit
+                state["state"] = "closed"
+                state["failure_count"] = 0
+                self.logger.info(f"Circuit breaker for {key} recovered, moving to closed state")
+            elif state["state"] == "closed":
+                # Reset failure count on successful operation
+                state["failure_count"] = max(0, state["failure_count"] - 1)
+    
+    def record_failure(self, module: str, operation: str):
+        """Record failed operation"""
+        key = f"{module}.{operation}"
+        current_time = time.time()
+        
+        with self.lock:
+            state = self.operation_states[key]
+            state["failure_count"] += 1
+            state["last_failure"] = current_time
             
-            # Re-raise the last exception if all attempts failed
-            raise last_exception
-        
-        return wrapper
-    return decorator
+            if state["failure_count"] >= self.failure_threshold:
+                if state["state"] != "open":
+                    state["state"] = "open"
+                    self.logger.warning(
+                        f"Circuit breaker for {key} opened after {state['failure_count']} failures"
+                    )
+            elif state["state"] == "half-open":
+                # Half-open test failed, go back to open
+                state["state"] = "open"
+                self.logger.warning(f"Circuit breaker for {key} test failed, returning to open state")
 
 
-def handle_github_api_error(error: Exception, operation: str) -> bool:
+class ErrorTracker:
     """
-    Handle GitHub API specific errors with appropriate logging and recovery
-    
-    Args:
-        error (Exception): The GitHub API error
-        operation (str): Description of the operation that failed
-        
-    Returns:
-        bool: False to indicate operation should be considered failed
-    """
-    from github import GithubException, RateLimitExceededException
-    
-    if isinstance(error, RateLimitExceededException):
-        headers = getattr(error, 'headers', None)
-        if headers and hasattr(headers, 'get'):
-            reset_time = headers.get('X-RateLimit-Reset', 'unknown')
-        else:
-            reset_time = 'unknown'
-        logger.warning(
-            f"GitHub API rate limit exceeded during {operation}. "
-            f"Rate limit resets at: {reset_time}. "
-            f"Consider implementing rate limit handling or increasing delays."
-        )
-        return False
-    elif isinstance(error, GithubException):
-        # Handle different data formats (dict, string, or None)
-        if hasattr(error, 'data') and error.data:
-            if isinstance(error.data, dict):
-                message = error.data.get('message', str(error))
-            else:
-                message = str(error.data)
-        else:
-            message = str(error)
-        
-        logger.error(
-            f"GitHub API error during {operation}: {message} "
-            f"(Status: {getattr(error, 'status', 'unknown')})"
-        )
-        return False
-    else:
-        logger.error(f"Unexpected error during GitHub API {operation}: {error}")
-        return False
-
-
-def handle_network_error(error: Exception, operation: str) -> bool:
-    """
-    Handle network-related errors
-    
-    Args:
-        error (Exception): The network error
-        operation (str): Description of the operation that failed
-        
-    Returns:
-        bool: False to indicate operation should be considered failed
-    """
-    from requests.exceptions import ConnectionError, Timeout, RequestException
-    
-    if isinstance(error, (ConnectionError, Timeout)):
-        logger.error(
-            f"Network error during {operation}: {error}. "
-            f"Check internet connection and GitHub API availability."
-        )
-    elif isinstance(error, RequestException):
-        logger.error(f"HTTP request error during {operation}: {error}")
-    else:
-        logger.error(f"Unexpected network error during {operation}: {error}")
-    
-    return False
-
-
-def handle_general_error(error: Exception, operation: str, context: Dict[str, Any] = None) -> bool:
-    """
-    Handle general errors with context logging
-    
-    Args:
-        error (Exception): The error that occurred
-        operation (str): Description of the operation that failed
-        context (Dict[str, Any]): Additional context information
-        
-    Returns:
-        bool: False to indicate operation should be considered failed
-    """
-    context_str = ""
-    if context:
-        context_str = f" Context: {context}"
-    
-    logger.error(
-        f"Error during {operation}: {error}{context_str}",
-        exc_info=True
-    )
-    return False
-
-
-def with_error_recovery(
-    operation_name: str,
-    max_attempts: int = 3,
-    delay: float = 1.0,
-    backoff_multiplier: float = 1.5
-):
-    """
-    Decorator that combines retry logic with comprehensive error handling
-    
-    Args:
-        operation_name (str): Name of the operation for logging
-        max_attempts (int): Maximum retry attempts
-        delay (float): Initial delay between retries
-        backoff_multiplier (float): Backoff multiplier for delays
-        
-    Returns:
-        Decorated function
-    """
-    def decorator(func: Callable):
-        @retry_on_failure(
-            max_attempts=max_attempts,
-            delay=delay,
-            backoff_multiplier=backoff_multiplier,
-            exceptions=(Exception,)
-        )
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as e:
-                # Log detailed error information
-                error_context = collect_error_context(
-                    operation=operation_name,
-                    module=func.__module__,
-                    function=func.__name__
-                )
-                
-                # Record error metrics
-                if hasattr(wrapper, '_error_metrics'):
-                    wrapper._error_metrics.record_error(func.__module__, type(e).__name__)
-                
-                # Handle specific error types
-                from github import GithubException
-                if isinstance(e, GithubException):
-                    handle_github_api_error(e, operation_name)
-                elif isinstance(e, (ConnectionError, TimeoutError)):
-                    handle_network_error(e, operation_name)
-                else:
-                    handle_general_error(e, operation_name, error_context)
-                
-                raise
-        
-        # Attach error metrics to function
-        wrapper._error_metrics = ErrorMetrics()
-        return wrapper
-    return decorator
-
-
-def with_fallback(
-    primary_func: Callable,
-    fallback_func: Callable,
-    operation_name: str,
-    *args, **kwargs
-) -> Any:
-    """
-    Execute primary function with fallback on failure
-    
-    Args:
-        primary_func (Callable): Primary function to try
-        fallback_func (Callable): Fallback function if primary fails
-        operation_name (str): Name of operation for logging
-        *args: Arguments to pass to functions
-        **kwargs: Keyword arguments to pass to functions
-        
-    Returns:
-        Result from primary or fallback function
-    """
-    try:
-        logger.debug(f"Attempting primary operation: {operation_name}")
-        return primary_func(*args, **kwargs)
-    except Exception as e:
-        logger.warning(
-            f"Primary operation {operation_name} failed: {e}. "
-            f"Attempting fallback..."
-        )
-        try:
-            result = fallback_func(*args, **kwargs)
-            logger.info(f"Fallback operation succeeded for {operation_name}")
-            return result
-        except Exception as fallback_error:
-            logger.error(
-                f"Both primary and fallback operations failed for {operation_name}. "
-                f"Primary error: {e}, Fallback error: {fallback_error}"
-            )
-            raise fallback_error
-
-
-def collect_error_context(operation: str, module: str, additional_data: Dict[str, Any] = None, **kwargs) -> Dict[str, Any]:
-    """
-    Collect context information for error reporting
-    
-    Args:
-        operation (str): Name of the operation
-        module (str): Module where error occurred
-        additional_data (Dict[str, Any]): Additional context data
-        **kwargs: Additional keyword arguments
-        
-    Returns:
-        Dict[str, Any]: Context information
-    """
-    context = {
-        "timestamp": datetime.now(timezone.utc).isoformat(),
-        "operation": operation,
-        "module": module,
-        "python_version": sys.version,
-        **kwargs
-    }
-    
-    if additional_data:
-        context.update(additional_data)
-    
-    return context
-
-
-def generate_error_summary(error: Exception, context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Generate a comprehensive error summary
-    
-    Args:
-        error (Exception): The error that occurred
-        context (Dict[str, Any]): Context information
-        
-    Returns:
-        Dict[str, Any]: Error summary
-    """
-    return {
-        "error_type": type(error).__name__,
-        "error_message": str(error),
-        "stack_trace": traceback.format_exc(),
-        **context
-    }
-
-
-class ErrorMetrics:
-    """
-    Track and report error metrics for monitoring and debugging
+    Track and analyze error patterns for metrics and monitoring
     """
     
     def __init__(self):
-        """Initialize error metrics tracking"""
-        self.errors_by_module = defaultdict(int)
-        self.errors_by_type = defaultdict(int)
-        self.total_errors = 0
-        self.first_error_time = None
-        self.last_error_time = None
+        self.error_counts: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.recent_errors: deque = deque(maxlen=1000)
+        self.lock = threading.Lock()
     
-    def record_error(self, module: str, error_type: str):
-        """
-        Record an error occurrence
+    def record_error(self, module: str, function: str, error_type: str, message: str):
+        """Record error occurrence for analysis"""
+        key = f"{module}.{function}"
         
-        Args:
-            module (str): Module where error occurred
-            error_type (str): Type of error
-        """
-        self.errors_by_module[module] += 1
-        self.errors_by_type[error_type] += 1
-        self.total_errors += 1
-        
-        current_time = datetime.now(timezone.utc)
-        if self.first_error_time is None:
-            self.first_error_time = current_time
-        self.last_error_time = current_time
-        
-        logger.debug(f"Recorded error: {error_type} in {module}")
+        with self.lock:
+            self.error_counts[key][error_type] += 1
+            self.recent_errors.append({
+                "timestamp": time.time(),
+                "module": module,
+                "function": function,
+                "error_type": error_type,
+                "message": message
+            })
     
-    def get_error_statistics(self) -> Dict[str, Any]:
-        """
-        Get comprehensive error statistics
-        
-        Returns:
-            Dict[str, Any]: Error statistics
-        """
-        return {
-            "total_errors": self.total_errors,
-            "errors_by_module": dict(self.errors_by_module),
-            "errors_by_type": dict(self.errors_by_type),
-            "first_error_time": self.first_error_time.isoformat() if self.first_error_time else None,
-            "last_error_time": self.last_error_time.isoformat() if self.last_error_time else None
-        }
+    def get_error_statistics(self) -> Dict[str, Dict[str, int]]:
+        """Get error statistics by function and error type"""
+        with self.lock:
+            return dict(self.error_counts)
     
-    def reset_metrics(self):
-        """Reset all error metrics"""
-        self.errors_by_module.clear()
-        self.errors_by_type.clear()
-        self.total_errors = 0
-        self.first_error_time = None
-        self.last_error_time = None
-        logger.debug("Error metrics reset")
+    def get_recent_errors(self, count: int = 50) -> List[Dict]:
+        """Get recent errors for debugging"""
+        with self.lock:
+            return list(self.recent_errors)[-count:]
 
 
-# Global error metrics instance
-_global_error_metrics = ErrorMetrics()
-
-
-def get_global_error_metrics() -> ErrorMetrics:
+def collect_error_context(error: Exception, context: Dict[str, Any]) -> ErrorContext:
     """
-    Get the global error metrics instance
-    
-    Returns:
-        ErrorMetrics: Global error metrics
-    """
-    return _global_error_metrics
-
-
-# Utility functions for common error handling patterns
-
-def safe_github_operation(operation_func: Callable, operation_name: str, *args, **kwargs) -> Optional[Any]:
-    """
-    Safely execute a GitHub operation with comprehensive error handling
+    Collect full error context for enhanced error reporting
     
     Args:
-        operation_func (Callable): GitHub operation function
-        operation_name (str): Name of operation for logging
-        *args: Function arguments
-        **kwargs: Function keyword arguments
+        error: Original exception
+        context: Additional context information
         
     Returns:
-        Optional[Any]: Operation result or None if failed
+        ErrorContext with full information
     """
-    try:
-        return operation_func(*args, **kwargs)
-    except Exception as e:
-        from github import GithubException
-        if isinstance(e, GithubException):
-            handle_github_api_error(e, operation_name)
-        else:
-            handle_general_error(e, operation_name)
-        
-        # Record error in global metrics
-        _global_error_metrics.record_error("github_api", type(e).__name__)
-        return None
+    return ErrorContext(error, context)
 
 
-def safe_file_operation(operation_func: Callable, operation_name: str, *args, **kwargs) -> Optional[Any]:
+# Global instances
+_rate_limiter = RateLimiter()
+_circuit_breaker = OperationCircuitBreaker()
+_error_tracker = ErrorTracker()
+
+
+def get_rate_limiter() -> RateLimiter:
+    """Get global rate limiter instance"""
+    return _rate_limiter
+
+
+def get_circuit_breaker() -> OperationCircuitBreaker:
+    """Get global circuit breaker instance"""
+    return _circuit_breaker
+
+
+def get_error_tracker() -> ErrorTracker:
+    """Get global error tracker instance"""
+    return _error_tracker
+
+
+def with_enhanced_error_handling(
+    operation: str,
+    module: str = None,
+    use_rate_limiter: bool = False,
+    use_circuit_breaker: bool = False,
+    rate_limit_key: str = None
+):
     """
-    Safely execute a file operation with error handling
+    Decorator for enhanced error handling with rate limiting and circuit breaker
     
     Args:
-        operation_func (Callable): File operation function
-        operation_name (str): Name of operation for logging
-        *args: Function arguments
-        **kwargs: Function keyword arguments
-        
-    Returns:
-        Optional[Any]: Operation result or None if failed
+        operation: Operation name for error context
+        module: Module name for circuit breaker
+        use_rate_limiter: Whether to apply rate limiting
+        use_circuit_breaker: Whether to use circuit breaker
+        rate_limit_key: Custom key for rate limiting
     """
-    try:
-        return operation_func(*args, **kwargs)
-    except (FileNotFoundError, PermissionError, OSError) as e:
-        logger.error(f"File operation {operation_name} failed: {e}")
-        _global_error_metrics.record_error("file_operations", type(e).__name__)
-        return None
-    except Exception as e:
-        handle_general_error(e, operation_name)
-        _global_error_metrics.record_error("file_operations", type(e).__name__)
-        return None
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            # Determine module name
+            func_module = module or func.__module__
+            rate_key = rate_limit_key or func_module
+            
+            # Check rate limiting
+            if use_rate_limiter:
+                if not _rate_limiter.can_proceed(rate_key):
+                    raise RateLimitError(f"Rate limit exceeded", operation)
+            
+            # Check circuit breaker
+            if use_circuit_breaker:
+                if not _circuit_breaker.can_proceed(func_module, func.__name__):
+                    raise NetworkError(f"Circuit breaker open", operation, 
+                                     Exception("Circuit breaker protection"))
+            
+            # Execute function with error handling
+            context = {
+                "operation": operation,
+                "module": func_module,
+                "function": func.__name__,
+                "parameters": {"args_count": len(args), "kwargs_keys": list(kwargs.keys())},
+                "timestamp": time.time()
+            }
+            
+            try:
+                result = func(*args, **kwargs)
+                
+                # Record success for circuit breaker
+                if use_circuit_breaker:
+                    _circuit_breaker.record_success(func_module, func.__name__)
+                
+                return result
+                
+            except Exception as e:
+                # Record failure for circuit breaker
+                if use_circuit_breaker:
+                    _circuit_breaker.record_failure(func_module, func.__name__)
+                
+                # Record error for tracking
+                _error_tracker.record_error(
+                    func_module, func.__name__, 
+                    e.__class__.__name__, str(e)
+                )
+                
+                # Re-raise enhanced error if it's already enhanced
+                if isinstance(e, EnhancedError):
+                    raise
+                
+                # Otherwise, wrap in error context
+                raise collect_error_context(e, context)
+        
+        return wrapper
+    return decorator
 
 
-# Example usage and testing
-if __name__ == "__main__":
-    # Test retry decorator
-    @retry_on_failure(max_attempts=3, delay=0.1)
-    def test_retry_function():
-        print("Testing retry functionality...")
-        raise ConnectionError("Test connection error")
-    
-    # Test circuit breaker
-    breaker = CircuitBreaker(failure_threshold=2, recovery_timeout=1.0)
-    
-    def test_circuit_breaker():
-        print("Testing circuit breaker...")
-        raise ValueError("Test error")
-    
-    # Test error metrics
-    metrics = ErrorMetrics()
-    metrics.record_error("test_module", "TestError")
-    print(f"Error statistics: {metrics.get_error_statistics()}")
-    
-    print("Error handling module test completed")
+# Convenience decorators for common patterns
+def github_api_operation(operation: str):
+    """Decorator for GitHub API operations with full protection"""
+    return with_enhanced_error_handling(
+        operation=operation,
+        module="github_api",
+        use_rate_limiter=True,
+        use_circuit_breaker=True,
+        rate_limit_key="github_api"
+    )
+
+
+def file_operation(operation: str):
+    """Decorator for file operations with enhanced error handling"""
+    return with_enhanced_error_handling(
+        operation=operation,
+        use_rate_limiter=False,
+        use_circuit_breaker=False
+    )
+
+
+def network_operation(operation: str, service: str = "generic"):
+    """Decorator for network operations with protection"""
+    return with_enhanced_error_handling(
+        operation=operation,
+        use_rate_limiter=True,
+        use_circuit_breaker=True,
+        rate_limit_key=service
+    )

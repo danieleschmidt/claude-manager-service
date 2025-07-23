@@ -15,15 +15,15 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
 
-from enhanced_error_handler import (
+from error_handler import (
     NetworkError, RateLimitError, FileOperationError,
     get_rate_limiter, get_circuit_breaker, get_error_tracker
 )
-from enhanced_security import (
+from security import (
     validate_token_enhanced, sanitize_repo_name, 
     InvalidTokenFormatError, PathTraversalError
 )
-from enhanced_validation import validate_config_schema, ConfigurationValidationError
+from validation import validate_config_schema, ConfigurationValidationError
 
 
 class TestGitHubAPIEnhancedErrorHandling:
@@ -88,7 +88,7 @@ class TestGitHubAPIEnhancedErrorHandling:
     
     def test_rate_limiting_integration(self):
         """Test rate limiting integration"""
-        from enhanced_error_handler import get_rate_limiter
+        from error_handler import get_rate_limiter
         
         limiter = get_rate_limiter()
         
@@ -159,7 +159,7 @@ class TestConfigurationValidationIntegration:
         
         try:
             # Load and validate
-            from enhanced_error_handler import safe_json_load
+            from error_handler import safe_json_load
             loaded_config = safe_json_load(temp_path)
             
             # Should validate successfully
@@ -185,18 +185,18 @@ class TestSecurityValidationIntegration:
             assert validate_token_enhanced(token, "github") is True
         
         # Invalid tokens (weak token gets caught first)
-        from enhanced_security import WeakTokenError
+        from security import WeakTokenError
         with pytest.raises(WeakTokenError):
             validate_token_enhanced("invalid_token", "github")
         
         # Legacy token should raise ExpiredTokenError
-        from enhanced_security import ExpiredTokenError
+        from security import ExpiredTokenError
         with pytest.raises(ExpiredTokenError):
             validate_token_enhanced("a" * 40, "github")  # 40-char hex (old format)
     
     def test_path_security_integration(self):
         """Test path security validation"""
-        from enhanced_security import safe_path_join, validate_safe_path
+        from security import safe_path_join, validate_safe_path
         
         # Safe path operations
         safe_path = safe_path_join("/base", "subdir", "file.txt")

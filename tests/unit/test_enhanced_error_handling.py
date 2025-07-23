@@ -22,7 +22,7 @@ class TestSpecificExceptionHandling:
     
     def test_file_operation_specific_exceptions(self):
         """Test that file operations handle specific exceptions"""
-        from enhanced_error_handler import (
+        from error_handler import (
             safe_file_read,
             safe_json_load,
             FileOperationError,
@@ -51,7 +51,7 @@ class TestSpecificExceptionHandling:
     
     def test_json_parsing_specific_exceptions(self):
         """Test specific JSON parsing error handling"""
-        from enhanced_error_handler import safe_json_load, JsonParsingError
+        from error_handler import safe_json_load, JsonParsingError
         
         # Test invalid JSON
         with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as temp_file:
@@ -69,7 +69,7 @@ class TestSpecificExceptionHandling:
     
     def test_network_operation_specific_exceptions(self):
         """Test specific network operation error handling"""
-        from enhanced_error_handler import (
+        from error_handler import (
             safe_api_call,
             NetworkError,
             RateLimitError,
@@ -104,7 +104,7 @@ class TestSecurityValidationEnhancements:
     
     def test_enhanced_token_validation(self):
         """Test improved token validation with specific patterns"""
-        from enhanced_security import (
+        from security import (
             validate_token_enhanced,
             TokenValidationError,
             InvalidTokenFormatError,
@@ -133,7 +133,7 @@ class TestSecurityValidationEnhancements:
     
     def test_path_traversal_prevention(self):
         """Test path traversal attack prevention"""
-        from enhanced_security import (
+        from security import (
             safe_path_join,
             PathTraversalError,
             validate_safe_path
@@ -158,7 +158,7 @@ class TestSecurityValidationEnhancements:
     
     def test_input_sanitization_enhancement(self):
         """Test enhanced input sanitization"""
-        from enhanced_security import (
+        from security import (
             sanitize_input_enhanced,
             sanitize_repo_name,
             sanitize_issue_content_enhanced
@@ -186,7 +186,7 @@ class TestRateLimitingSystem:
     
     def test_rate_limiter_creation(self):
         """Test rate limiter basic functionality"""
-        from enhanced_error_handler import RateLimiter
+        from error_handler import RateLimiter
         
         # Create rate limiter: 5 requests per 10 seconds
         limiter = RateLimiter(max_requests=5, time_window=10.0)
@@ -200,7 +200,7 @@ class TestRateLimitingSystem:
     
     def test_rate_limiter_window_reset(self):
         """Test rate limiter time window reset"""
-        from enhanced_error_handler import RateLimiter
+        from error_handler import RateLimiter
         
         limiter = RateLimiter(max_requests=2, time_window=0.1)  # Very short window
         
@@ -217,7 +217,7 @@ class TestRateLimitingSystem:
     
     def test_rate_limiter_per_key_isolation(self):
         """Test that rate limiting is isolated per key"""
-        from enhanced_error_handler import RateLimiter
+        from error_handler import RateLimiter
         
         limiter = RateLimiter(max_requests=1, time_window=10.0)
         
@@ -235,7 +235,7 @@ class TestEnhancedErrorReporting:
     
     def test_error_context_collection(self):
         """Test that errors collect relevant context"""
-        from enhanced_error_handler import ErrorContext, collect_error_context
+        from error_handler import ErrorContext, collect_error_context
         
         def failing_function():
             context = {
@@ -261,7 +261,7 @@ class TestEnhancedErrorReporting:
     
     def test_error_metrics_collection(self):
         """Test that errors are properly tracked for metrics"""
-        from enhanced_error_handler import ErrorTracker
+        from error_handler import ErrorTracker
         
         tracker = ErrorTracker()
         
@@ -283,7 +283,7 @@ class TestCircuitBreakerEnhancements:
     
     def test_operation_specific_circuit_breakers(self):
         """Test circuit breakers per operation type"""
-        from enhanced_error_handler import OperationCircuitBreaker
+        from error_handler import OperationCircuitBreaker
         
         breaker = OperationCircuitBreaker(
             failure_threshold=3,
@@ -312,7 +312,7 @@ class TestValidationEnhancements:
     
     def test_configuration_schema_validation(self):
         """Test schema-based configuration validation"""
-        from enhanced_validation import (
+        from validation import (
             validate_config_schema,
             ConfigurationValidationError
         )
@@ -351,7 +351,7 @@ class TestValidationEnhancements:
     
     def test_api_parameter_validation(self):
         """Test API parameter validation"""
-        from enhanced_validation import (
+        from validation import (
             validate_api_parameters,
             ParameterValidationError
         )
