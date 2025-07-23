@@ -411,8 +411,138 @@ class ContinuousBacklogExecutor:
     
     async def _discover_test_failures(self) -> List[BacklogItem]:
         """Discover tasks from failing tests"""
-        # TODO: Implement test failure discovery
-        return []
+        failing_items = []
+        
+        try:
+            # Run pytest to collect failures
+            import subprocess
+            result = subprocess.run(
+                ['python3', '-m', 'pytest', '--collect-only', '-q', '--tb=short'],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            
+            # If there are import errors or failures, run actual tests to get failure details
+            if result.returncode != 0 or 'error' in result.stderr.lower():
+                test_result = subprocess.run(
+                    ['python3', '-m', 'pytest', '-x', '--tb=short'],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                
+                # Parse test failures from output
+                failing_items.extend(self._parse_test_failures(test_result.stdout))
+            
+        except subprocess.TimeoutExpired:
+            self.logger.warning("Test discovery timed out")
+        except Exception as e:
+            self.logger.error(f"Error discovering test failures: {e}")
+        
+        return failing_items
+    
+    def _parse_test_failures(self, pytest_output: str) -> List[BacklogItem]:
+        """Parse pytest output to extract failing test information"""
+        failing_items = []
+        lines = pytest_output.split('\n')
+        
+        for line in lines:
+            if line.startswith('FAILED '):
+                try:
+                    # Extract test path and error
+                    parts = line.split(' - ', 1)
+                    if len(parts) >= 2:
+                        test_path = parts[0].replace('FAILED ', '')
+                        error_msg = parts[1]
+                        
+                        # Create backlog item for the failure
+                        item = self._create_backlog_item_from_test_failure(test_path, error_msg)
+                        failing_items.append(item)
+                        
+                except Exception as e:
+                    self.logger.warning(f"Failed to parse test failure line: {line}, error: {e}")
+        
+        return failing_items
+    
+    def _create_backlog_item_from_test_failure(self, test_path: str, error_msg: str) -> BacklogItem:
+        """Create a backlog item from a test failure"""
+        now = datetime.now()
+        
+        # Extract test file and test name
+        file_path, test_name = test_path.split('::', 1) if '::' in test_path else (test_path, 'unknown')
+        
+        # Determine impact based on error type
+        impact = self._estimate_test_failure_impact(error_msg)
+        effort = self._estimate_test_failure_effort(error_msg)
+        
+        return BacklogItem(
+            id=f"test_failure_{hash(test_path)}_{int(now.timestamp())}",
+            title=f"Fix failing test: {test_name}",
+            description=f"Test failure in {file_path}\n\nError: {error_msg}",
+            task_type=TaskType.BUG,
+            impact=impact,
+            effort=effort,
+            status=TaskStatus.NEW,
+            wsjf_score=0.0,  # Will be calculated later
+            created_at=now,
+            updated_at=now,
+            links=[f"file://{file_path}"],
+            acceptance_criteria=[
+                f"Fix the failing test: {test_name}",
+                "Ensure the test passes consistently",
+                "All existing tests continue to pass",
+                "Add additional test coverage if needed"
+            ],
+            security_notes="Ensure fix doesn't introduce security vulnerabilities",
+            test_notes="This IS a test fix - verify the underlying functionality"
+        )
+    
+    def _estimate_test_failure_impact(self, error_msg: str) -> int:
+        """Estimate impact of test failure (1-13 scale)"""
+        error_lower = error_msg.lower()
+        
+        # Critical errors
+        if any(word in error_lower for word in [
+            'security', 'auth', 'permission', 'vulnerability', 
+            'injection', 'xss', 'csrf'
+        ]):
+            return 13
+        
+        # High impact errors
+        if any(word in error_lower for word in [
+            'connection', 'database', 'network', 'timeout',
+            'crash', 'exception', 'error'
+        ]):
+            return 8
+        
+        # Medium impact (assertion failures, logic errors)
+        if any(word in error_lower for word in [
+            'assertion', 'expected', 'actual', 'mismatch'
+        ]):
+            return 5
+        
+        # Default medium-low impact
+        return 3
+    
+    def _estimate_test_failure_effort(self, error_msg: str) -> int:
+        """Estimate effort to fix test failure (1-13 scale)"""
+        error_lower = error_msg.lower()
+        
+        # Complex fixes
+        if any(word in error_lower for word in [
+            'architecture', 'refactor', 'design', 'integration'
+        ]):
+            return 8
+        
+        # Medium effort fixes
+        if any(word in error_lower for word in [
+            'connection', 'network', 'database', 'configuration'
+        ]):
+            return 5
+        
+        # Simple fixes (assertions, small logic errors)
+        return 2
     
     async def _discover_pr_feedback(self) -> List[BacklogItem]: 
         """Discover tasks from PR comments and feedback"""
@@ -426,8 +556,219 @@ class ContinuousBacklogExecutor:
     
     async def _discover_dependency_issues(self) -> List[BacklogItem]:
         """Discover tasks from dependency vulnerability alerts"""
-        # TODO: Implement dependency issue discovery
-        return []
+        dependency_items = []
+        
+        try:
+            # Check for requirements.txt
+            requirements_file = Path("requirements.txt")
+            if requirements_file.exists():
+                # Use pip-audit to check for vulnerabilities
+                import subprocess
+                import json
+                
+                try:
+                    # Run pip-audit with JSON output
+                    result = subprocess.run(
+                        ['pip-audit', '--format=json', '--requirement', str(requirements_file)],
+                        capture_output=True,
+                        text=True,
+                        timeout=120
+                    )
+                    
+                    if result.returncode == 0 and result.stdout:
+                        audit_data = json.loads(result.stdout)
+                        dependency_items.extend(self._parse_vulnerability_report(audit_data))
+                    
+                except (subprocess.TimeoutExpired, FileNotFoundError, json.JSONDecodeError):
+                    # Fallback to manual check of known vulnerable packages
+                    dependency_items.extend(await self._manual_dependency_check(requirements_file))
+                
+            # Check for other dependency files (package.json, setup.py, etc.)
+            dependency_items.extend(await self._check_other_dependency_files())
+            
+        except Exception as e:
+            self.logger.error(f"Error discovering dependency issues: {e}")
+        
+        return dependency_items
+    
+    def _parse_vulnerability_report(self, audit_data: dict) -> List[BacklogItem]:
+        """Parse pip-audit JSON output to create backlog items"""
+        vuln_items = []
+        
+        vulnerabilities = audit_data.get('vulnerabilities', [])
+        for vuln in vulnerabilities:
+            try:
+                item = self._create_backlog_item_from_vulnerability(vuln)
+                vuln_items.append(item)
+            except Exception as e:
+                self.logger.warning(f"Failed to process vulnerability: {vuln}, error: {e}")
+        
+        return vuln_items
+    
+    def _create_backlog_item_from_vulnerability(self, vuln: dict) -> BacklogItem:
+        """Create a backlog item from a vulnerability report"""
+        now = datetime.now()
+        
+        package = vuln.get('package', 'unknown')
+        version = vuln.get('version', 'unknown')
+        vuln_id = vuln.get('id', 'unknown')
+        description = vuln.get('description', 'No description available')
+        fix_versions = vuln.get('fix_versions', [])
+        
+        # Determine impact based on vulnerability type
+        impact = self._estimate_vulnerability_impact(description, vuln_id)
+        effort = self._estimate_vulnerability_effort(package, fix_versions)
+        
+        fix_info = f"Upgrade to version {fix_versions[0]}" if fix_versions else "No fix available yet"
+        
+        return BacklogItem(
+            id=f"vuln_{package}_{vuln_id}_{int(now.timestamp())}",
+            title=f"Fix vulnerability in {package} {version}",
+            description=f"Security vulnerability in {package} {version}\n\n"
+                       f"Vulnerability ID: {vuln_id}\n"
+                       f"Description: {description}\n"
+                       f"Fix: {fix_info}",
+            task_type=TaskType.SECURITY,
+            impact=impact,
+            effort=effort,
+            status=TaskStatus.NEW,
+            wsjf_score=0.0,
+            created_at=now,
+            updated_at=now,
+            links=[f"https://cve.mitre.org/cgi-bin/cvename.cgi?name={vuln_id}"] if vuln_id.startswith('CVE') else [],
+            acceptance_criteria=[
+                f"Update {package} from {version} to a secure version",
+                "Verify all functionality still works after upgrade",
+                "Run security scan to confirm vulnerability is resolved",
+                "Update requirements.txt with new version"
+            ],
+            security_notes=f"Critical security vulnerability: {description}",
+            test_notes="Run full test suite after dependency update"
+        )
+    
+    def _estimate_vulnerability_impact(self, description: str, vuln_id: str) -> int:
+        """Estimate impact of vulnerability (1-13 scale)"""
+        desc_lower = description.lower()
+        
+        # Critical vulnerabilities
+        if any(word in desc_lower for word in [
+            'remote code execution', 'rce', 'arbitrary code',
+            'sql injection', 'command injection', 'deserialization'
+        ]):
+            return 13
+        
+        # High impact vulnerabilities
+        if any(word in desc_lower for word in [
+            'xss', 'cross-site scripting', 'csrf', 'authentication bypass',
+            'privilege escalation', 'directory traversal', 'path traversal'
+        ]):
+            return 8
+        
+        # Medium impact
+        if any(word in desc_lower for word in [
+            'denial of service', 'dos', 'information disclosure',
+            'memory corruption', 'buffer overflow'
+        ]):
+            return 5
+        
+        # Default high for any security vulnerability
+        return 8
+    
+    def _estimate_vulnerability_effort(self, package: str, fix_versions: list) -> int:
+        """Estimate effort to fix vulnerability (1-13 scale)"""
+        # If no fix available, higher effort (may need workarounds)
+        if not fix_versions:
+            return 8
+        
+        # Core dependencies might require more testing
+        core_packages = ['django', 'flask', 'requests', 'sqlalchemy', 'numpy', 'pandas']
+        if package.lower() in core_packages:
+            return 5
+        
+        # Simple dependency updates
+        return 2
+    
+    async def _manual_dependency_check(self, requirements_file: Path) -> List[BacklogItem]:
+        """Manual check for known vulnerable packages when pip-audit is not available"""
+        manual_items = []
+        
+        try:
+            content = requirements_file.read_text()
+            lines = [line.strip() for line in content.split('\n') if line.strip() and not line.startswith('#')]
+            
+            # Known vulnerable versions (simplified check)
+            known_vulns = {
+                'flask': {'1.0.0': 'XSS vulnerability in Jinja2 templates'},
+                'django': {'2.0.0': 'SQL injection in admin interface'},
+                'requests': {'2.19.0': 'Certificate verification bypass'}
+            }
+            
+            for line in lines:
+                for package, vulns in known_vulns.items():
+                    if package in line.lower():
+                        for version, desc in vulns.items():
+                            if version in line:
+                                item = BacklogItem(
+                                    id=f"manual_vuln_{package}_{version}_{int(datetime.now().timestamp())}",
+                                    title=f"Update vulnerable {package} {version}",
+                                    description=f"Known vulnerability in {package} {version}: {desc}",
+                                    task_type=TaskType.SECURITY,
+                                    impact=8,
+                                    effort=3,
+                                    status=TaskStatus.NEW,
+                                    wsjf_score=0.0,
+                                    created_at=datetime.now(),
+                                    updated_at=datetime.now(),
+                                    links=[],
+                                    acceptance_criteria=[f"Update {package} to latest secure version"],
+                                    security_notes=f"Known vulnerability: {desc}",
+                                    test_notes="Test after dependency update"
+                                )
+                                manual_items.append(item)
+                                
+        except Exception as e:
+            self.logger.warning(f"Manual dependency check failed: {e}")
+        
+        return manual_items
+    
+    async def _check_other_dependency_files(self) -> List[BacklogItem]:
+        """Check other dependency files (package.json, setup.py, etc.)"""
+        other_items = []
+        
+        # Check package.json for Node.js dependencies
+        package_json = Path("package.json")
+        if package_json.exists():
+            try:
+                import json
+                with open(package_json, 'r') as f:
+                    data = json.load(f)
+                    
+                # Simple check for old versions
+                dependencies = data.get('dependencies', {})
+                for dep, version in dependencies.items():
+                    if any(old_indicator in version for old_indicator in ['0.', '^0.', '~0.']):
+                        item = BacklogItem(
+                            id=f"outdated_npm_{dep}_{int(datetime.now().timestamp())}",
+                            title=f"Update outdated Node.js dependency: {dep}",
+                            description=f"Dependency {dep}@{version} appears to be outdated",
+                            task_type=TaskType.REFACTOR,
+                            impact=3,
+                            effort=2,
+                            status=TaskStatus.NEW,
+                            wsjf_score=0.0,
+                            created_at=datetime.now(),
+                            updated_at=datetime.now(),
+                            links=[],
+                            acceptance_criteria=[f"Update {dep} to latest stable version"],
+                            security_notes="Check for security updates in new version",
+                            test_notes="Run npm audit after update"
+                        )
+                        other_items.append(item)
+                        
+            except Exception as e:
+                self.logger.warning(f"Failed to check package.json: {e}")
+        
+        return other_items
     
     def _merge_new_items(self, new_items: List[BacklogItem]) -> None:
         """Merge new items with existing backlog, avoiding duplicates"""

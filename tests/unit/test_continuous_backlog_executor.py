@@ -565,6 +565,147 @@ class TestContinuousBacklogExecutor:
                 assert executor._should_terminate() == False
     
     @pytest.mark.asyncio
+    async def test_discover_test_failures(self, temp_workspace):
+        """Test discovery of failing tests and conversion to backlog items"""
+        with patch('src.continuous_backlog_executor.ConfigurationService'):
+            with patch.object(Path, 'cwd', return_value=temp_workspace):
+                executor = ContinuousBacklogExecutor()
+                
+                # Mock subprocess to simulate pytest output with failures
+                mock_pytest_output = """
+FAILED tests/unit/test_example.py::test_broken_function - AssertionError: Expected 5, got 3
+FAILED tests/integration/test_api.py::test_auth_failure - ConnectionError: Auth service unavailable
+"""
+                
+                with patch('subprocess.run') as mock_subprocess:
+                    mock_result = Mock()
+                    mock_result.stdout = mock_pytest_output
+                    mock_result.returncode = 1  # Indicates test failures
+                    mock_subprocess.return_value = mock_result
+                    
+                    # Execute test failure discovery
+                    failing_items = await executor._discover_test_failures()
+                    
+                    # Verify backlog items were created for failures
+                    assert len(failing_items) >= 2
+                    
+                    # Check first failure item
+                    auth_failure = next((item for item in failing_items 
+                                       if "auth_failure" in item.title.lower()), None)
+                    assert auth_failure is not None
+                    assert auth_failure.task_type == TaskType.BUG
+                    assert auth_failure.impact >= 5  # Test failures are important
+                    assert "ConnectionError" in auth_failure.description
+                    assert len(auth_failure.acceptance_criteria) > 0
+
+    @pytest.mark.asyncio
+    async def test_discover_dependency_issues(self, temp_workspace):
+        """Test discovery of dependency vulnerabilities and outdated packages"""
+        with patch('src.continuous_backlog_executor.ConfigurationService'):
+            with patch.object(Path, 'cwd', return_value=temp_workspace):
+                executor = ContinuousBacklogExecutor()
+                
+                # Create mock requirements.txt with known vulnerable package
+                requirements_content = """
+PyGithub>=1.59
+requests==2.25.1
+flask==1.0.0
+"""
+                requirements_file = temp_workspace / "requirements.txt"
+                with open(requirements_file, 'w') as f:
+                    f.write(requirements_content)
+                
+                # Mock pip-audit output showing vulnerabilities
+                mock_audit_output = """
+{
+  "vulnerabilities": [
+    {
+      "package": "flask",
+      "version": "1.0.0",
+      "id": "GHSA-562c-5r94-xh97",
+      "description": "Flask before 1.0.4 allows XSS via unescaped user input",
+      "fix_versions": ["1.0.4"]
+    }
+  ]
+}
+"""
+                
+                with patch('subprocess.run') as mock_subprocess:
+                    mock_result = Mock()
+                    mock_result.stdout = mock_audit_output
+                    mock_result.returncode = 0
+                    mock_subprocess.return_value = mock_result
+                    
+                    # Execute dependency discovery
+                    dep_items = await executor._discover_dependency_issues()
+                    
+                    # Verify backlog items were created
+                    assert len(dep_items) >= 1
+                    
+                    # Check vulnerability item
+                    flask_vuln = next((item for item in dep_items 
+                                     if "flask" in item.title.lower()), None)
+                    assert flask_vuln is not None
+                    assert flask_vuln.task_type == TaskType.SECURITY
+                    assert flask_vuln.impact >= 8  # Security vulnerabilities are high impact
+                    assert "XSS" in flask_vuln.description
+                    assert "1.0.4" in flask_vuln.description  # Fix version mentioned
+
+    @pytest.mark.asyncio
+    async def test_discover_security_issues(self, temp_workspace):
+        """Test discovery of security issues in codebase"""
+        with patch('src.continuous_backlog_executor.ConfigurationService'):
+            with patch.object(Path, 'cwd', return_value=temp_workspace):
+                executor = ContinuousBacklogExecutor()
+                
+                # Create mock source files with security issues
+                (temp_workspace / "src").mkdir(exist_ok=True)
+                
+                vulnerable_code = '''
+import hashlib
+import subprocess
+
+# Hardcoded API key - security issue
+API_KEY = "sk-1234567890abcdef"
+
+def weak_hash(password):
+    # Weak hashing algorithm
+    return hashlib.md5(password.encode()).hexdigest()
+
+def unsafe_command(user_input):
+    # Command injection vulnerability
+    subprocess.run(f"echo {user_input}", shell=True)
+
+def weak_random():
+    import random
+    # Weak random number generation
+    return random.randint(1000, 9999)
+'''
+                
+                vuln_file = temp_workspace / "src" / "auth.py"
+                with open(vuln_file, 'w') as f:
+                    f.write(vulnerable_code)
+                
+                # Execute security discovery
+                security_items = await executor._discover_security_issues()
+                
+                # Verify security issues were found
+                assert len(security_items) >= 3
+                
+                # Check for hardcoded secret detection
+                secret_item = next((item for item in security_items 
+                                  if "secret" in item.title.lower() or "key" in item.title.lower()), None)
+                assert secret_item is not None
+                assert secret_item.task_type == TaskType.SECURITY
+                assert secret_item.impact >= 8
+                
+                # Check for weak crypto detection
+                crypto_item = next((item for item in security_items 
+                                  if "md5" in item.description.lower() or "hash" in item.title.lower()), None)
+                assert crypto_item is not None
+                assert crypto_item.impact >= 5
+
+    @pytest.mark.asyncio
     async def test_save_and_load_backlog(self, temp_workspace):
         """Test saving and loading backlog"""
         with patch('src.continuous_backlog_executor.ConfigurationService'):
