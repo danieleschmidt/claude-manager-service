@@ -416,6 +416,72 @@ def enhance_task_with_priority(task: Dict[str, Any]) -> Dict[str, Any]:
     return prioritize_discovered_tasks([task])[0]
 
 
+def calculate_wsjf_score(business_value: float, time_criticality: float, risk_reduction: float, job_size: float) -> float:
+    """
+    Calculate WSJF (Weighted Shortest Job First) score
+    
+    Args:
+        business_value: Business value score (1-10)
+        time_criticality: Time criticality score (1-10)
+        risk_reduction: Risk reduction score (1-10)
+        job_size: Job size/effort score (1-10)
+        
+    Returns:
+        WSJF score
+    """
+    if job_size <= 0:
+        job_size = 1.0  # Prevent division by zero
+    
+    cost_of_delay = business_value + time_criticality + risk_reduction
+    return cost_of_delay / job_size
+
+
+class TaskPrioritizer:
+    """
+    Task prioritization system using WSJF methodology
+    """
+    
+    def __init__(self):
+        self.logger = get_logger(f"{__name__}.TaskPrioritizer")
+    
+    def prioritize_tasks(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Prioritize a list of tasks using WSJF scoring
+        
+        Args:
+            tasks: List of task dictionaries
+            
+        Returns:
+            Prioritized tasks with WSJF scores
+        """
+        return prioritize_discovered_tasks(tasks)
+    
+    def calculate_priority(self, task: Dict[str, Any]) -> float:
+        """
+        Calculate priority score for a single task
+        
+        Args:
+            task: Task dictionary
+            
+        Returns:
+            Priority score
+        """
+        return calculate_task_priority(task)
+    
+    def get_task_classification(self, content: str, file_path: str) -> str:
+        """
+        Get task type classification
+        
+        Args:
+            content: Task content
+            file_path: File path
+            
+        Returns:
+            Task type
+        """
+        return classify_task_type(content, file_path)
+
+
 def _generate_priority_reason(task: Dict[str, Any], priority_score: float) -> str:
     """
     Generate a human-readable explanation for the priority score

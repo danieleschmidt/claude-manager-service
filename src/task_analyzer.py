@@ -9,13 +9,13 @@ from performance_monitor import monitor_performance
 from task_tracker import get_task_tracker
 from config_validator import get_validated_config
 from error_handler import with_error_recovery, safe_github_operation
-from concurrent_repository_scanner import ConcurrentRepositoryScanner
+# Import ConcurrentRepositoryScanner lazily to avoid circular import
 
 logger = get_logger(__name__)
 
 @monitor_performance(track_memory=True, custom_name="scan_todo_comments")
 @log_performance
-@with_error_recovery("find_todo_comments", max_attempts=2, delay=3.0)
+@with_error_recovery("find_todo_comments")
 def find_todo_comments(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
     """Scan repository for TODO and FIXME comments and create issues for them"""
     logger.info(f"Scanning {repo.full_name} for TODO comments")
@@ -128,7 +128,7 @@ def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):
 
 @monitor_performance(track_memory=True, custom_name="analyze_open_issues")
 @log_performance
-@with_error_recovery("analyze_open_issues", max_attempts=2, delay=2.0)
+@with_error_recovery("analyze_open_issues")
 def analyze_open_issues(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:
     """Analyze open issues in repository and identify stale ones for potential action"""
     logger.info(f"Analyzing open issues in {repo.full_name}")
@@ -214,6 +214,9 @@ if __name__ == "__main__":
         
         try:
             logger.info(f"Starting concurrent analysis of {len(repos_to_scan)} repositories")
+            
+            # Import here to avoid circular import
+            from concurrent_repository_scanner import ConcurrentRepositoryScanner
             
             # Initialize concurrent scanner with reasonable defaults
             scanner = ConcurrentRepositoryScanner(

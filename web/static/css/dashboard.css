@@ -1,0 +1,202 @@
+/* Claude Manager Service Dashboard Styles */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-brand {
+    font-weight: 600;
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid #e9ecef;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+.performance-stats {
+    padding: 1rem 0;
+}
+
+.stat-item {
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.stat-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.stat-item strong {
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.stat-item span {
+    color: #6c757d;
+    font-size: 0.9rem;
+    float: right;
+}
+
+.table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.875rem;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.priority-high {
+    background-color: #dc3545 !important;
+}
+
+.priority-medium {
+    background-color: #fd7e14 !important;
+}
+
+.priority-low {
+    background-color: #28a745 !important;
+}
+
+.status-completed {
+    background-color: #28a745 !important;
+}
+
+.status-in-progress {
+    background-color: #17a2b8 !important;
+}
+
+.status-pending {
+    background-color: #6c757d !important;
+}
+
+.type-security {
+    background-color: #dc3545 !important;
+}
+
+.type-bug {
+    background-color: #fd7e14 !important;
+}
+
+.type-feature {
+    background-color: #007bff !important;
+}
+
+.type-documentation {
+    background-color: #6f42c1 !important;
+}
+
+.config-item {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    border-left: 4px solid #007bff;
+}
+
+.config-label {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.config-value {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-family: 'Courier New', monospace;
+}
+
+.alert-banner {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1050;
+    min-width: 300px;
+}
+
+/* Loading animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading {
+    animation: pulse 1.5s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding: 0 10px;
+    }
+    
+    .card-body {
+        padding: 1rem 0.75rem;
+    }
+    
+    .performance-stats {
+        padding: 0.5rem 0;
+    }
+}
+
+/* Chart containers */
+canvas {
+    max-height: 200px;
+}
+
+.chart-container {
+    position: relative;
+    height: 200px;
+}
+
+/* Status indicators */
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 0.5rem;
+}
+
+.status-healthy {
+    background-color: #28a745;
+}
+
+.status-warning {
+    background-color: #ffc107;
+}
+
+.status-error {
+    background-color: #dc3545;
+}
+
+/* Utility classes */
+.text-truncate-custom {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.border-end {
+    border-right: 1px solid #dee2e6 !important;
+}

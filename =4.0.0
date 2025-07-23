@@ -1,0 +1,25 @@
+Collecting Flask
+  Downloading flask-3.1.1-py3-none-any.whl.metadata (3.0 kB)
+Collecting Flask-CORS
+  Downloading flask_cors-6.0.1-py3-none-any.whl.metadata (5.3 kB)
+Collecting blinker>=1.9.0 (from Flask)
+  Downloading blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting click>=8.1.3 (from Flask)
+  Downloading click-8.2.1-py3-none-any.whl.metadata (2.5 kB)
+Collecting itsdangerous>=2.2.0 (from Flask)
+  Downloading itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Requirement already satisfied: jinja2>=3.1.2 in ./venv/lib/python3.12/site-packages (from Flask) (3.1.6)
+Requirement already satisfied: markupsafe>=2.1.1 in ./venv/lib/python3.12/site-packages (from Flask) (3.0.2)
+Collecting werkzeug>=3.1.0 (from Flask)
+  Downloading werkzeug-3.1.3-py3-none-any.whl.metadata (3.7 kB)
+Downloading flask-3.1.1-py3-none-any.whl (103 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.3/103.3 kB 5.0 MB/s eta 0:00:00
+Downloading flask_cors-6.0.1-py3-none-any.whl (13 kB)
+Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Downloading click-8.2.1-py3-none-any.whl (102 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 102.2/102.2 kB 14.0 MB/s eta 0:00:00
+Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Downloading werkzeug-3.1.3-py3-none-any.whl (224 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 224.5/224.5 kB 20.0 MB/s eta 0:00:00
+Installing collected packages: werkzeug, itsdangerous, click, blinker, Flask, Flask-CORS
+Successfully installed Flask-3.1.1 Flask-CORS-6.0.1 blinker-1.9.0 click-8.2.1 itsdangerous-2.2.0 werkzeug-3.1.3

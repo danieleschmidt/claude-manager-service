@@ -24,7 +24,15 @@ import functools
 from logger import get_logger
 from error_handler import get_error_tracker, NetworkError
 from performance_monitor import monitor_performance
-from task_analyzer import find_todo_comments, analyze_open_issues
+# Import task_analyzer functions with late import to avoid circular dependency
+def _get_task_analyzer_functions():
+    """Get task analyzer functions with late import to avoid circular dependency"""
+    try:
+        from task_analyzer import find_todo_comments, analyze_open_issues
+        return find_todo_comments, analyze_open_issues
+    except ImportError:
+        # Fallback - return None functions
+        return None, None
 
 
 # Custom Exceptions
@@ -173,19 +181,22 @@ class ConcurrentRepositoryScanner:
             todos_found = 0
             issues_found = 0
             
+            # Get task analyzer functions with late import
+            find_todo_comments_func, analyze_open_issues_func = _get_task_analyzer_functions()
+            
             # Scan for TODOs if requested
-            if scan_todos:
+            if scan_todos and find_todo_comments_func:
                 try:
                     # Note: find_todo_comments doesn't return a count, so we'll estimate
-                    find_todo_comments(github_api, repo, manager_repo_name)
+                    find_todo_comments_func(github_api, repo, manager_repo_name)
                     todos_found = 1  # Assume 1 if no error (could be enhanced later)
                 except Exception as e:
                     self.logger.warning(f"TODO scanning failed for {repo_name}: {e}")
             
             # Analyze open issues if requested  
-            if scan_issues:
+            if scan_issues and analyze_open_issues_func:
                 try:
-                    analyze_open_issues(github_api, repo, manager_repo_name)
+                    analyze_open_issues_func(github_api, repo, manager_repo_name)
                     issues_found = 1  # Assume 1 if no error (could be enhanced later)
                 except Exception as e:
                     self.logger.warning(f"Issue analysis failed for {repo_name}: {e}")

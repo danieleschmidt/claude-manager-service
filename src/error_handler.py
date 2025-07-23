@@ -550,3 +550,142 @@ def network_operation(operation: str, service: str = "generic"):
         use_circuit_breaker=True,
         rate_limit_key=service
     )
+
+
+# Backward compatibility functions
+def with_error_recovery(operation: str):
+    """Legacy decorator for error recovery - redirects to enhanced error handling"""
+    return with_enhanced_error_handling(operation=operation)
+
+
+def safe_github_operation(operation: str):
+    """Legacy decorator for GitHub operations - redirects to github_api_operation"""
+    return github_api_operation(operation)
+
+
+def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
+    """Legacy retry decorator - provides basic retry functionality"""
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+            for attempt in range(max_retries + 1):
+                try:
+                    return func(*args, **kwargs)
+                except Exception as e:
+                    last_exception = e
+                    if attempt < max_retries:
+                        time.sleep(delay * (attempt + 1))
+                    else:
+                        raise last_exception
+            return None
+        return wrapper
+    return decorator
+
+
+def handle_github_api_error(func: Callable) -> Callable:
+    """Legacy GitHub API error handler"""
+    return github_api_operation("github_api_call")(func)
+
+
+def handle_network_error(func: Callable) -> Callable:
+    """Legacy network error handler"""
+    return network_operation("network_call")(func)
+
+
+def handle_general_error(func: Callable) -> Callable:
+    """Legacy general error handler"""
+    return with_enhanced_error_handling("general_operation")(func)
+
+
+def with_fallback(fallback_value=None):
+    """Legacy fallback decorator"""
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception:
+                return fallback_value
+        return wrapper
+    return decorator
+
+
+class CircuitBreakerError(Exception):
+    """Legacy circuit breaker error"""
+    pass
+
+
+class CircuitBreaker:
+    """Legacy circuit breaker - redirects to OperationCircuitBreaker"""
+    def __init__(self, failure_threshold: int = 5, recovery_timeout: float = 300.0):
+        self._breaker = OperationCircuitBreaker(failure_threshold, recovery_timeout)
+        self.module = "legacy"
+        self.operation = "circuit_breaker"
+    
+    def call(self, func: Callable, *args, **kwargs):
+        """Execute function with circuit breaker protection"""
+        if not self._breaker.can_proceed(self.module, self.operation):
+            raise CircuitBreakerError("Circuit breaker is open")
+        
+        try:
+            result = func(*args, **kwargs)
+            self._breaker.record_success(self.module, self.operation)
+            return result
+        except Exception as e:
+            self._breaker.record_failure(self.module, self.operation)
+            raise
+
+
+def generate_error_summary(errors: List[Dict]) -> str:
+    """Generate error summary from error list"""
+    if not errors:
+        return "No errors recorded"
+    
+    error_types = defaultdict(int)
+    for error in errors:
+        error_types[error.get("error_type", "Unknown")] += 1
+    
+    summary = f"Total errors: {len(errors)}\n"
+    for error_type, count in error_types.items():
+        summary += f"  {error_type}: {count}\n"
+    
+    return summary
+
+
+class ErrorMetrics:
+    """Legacy error metrics - redirects to ErrorTracker"""
+    def __init__(self):
+        self._tracker = get_error_tracker()
+    
+    def record_error(self, module: str, function: str, error_type: str, message: str):
+        """Record error occurrence"""
+        self._tracker.record_error(module, function, error_type, message)
+    
+    def get_statistics(self):
+        """Get error statistics"""
+        return self._tracker.get_error_statistics()
+    
+    def get_recent_errors(self, count: int = 50):
+        """Get recent errors"""
+        return self._tracker.get_recent_errors(count)
+
+
+class ErrorHandler:
+    """Legacy error handler class for backward compatibility"""
+    def __init__(self):
+        self.error_tracker = get_error_tracker()
+        self.logger = get_logger(__name__)
+    
+    def handle_error(self, error: Exception, context: Dict[str, Any] = None):
+        """Handle error with context"""
+        context = context or {}
+        module = context.get("module", "unknown")
+        function = context.get("function", "unknown")
+        
+        self.error_tracker.record_error(
+            module, function, error.__class__.__name__, str(error)
+        )
+        
+        self.logger.error(f"Error in {module}.{function}: {str(error)}")
+        return collect_error_context(error, context)
