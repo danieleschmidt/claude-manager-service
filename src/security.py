@@ -443,6 +443,25 @@ def sanitize_issue_content(content: str) -> str:
 
 
 # Enhanced Security Functions
+def validate_token_enhanced(token: str, service: str = "github") -> bool:
+    """
+    Enhanced token validation with specific service patterns
+    
+    Args:
+        token: Token to validate
+        service: Service type (github, terragon)
+        
+    Returns:
+        True if token is valid
+        
+    Raises:
+        InvalidTokenFormatError: If token format is invalid
+        WeakTokenError: If token is too weak
+        ExpiredTokenError: If token appears expired
+    """
+    return validate_token_format(token, service)
+
+
 def validate_token_format(token: str, service: str = "github") -> bool:
     """
     Validate token format using service-specific patterns
