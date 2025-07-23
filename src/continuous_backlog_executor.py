@@ -546,8 +546,184 @@ class ContinuousBacklogExecutor:
     
     async def _discover_pr_feedback(self) -> List[BacklogItem]: 
         """Discover tasks from PR comments and feedback"""
-        # TODO: Implement PR feedback discovery
-        return []
+        feedback_items = []
+        
+        try:
+            # Get configured repositories
+            config = self.config_service.get_config()
+            repositories = config.get('repositories', [])
+            
+            for repo_name in repositories:
+                self.logger.info(f"Scanning for PR feedback in {repo_name}")
+                
+                try:
+                    # Get repository object
+                    repo = self.github_api.github.get_repo(repo_name)
+                    
+                    # Get recent pull requests (open and recently closed)
+                    pulls = list(repo.get_pulls(state='all', sort='updated'))[:20]  # Last 20 PRs
+                    
+                    for pr in pulls:
+                        # Skip very old PRs (older than 30 days)
+                        if (datetime.now() - pr.updated_at.replace(tzinfo=None)).days > 30:
+                            continue
+                        
+                        # Get PR review comments
+                        review_comments = list(pr.get_review_comments())
+                        issue_comments = list(pr.get_issue_comments())
+                        
+                        # Process review comments for actionable feedback
+                        for comment in review_comments:
+                            feedback_item = self._extract_pr_feedback_item(
+                                repo_name, pr, comment, "review_comment"
+                            )
+                            if feedback_item:
+                                feedback_items.append(feedback_item)
+                        
+                        # Process issue comments for actionable feedback
+                        for comment in issue_comments:
+                            feedback_item = self._extract_pr_feedback_item(
+                                repo_name, pr, comment, "issue_comment"
+                            )
+                            if feedback_item:
+                                feedback_items.append(feedback_item)
+                
+                except Exception as e:
+                    self.logger.error(f"Error processing PR feedback for {repo_name}: {e}")
+                    continue
+            
+            self.logger.info(f"Discovered {len(feedback_items)} PR feedback items")
+            return feedback_items
+            
+        except Exception as e:
+            self.logger.error(f"Error in PR feedback discovery: {e}")
+            return []
+    
+    def _extract_pr_feedback_item(self, repo_name: str, pr, comment, comment_type: str) -> Optional[BacklogItem]:
+        """Extract actionable feedback from PR comment"""
+        try:
+            comment_body = comment.body.lower()
+            
+            # Define actionable feedback patterns
+            actionable_patterns = [
+                r'(should|could|might|consider)\s+(add|implement|fix|refactor|improve)',
+                r'(todo|fixme|hack)[:]\s*(.+)',
+                r'(this needs|needs to be|should be)\s+(fixed|updated|changed|improved)',
+                r'(security|performance|bug|issue)\s+(concern|problem|issue)',
+                r'(please|can you)\s+(add|fix|update|change|implement)',
+                r'(suggestion|recommendation)[:]\s*(.+)',
+                r'(follow.?up|future work)[:]\s*(.+)'
+            ]
+            
+            # Check if comment contains actionable feedback
+            actionable = False
+            extracted_text = ""
+            
+            for pattern in actionable_patterns:
+                matches = re.findall(pattern, comment_body, re.IGNORECASE)
+                if matches:
+                    actionable = True
+                    # Extract the relevant text
+                    if isinstance(matches[0], tuple):
+                        extracted_text = ' '.join(matches[0])
+                    else:
+                        extracted_text = matches[0]
+                    break
+            
+            if not actionable:
+                return None
+            
+            # Skip if comment is too short or generic
+            if len(comment.body.strip()) < 20:
+                return None
+            
+            # Determine task type and priority from comment content
+            task_type = TaskType.ENHANCEMENT
+            impact = 3  # Default medium impact
+            
+            if any(keyword in comment_body for keyword in ['security', 'vulnerability', 'exploit']):
+                task_type = TaskType.SECURITY
+                impact = 5
+            elif any(keyword in comment_body for keyword in ['bug', 'error', 'broken', 'crash']):
+                task_type = TaskType.BUG
+                impact = 4
+            elif any(keyword in comment_body for keyword in ['performance', 'slow', 'optimization']):
+                task_type = TaskType.PERFORMANCE
+                impact = 4
+            elif any(keyword in comment_body for keyword in ['test', 'testing', 'coverage']):
+                task_type = TaskType.TESTING
+                impact = 3
+            
+            # Estimate effort based on comment complexity and scope
+            effort = self._estimate_pr_feedback_effort(comment.body)
+            
+            now = datetime.now()
+            
+            return BacklogItem(
+                id=f"pr_feedback_{repo_name}_{pr.number}_{comment.id}_{int(now.timestamp())}",
+                title=f"PR Feedback: {extracted_text[:60]}..." if len(extracted_text) > 60 else f"PR Feedback: {extracted_text}",
+                description=f"Actionable feedback from PR #{pr.number}: {pr.title}\n\n"
+                           f"Comment by {comment.user.login}:\n"
+                           f"{comment.body}\n\n"
+                           f"PR Link: {pr.html_url}\n"
+                           f"Comment Type: {comment_type}",
+                task_type=task_type,
+                impact=impact,
+                effort=effort,
+                status=TaskStatus.NEW,
+                wsjf_score=0.0,
+                created_at=now,
+                updated_at=now,
+                links=[pr.html_url, comment.html_url],
+                acceptance_criteria=[
+                    f"Review and address the feedback from {comment.user.login}",
+                    f"Implement suggested changes if applicable",
+                    f"Update PR #{pr.number} or create follow-up issue"
+                ],
+                tags=[f"pr-{pr.number}", f"feedback", f"reviewer-{comment.user.login}", repo_name]
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error extracting PR feedback item: {e}")
+            return None
+    
+    def _estimate_pr_feedback_effort(self, comment_body: str) -> int:
+        """Estimate effort for implementing PR feedback"""
+        # Simple heuristic based on comment content and length
+        comment_lower = comment_body.lower()
+        
+        # High effort indicators
+        if any(keyword in comment_lower for keyword in [
+            'refactor', 'rewrite', 'architecture', 'design pattern', 
+            'major change', 'significant', 'substantial'
+        ]):
+            return 8
+        
+        # Medium-high effort indicators
+        if any(keyword in comment_lower for keyword in [
+            'implement', 'add feature', 'create', 'build', 'new component'
+        ]):
+            return 5
+        
+        # Medium effort indicators
+        if any(keyword in comment_lower for keyword in [
+            'update', 'modify', 'change', 'improve', 'enhance'
+        ]):
+            return 3
+        
+        # Low effort indicators (documentation, small fixes, etc.)
+        if any(keyword in comment_lower for keyword in [
+            'typo', 'comment', 'documentation', 'readme', 'format', 'style'
+        ]):
+            return 1
+        
+        # Default based on comment length
+        if len(comment_body) > 200:
+            return 5
+        elif len(comment_body) > 100:
+            return 3
+        else:
+            return 2
     
     async def _discover_security_issues(self) -> List[BacklogItem]:
         """Discover tasks from security scan results"""

@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any, Optional
 from pathlib import Path
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, Response
 from flask_cors import CORS
 
 # Import Claude Manager Service modules
@@ -27,7 +27,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from logger import get_logger
-from performance_monitor import get_performance_monitor
+from performance_monitor import get_monitor
 from config_validator import get_validated_config
 from task_prioritization import TaskPrioritizer, prioritize_discovered_tasks
 
@@ -39,14 +39,14 @@ CORS(app)  # Enable CORS for API endpoints
 logger = get_logger(__name__)
 
 # Initialize service components
-performance_monitor = get_performance_monitor()
+performance_monitor = get_monitor()
 task_prioritizer = TaskPrioritizer()
 
 
 class DashboardAPI:
     """API handler for dashboard data"""
     
-    def __init__(self):
+    def __init__(self) -> None:
         self.logger = get_logger(f"{__name__}.DashboardAPI")
     
     def get_backlog_status(self) -> Dict[str, Any]:
@@ -149,38 +149,38 @@ dashboard_api = DashboardAPI()
 
 
 @app.route('/')
-def index():
+def index() -> str:
     """Main dashboard page"""
     return render_template('dashboard.html')
 
 
 @app.route('/api/backlog')
-def api_backlog():
+def api_backlog() -> Response:
     """API endpoint for backlog status"""
     return jsonify(dashboard_api.get_backlog_status())
 
 
 @app.route('/api/performance')
-def api_performance():
+def api_performance() -> Response:
     """API endpoint for performance metrics"""
     return jsonify(dashboard_api.get_performance_metrics())
 
 
 @app.route('/api/config')
-def api_config():
+def api_config() -> Response:
     """API endpoint for system configuration"""
     return jsonify(dashboard_api.get_system_config())
 
 
 @app.route('/api/tasks')
-def api_tasks():
+def api_tasks() -> Response:
     """API endpoint for recent tasks"""
     limit = request.args.get('limit', 10, type=int)
     return jsonify(dashboard_api.get_recent_tasks(limit))
 
 
 @app.route('/api/health')
-def api_health():
+def api_health() -> Response:
     """Health check endpoint"""
     return jsonify({
         "status": "healthy",
