@@ -37,7 +37,7 @@ class TestConcurrentScanningIntegration:
         self.mock_repo.full_name = "test/repo1"
         self.mock_github_api.get_repo.return_value = self.mock_repo
     
-    @patch('task_analyzer.ConcurrentRepositoryScanner')
+    @patch('concurrent_repository_scanner.ConcurrentRepositoryScanner')
     @patch('task_analyzer.GitHubAPI')  
     @patch('task_analyzer.get_task_tracker')
     def test_concurrent_scanning_replaces_sequential_loop(self, mock_tracker, mock_github_api, mock_scanner_class):
