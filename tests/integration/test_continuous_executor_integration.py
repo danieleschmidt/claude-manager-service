@@ -5,13 +5,17 @@ Integration tests for Continuous Backlog Executor
 
 import asyncio
 import json
+import os
 import pytest
+import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import Mock, patch, AsyncMock
 
-from src.continuous_backlog_executor import ContinuousBacklogExecutor, TaskStatus, TaskType
+sys.path.append('/root/repo/src')
+
+from continuous_backlog_executor import ContinuousBacklogExecutor, TaskStatus, TaskType
 
 
 @pytest.fixture
@@ -48,6 +52,7 @@ def integration_workspace():
         yield temp_path
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_full_discovery_and_processing_cycle(integration_workspace):
     """Test complete discovery and processing cycle"""
@@ -85,6 +90,7 @@ def process_request(data):
             with patch('src.continuous_backlog_executor.AsyncTaskAnalyzer') as mock_analyzer:
                 with patch('src.continuous_backlog_executor.AsyncOrchestrator') as mock_orchestrator:
                     with patch('src.continuous_backlog_executor.RepositoryService') as mock_repo_service:
+                        with patch('async_github_api.GitHubAPI') as mock_sync_github:
                         
                         # Setup configuration service
                         config_path = integration_workspace / "config.json"
