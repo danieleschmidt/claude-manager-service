@@ -12,7 +12,7 @@ import tempfile
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, Mock
 
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / 'src'))
@@ -88,10 +88,14 @@ class TestPerformanceMonitor:
         monitor = object.__new__(PerformanceMonitor)
         monitor._initialized = False
         
-        # Mock the data directory
-        with patch.object(PerformanceMonitor, 'data_dir', temp_dir):
+        # Patch Path creation to use temp directory instead
+        with patch('performance_monitor.Path') as mock_path:
+            mock_path.return_value.parent.parent = temp_dir
+            mock_path.return_value.mkdir = Mock()
             monitor.__init__()
         
+        # Set the data_dir to temp_dir for the test
+        monitor.data_dir = temp_dir
         return monitor
     
     def test_monitor_initialization(self, monitor):

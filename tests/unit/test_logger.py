@@ -18,6 +18,15 @@ import sys
 sys.path.append('/root/repo/src')
 
 
+def create_mock_file_handler():
+    """Create a properly mocked RotatingFileHandler with integer level"""
+    mock_handler = Mock()
+    mock_handler.level = logging.DEBUG  # Integer level to prevent MagicMock comparison errors
+    mock_handler.setLevel = Mock()
+    mock_handler.setFormatter = Mock()
+    return mock_handler
+
+
 class TestColoredFormatter:
     """Test cases for ColoredFormatter class"""
     
@@ -490,7 +499,7 @@ class TestLoggerIntegration:
         """Test complete logging flow from get_logger to output"""
         from logger import get_logger
         
-        with patch('logging.handlers.RotatingFileHandler'), \
+        with patch('logging.handlers.RotatingFileHandler', return_value=create_mock_file_handler()), \
              patch('logger.Path.mkdir'):
             
             # Capture console output
@@ -507,7 +516,7 @@ class TestLoggerIntegration:
         """Test that multiple loggers work independently"""
         from logger import get_logger
         
-        with patch('logging.handlers.RotatingFileHandler'), \
+        with patch('logging.handlers.RotatingFileHandler', return_value=create_mock_file_handler()), \
              patch('logger.Path.mkdir'):
             
             logger1 = get_logger('module1')
@@ -526,7 +535,7 @@ class TestLoggerIntegration:
         """Test that log level configuration affects what gets logged"""
         from logger import get_logger
         
-        with patch('logging.handlers.RotatingFileHandler'), \
+        with patch('logging.handlers.RotatingFileHandler', return_value=create_mock_file_handler()), \
              patch('logger.Path.mkdir'):
             
             logger = get_logger('level_test')
@@ -565,7 +574,7 @@ class TestLoggerEdgeCases:
         """Test logging with unicode characters"""
         from logger import get_logger
         
-        with patch('logging.handlers.RotatingFileHandler'), \
+        with patch('logging.handlers.RotatingFileHandler', return_value=create_mock_file_handler()), \
              patch('logger.Path.mkdir'):
             
             logger = get_logger('unicode_test')
@@ -578,7 +587,7 @@ class TestLoggerEdgeCases:
         """Test logging with very long messages"""
         from logger import get_logger
         
-        with patch('logging.handlers.RotatingFileHandler'), \
+        with patch('logging.handlers.RotatingFileHandler', return_value=create_mock_file_handler()), \
              patch('logger.Path.mkdir'):
             
             logger = get_logger('long_message_test')
