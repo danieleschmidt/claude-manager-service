@@ -45,11 +45,10 @@ def async_github_operation(operation_name: str):
             
             # Execute in thread pool
             try:
-                with monitor_performance(f"async_{operation_name}"):
-                    result = await loop.run_in_executor(
-                        self._thread_executor, 
-                        sync_func
-                    )
+                result = await loop.run_in_executor(
+                    self._thread_executor, 
+                    sync_func
+                )
                 return result
             except Exception as e:
                 logger.error(f"Async operation {operation_name} failed: {e}")
