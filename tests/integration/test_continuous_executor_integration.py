@@ -91,91 +91,92 @@ def process_request(data):
                 with patch('src.continuous_backlog_executor.AsyncOrchestrator') as mock_orchestrator:
                     with patch('src.continuous_backlog_executor.RepositoryService') as mock_repo_service:
                         with patch('async_github_api.GitHubAPI') as mock_sync_github:
-                        
-                        # Setup configuration service
-                        config_path = integration_workspace / "config.json"
-                        mock_config_service.return_value.get_config.return_value = {
-                            'github': {
-                                'reposToScan': ['testuser/test-repo'],
-                                'managerRepo': 'testuser/test-manager'
+                            
+                            # Setup configuration service
+                            config_path = integration_workspace / "config.json"
+                            mock_config_service.return_value.get_config.return_value = {
+                                'github': {
+                                    'reposToScan': ['testuser/test-repo'],
+                                    'managerRepo': 'testuser/test-manager'
+                                }
                             }
-                        }
-                        
-                        # Setup GitHub API mock
-                        mock_repo = Mock()
-                        mock_repo.full_name = 'testuser/test-repo'
-                        mock_github_instance = mock_github.return_value
-                        mock_github_instance.get_repo = AsyncMock(return_value=mock_repo)
-                        
-                        # Setup task analyzer mock to return TODO discoveries
-                        mock_analyzer_instance = mock_analyzer.return_value
-                        mock_analyzer_instance.find_todo_comments_async = AsyncMock(return_value=[
-                            {
-                                'title': 'Address TODO in src/auth.py:3',
-                                'description': 'Add rate limiting to prevent brute force attacks',
-                                'content': 'TODO: Add rate limiting to prevent brute force attacks',
-                                'url': 'https://github.com/test/repo/blob/main/src/auth.py#L3',
-                                'file_path': 'src/auth.py',
-                                'line_number': 3
-                            },
-                            {
-                                'title': 'Address FIXME in src/api.py:2',
-                                'description': 'Add input validation here',
-                                'content': 'FIXME: Add input validation here',
-                                'url': 'https://github.com/test/repo/blob/main/src/api.py#L2',
-                                'file_path': 'src/api.py',
-                                'line_number': 2
-                            }
-                        ])
-                        
-                        # Create executor with mocked workspace
-                        with patch.object(Path, 'cwd', return_value=integration_workspace):
-                            executor = ContinuousBacklogExecutor(str(config_path))
-                            executor.backlog_file = integration_workspace / "DOCS" / "backlog.json"
-                            executor.status_dir = integration_workspace / "DOCS" / "status"
                             
-                            # Run discovery and initial processing
-                            await executor._sync_and_refresh()
+                            # Setup GitHub API mock
+                            mock_repo = Mock()
+                            mock_repo.full_name = 'testuser/test-repo'
+                            mock_github_instance = mock_github.return_value
+                            mock_github_instance.get_repo = AsyncMock(return_value=mock_repo)
                             
-                            # Verify backlog was populated
-                            assert len(executor.backlog) >= 2
+                            # Setup task analyzer mock to return TODO discoveries
+                            mock_analyzer_instance = mock_analyzer.return_value
+                            mock_analyzer_instance.find_todo_comments_async = AsyncMock(return_value=[
+                                {
+                                    'title': 'Address TODO in src/auth.py:3',
+                                    'description': 'Add rate limiting to prevent brute force attacks',
+                                    'content': 'TODO: Add rate limiting to prevent brute force attacks',
+                                    'url': 'https://github.com/test/repo/blob/main/src/auth.py#L3',
+                                    'file_path': 'src/auth.py',
+                                    'line_number': 3
+                                },
+                                {
+                                    'title': 'Address FIXME in src/api.py:2',
+                                    'description': 'Add input validation here',
+                                    'content': 'FIXME: Add input validation here',
+                                    'url': 'https://github.com/test/repo/blob/main/src/api.py#L2',
+                                    'file_path': 'src/api.py',
+                                    'line_number': 2
+                                }
+                            ])
                             
-                            # Find the security-related item (rate limiting)
-                            security_item = None
-                            validation_item = None
-                            
-                            for item in executor.backlog:
-                                if "rate limiting" in item.description.lower():
-                                    security_item = item
-                                elif "validation" in item.description.lower():
-                                    validation_item = item
-                            
-                            # Verify security item properties
-                            assert security_item is not None
-                            assert security_item.task_type == TaskType.SECURITY
-                            assert security_item.impact >= 8  # High impact due to security
-                            assert security_item.wsjf_score > 0
-                            assert len(security_item.acceptance_criteria) >= 5
-                            assert "Security-related change" in security_item.security_notes
-                            
-                            # Verify validation item properties
-                            assert validation_item is not None
-                            assert validation_item.task_type == TaskType.SECURITY  # Due to "injection" vulnerability
-                            assert validation_item.impact >= 8
-                            assert validation_item.wsjf_score > 0
-                            
-                            # Verify items are properly ranked by WSJF
-                            scores = [item.wsjf_score for item in executor.backlog]
-                            assert scores == sorted(scores, reverse=True)
-                            
-                            # Test getting actionable items
-                            actionable = executor._get_actionable_items()
-                            
-                            # Should have actionable items if they're marked as READY
-                            ready_items = [item for item in executor.backlog if item.status == TaskStatus.READY]
-                            assert len(actionable) == len(ready_items)
+                            # Create executor with mocked workspace
+                            with patch.object(Path, 'cwd', return_value=integration_workspace):
+                                executor = ContinuousBacklogExecutor(str(config_path))
+                                executor.backlog_file = integration_workspace / "DOCS" / "backlog.json"
+                                executor.status_dir = integration_workspace / "DOCS" / "status"
+                                
+                                # Run discovery and initial processing
+                                await executor._sync_and_refresh()
+                                
+                                # Verify backlog was populated
+                                assert len(executor.backlog) >= 2
+                                
+                                # Find the security-related item (rate limiting)
+                                security_item = None
+                                validation_item = None
+                                
+                                for item in executor.backlog:
+                                    if "rate limiting" in item.description.lower():
+                                        security_item = item
+                                    elif "validation" in item.description.lower():
+                                        validation_item = item
+                                
+                                # Verify security item properties
+                                assert security_item is not None
+                                assert security_item.task_type == TaskType.SECURITY
+                                assert security_item.impact >= 8  # High impact due to security
+                                assert security_item.wsjf_score > 0
+                                assert len(security_item.acceptance_criteria) >= 5
+                                assert "Security-related change" in security_item.security_notes
+                                
+                                # Verify validation item properties
+                                assert validation_item is not None
+                                assert validation_item.task_type == TaskType.SECURITY  # Due to "injection" vulnerability
+                                assert validation_item.impact >= 8
+                                assert validation_item.wsjf_score > 0
+                                
+                                # Verify items are properly ranked by WSJF
+                                scores = [item.wsjf_score for item in executor.backlog]
+                                assert scores == sorted(scores, reverse=True)
+                                
+                                # Test getting actionable items
+                                actionable = executor._get_actionable_items()
+                                
+                                # Should have actionable items if they're marked as READY
+                                ready_items = [item for item in executor.backlog if item.status == TaskStatus.READY]
+                                assert len(actionable) == len(ready_items)
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_tdd_cycle_execution(integration_workspace):
     """Test TDD cycle execution with realistic scenario"""
@@ -232,6 +233,7 @@ async def test_tdd_cycle_execution(integration_workspace):
                             # (In a real implementation, this would verify actual code changes)
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_blocked_item_handling(integration_workspace):
     """Test handling of blocked items"""
@@ -280,6 +282,7 @@ async def test_blocked_item_handling(integration_workspace):
                             assert executor._should_terminate() == True
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_metrics_and_reporting(integration_workspace):
     """Test metrics collection and status reporting"""
@@ -361,6 +364,7 @@ async def test_metrics_and_reporting(integration_workspace):
                             assert status_counts["READY"] == 1
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_backlog_persistence(integration_workspace):
     """Test backlog saving and loading persistence"""
@@ -434,6 +438,7 @@ async def test_backlog_persistence(integration_workspace):
                             assert item2.blocked_reason == "External dependency"
 
 
+@patch.dict('os.environ', {'GITHUB_TOKEN': 'ghp_' + 'x' * 36})
 @pytest.mark.asyncio
 async def test_large_item_splitting_integration(integration_workspace):
     """Test integration of large item splitting functionality"""

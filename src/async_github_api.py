@@ -14,6 +14,7 @@ Features:
 
 import asyncio
 import functools
+import os
 from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, List, Awaitable, Any, Callable
 from github import Repository, Issue
@@ -79,7 +80,7 @@ class AsyncGitHubAPI:
         self._sync_api = GitHubAPI()
         
         # Configure thread pool executor
-        self._max_workers = max_workers or min(32, (asyncio.cpu_count() or 1) + 4)
+        self._max_workers = max_workers or min(32, (os.cpu_count() or 1) + 4)
         self._thread_executor = ThreadPoolExecutor(max_workers=self._max_workers)
         
         self.logger.info(f"Async GitHub API initialized with {self._max_workers} max workers")
