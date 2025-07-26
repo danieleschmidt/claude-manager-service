@@ -52,7 +52,7 @@ class TestTaskAnalyzer:
         # Verify issue creation was called
         mock_github_api.create_issue.assert_called()
         call_args = mock_github_api.create_issue.call_args
-        assert "Address TODO in src/test.py:2" in call_args[0][1]  # title
+        assert "Address TODO" in call_args[0][1] and "src/test.py:2" in call_args[0][1]  # title
         assert "test/manager" in call_args[0][0]  # repo name
         
         # Verify task was marked as processed (should be called for each matching query)

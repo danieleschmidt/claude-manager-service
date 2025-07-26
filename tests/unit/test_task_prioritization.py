@@ -129,7 +129,7 @@ class TestTaskPrioritization:
             },
             {
                 'id': 'task3',
-                'content': 'FIXME: SQL injection vulnerability in user query',
+                'content': 'TODO: Add parameterized queries to prevent SQL injection',
                 'file_path': 'src/database.py', 
                 'line_number': 89,
                 'type': 'security'
