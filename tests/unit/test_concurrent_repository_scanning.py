@@ -58,9 +58,9 @@ class TestConcurrentRepositoryScanner:
         mock_github_api = Mock()
         mock_github_api.get_repo.return_value = mock_repo
         
-        # Mock scanning functions
-        with patch('concurrent_repository_scanner.find_todo_comments') as mock_todos, \
-             patch('concurrent_repository_scanner.analyze_open_issues') as mock_issues:
+        # Mock scanning functions from task_analyzer
+        with patch('task_analyzer.find_todo_comments') as mock_todos, \
+             patch('task_analyzer.analyze_open_issues') as mock_issues:
             
             mock_todos.return_value = None
             mock_issues.return_value = None
