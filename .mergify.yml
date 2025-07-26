@@ -1,0 +1,29 @@
+pull_request_rules:
+  - name: Merge queue
+    conditions:
+      - label=automerge
+      - "#approved-reviews-by>=1"
+      - check-success=CI
+    actions:
+      queue:
+        name: default
+        method: rebase
+        
+  - name: Auto-approve dependabot PRs
+    conditions:
+      - author=dependabot[bot]
+      - check-success=CI
+    actions:
+      review:
+        type: APPROVE
+      label:
+        add: [automerge]
+        
+  - name: Auto-merge documentation updates
+    conditions:
+      - files~=^(README\.md|docs/.*\.md|\.github/.*\.md)$
+      - check-success=CI
+      - "#approved-reviews-by>=1"
+    actions:
+      label:
+        add: [automerge]

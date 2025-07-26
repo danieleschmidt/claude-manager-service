@@ -1,0 +1,17 @@
+# Automatic Merge Conflict Resolution Configuration
+# Safe overwrite – keep incoming side
+package-lock.json merge=theirs
+poetry.lock      merge=theirs
+*.snap           merge=theirs
+
+# Line-union for documentation
+*.md             merge=union
+CHANGELOG.md     merge=union
+
+# Lock binaries to prevent conflicts
+*.png            merge=lock
+*.jpg            merge=lock
+*.jpeg           merge=lock
+*.gif            merge=lock
+*.pdf            merge=lock
+*.ico            merge=lock
