@@ -296,8 +296,8 @@ class ConfigurationService:
             # Add environment-specific overrides
             env_overrides = {
                 'performance': {
-                    'enabled': self._env_config.performance_monitoring_enabled,
-                    'retentionDays': self._env_config.performance_retention_days
+                    'enabled': self._env_config.enable_performance_monitoring,
+                    'retentionDays': self._env_config.perf_retention_days
                 },
                 'security': {
                     'maxContentLength': self._env_config.security_max_content_length

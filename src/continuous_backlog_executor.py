@@ -118,7 +118,7 @@ class ContinuousBacklogExecutor:
         
         # Initialize services
         self.config_service = ConfigurationService(config_path)
-        self.config = self.config_service.get_config()
+        self.config = None  # Will be loaded asynchronously
         
         # Initialize components
         self.github_api = AsyncGitHubAPI()
@@ -142,6 +142,11 @@ class ContinuousBacklogExecutor:
         # Ensure directories exist
         self.status_dir.mkdir(parents=True, exist_ok=True)
         self.backlog_file.parent.mkdir(parents=True, exist_ok=True)
+        
+    async def _ensure_config_loaded(self):
+        """Ensure configuration is loaded asynchronously"""
+        if self.config is None:
+            self.config = await self.config_service.get_config()
     
     async def run_continuous_execution(self) -> None:
         """
@@ -283,13 +288,16 @@ class ContinuousBacklogExecutor:
         todo_items = []
         
         try:
+            # Ensure config is loaded
+            await self._ensure_config_loaded()
+            
             # Use existing task analyzer to find TODOs
             for repo_name in self.config['github']['reposToScan']:
                 repo = await self.github_api.get_repo(repo_name)
                 if repo:
                     # Get TODO results from task analyzer
                     results = await self.task_analyzer.find_todo_comments_async(
-                        repo, self.config['github']['managerRepo']
+                        self.github_api, repo, self.config['github']['managerRepo']
                     )
                     
                     # Convert to backlog items
@@ -550,7 +558,7 @@ class ContinuousBacklogExecutor:
         
         try:
             # Get configured repositories
-            config = self.config_service.get_config()
+            config = await self.config_service.get_config()
             repositories = config.get('repositories', [])
             
             for repo_name in repositories:
