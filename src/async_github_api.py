@@ -95,7 +95,7 @@ class AsyncGitHubAPI:
             self.logger.debug("Thread executor shutdown completed")
     
     @async_github_operation("get_repository")
-    async def get_repo(self, repo_name: str) -> Optional[Repository.Repository]:
+    def get_repo(self, repo_name: str) -> Optional[Repository.Repository]:
         """
         Async version of get_repo
         
@@ -108,7 +108,7 @@ class AsyncGitHubAPI:
         return self._sync_api.get_repo(repo_name)
     
     @async_github_operation("create_issue")
-    async def create_issue(self, repo_name: str, title: str, body: Optional[str], labels: List[str]) -> None:
+    def create_issue(self, repo_name: str, title: str, body: Optional[str], labels: List[str]) -> None:
         """
         Async version of create_issue
         
@@ -121,7 +121,7 @@ class AsyncGitHubAPI:
         return self._sync_api.create_issue(repo_name, title, body, labels)
     
     @async_github_operation("get_repository_contents")
-    async def get_repository_contents(self, repo: Repository.Repository, path: str = "") -> List[Any]:
+    def get_repository_contents(self, repo: Repository.Repository, path: str = "") -> List[Any]:
         """
         Async version of get_repository_contents
         
@@ -135,7 +135,7 @@ class AsyncGitHubAPI:
         return self._sync_api.get_repository_contents(repo, path)
     
     @async_github_operation("search_code")
-    async def search_code(self, repo: Repository.Repository, query: str) -> List[Any]:
+    def search_code(self, repo: Repository.Repository, query: str) -> List[Any]:
         """
         Async version of search_code
         
@@ -149,7 +149,7 @@ class AsyncGitHubAPI:
         return self._sync_api.search_code(repo, query)
     
     @async_github_operation("get_open_issues")
-    async def get_open_issues(self, repo: Repository.Repository) -> List[Issue.Issue]:
+    def get_open_issues(self, repo: Repository.Repository) -> List[Issue.Issue]:
         """
         Async version of get_open_issues
         
