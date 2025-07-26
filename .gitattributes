@@ -18,13 +18,33 @@ CHANGELOG.rst    merge=union
 HISTORY.md       merge=union
 
 # Binary files - use exclusive lock to prevent corruption
-*.svg *.png *.jpg *.jpeg *.gif *.ico merge=lock
-*.zip *.tar *.gz *.bz2 *.xz merge=lock
-*.pdf *.doc *.docx *.xls *.xlsx *.ppt *.pptx merge=lock
-*.exe *.dll *.so *.dylib merge=lock
+*.svg merge=lock
+*.png merge=lock
+*.jpg merge=lock
+*.jpeg merge=lock
+*.gif merge=lock
+*.ico merge=lock
+*.zip merge=lock
+*.tar merge=lock
+*.gz merge=lock
+*.bz2 merge=lock
+*.xz merge=lock
+*.pdf merge=lock
+*.doc merge=lock
+*.docx merge=lock
+*.xls merge=lock
+*.xlsx merge=lock
+*.ppt merge=lock
+*.pptx merge=lock
+*.exe merge=lock
+*.dll merge=lock
+*.so merge=lock
+*.dylib merge=lock
 
 # Database files - use exclusive lock
-*.db *.sqlite *.sqlite3 merge=lock
+*.db merge=lock
+*.sqlite merge=lock
+*.sqlite3 merge=lock
 
 # Generated files - prefer incoming
 **/dist/** merge=theirs

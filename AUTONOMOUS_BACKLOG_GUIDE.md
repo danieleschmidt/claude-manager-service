@@ -205,11 +205,15 @@ Security vulnerabilities automatically become high-priority backlog items:
 
 ### GitHub Actions
 
-Auto-rebase workflow (`.github/workflows/auto-rebase.yml`):
+**Note**: GitHub Actions require manual setup due to workflow permissions.
+
+To enable automatic PR rebasing, create `.github/workflows/auto-rebase.yml` with the provided template:
 - Automatic PR rebasing
 - Conflict detection and resolution
 - Rerere cache sharing
 - Metrics collection
+
+See the setup script `scripts/setup-git-hooks.sh` for local git configuration.
 
 ### CI/CD Integration
 
@@ -376,6 +380,40 @@ Planned improvements:
 - Integration with more CI/CD platforms
 - Real-time performance dashboards
 - Predictive failure analysis
+
+## ⚙️ Manual Setup Instructions
+
+### Setting Up GitHub Actions (Optional)
+
+Since GitHub Actions require workflow permissions, you need to manually create the auto-rebase workflow:
+
+1. **Create the workflow directory:**
+   ```bash
+   mkdir -p .github/workflows
+   ```
+
+2. **Copy the template:**
+   ```bash
+   cp templates/github-workflows/auto-rebase.yml .github/workflows/
+   ```
+
+3. **Commit and push:**
+   ```bash
+   git add .github/workflows/auto-rebase.yml
+   git commit -m "Add auto-rebase GitHub Action"
+   git push
+   ```
+
+4. **Verify workflow permissions:**
+   - Go to your repository Settings → Actions → General
+   - Ensure "Read and write permissions" are enabled
+   - Allow GitHub Actions to create pull requests
+
+The workflow will then:
+- Automatically rebase PRs when they become outdated
+- Handle merge conflicts using rerere cache
+- Comment on PRs when manual intervention is needed
+- Collect conflict resolution metrics
 
 ## 📞 Support
 
