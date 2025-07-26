@@ -34,7 +34,7 @@ class DiscoveredTask:
 def scan_for_todos_fixmes(root_path: str = ".") -> List[DiscoveredTask]:
     """Scan codebase for TODO and FIXME comments"""
     tasks = []
-    todo_pattern = re.compile(r'#?\s*(TODO|FIXME):?\s*(.+)', re.IGNORECASE)
+    todo_pattern = re.compile(r'#.*?(TODO|FIXME|XXX|HACK):?\s*(.+)', re.IGNORECASE)
     
     # File extensions to scan
     code_extensions = {'.py', '.js', '.ts', '.java', '.cpp', '.c', '.h', '.go', '.rs', '.rb', '.php'}
@@ -55,6 +55,12 @@ def scan_for_todos_fixmes(root_path: str = ".") -> List[DiscoveredTask]:
                         if match:
                             todo_type = match.group(1).upper()
                             todo_text = match.group(2).strip()
+                            
+                            # Skip test literals and string constants
+                            if (('test' in file_path.lower() and ('=' in line or '"' in line or "'" in line)) or
+                                ('assert' in line) or 
+                                (line.strip().startswith(('content =', '"', "'")))):
+                                continue
                             
                             # Get context (3 lines before and after)
                             start_line = max(0, line_num - 4)
