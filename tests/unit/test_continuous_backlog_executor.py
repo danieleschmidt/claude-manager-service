@@ -165,7 +165,10 @@ class TestContinuousBacklogExecutor:
     
     def test_estimate_todo_impact(self, temp_workspace):
         """Test TODO impact estimation"""
-        with patch('src.continuous_backlog_executor.ConfigurationService'):
+        with patch('src.continuous_backlog_executor.ConfigurationService'), \
+             patch('src.continuous_backlog_executor.AsyncGitHubAPI'), \
+             patch('src.continuous_backlog_executor.AsyncTaskAnalyzer'), \
+             patch('src.continuous_backlog_executor.AsyncOrchestrator'):
             with patch.object(Path, 'cwd', return_value=temp_workspace):
                 executor = ContinuousBacklogExecutor()
                 
@@ -183,7 +186,10 @@ class TestContinuousBacklogExecutor:
     
     def test_estimate_todo_effort(self, temp_workspace):
         """Test TODO effort estimation"""
-        with patch('src.continuous_backlog_executor.ConfigurationService'):
+        with patch('src.continuous_backlog_executor.ConfigurationService'), \
+             patch('src.continuous_backlog_executor.AsyncGitHubAPI'), \
+             patch('src.continuous_backlog_executor.AsyncTaskAnalyzer'), \
+             patch('src.continuous_backlog_executor.AsyncOrchestrator'):
             with patch.object(Path, 'cwd', return_value=temp_workspace):
                 executor = ContinuousBacklogExecutor()
                 
