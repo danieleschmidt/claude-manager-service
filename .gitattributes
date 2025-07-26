@@ -1,0 +1,39 @@
+# Git merge drivers for autonomous backlog management
+
+# Lock files - prefer incoming version during merges
+package-lock.json merge=theirs
+poetry.lock      merge=theirs
+yarn.lock        merge=theirs
+Pipfile.lock     merge=theirs
+composer.lock    merge=theirs
+Gemfile.lock     merge=theirs
+
+# Snapshot files - prefer incoming version
+*.snap           merge=theirs
+
+# Documentation files - use union merge to combine changes
+*.md             merge=union
+CHANGELOG.md     merge=union
+CHANGELOG.rst    merge=union
+HISTORY.md       merge=union
+
+# Binary files - use exclusive lock to prevent corruption
+*.svg *.png *.jpg *.jpeg *.gif *.ico merge=lock
+*.zip *.tar *.gz *.bz2 *.xz merge=lock
+*.pdf *.doc *.docx *.xls *.xlsx *.ppt *.pptx merge=lock
+*.exe *.dll *.so *.dylib merge=lock
+
+# Database files - use exclusive lock
+*.db *.sqlite *.sqlite3 merge=lock
+
+# Generated files - prefer incoming
+**/dist/** merge=theirs
+**/build/** merge=theirs
+**/__pycache__/** merge=theirs
+**/node_modules/** merge=theirs
+
+# Configuration that should be merged carefully
+.env.* merge=manual
+secrets.* merge=manual
+*.key merge=manual
+*.pem merge=manual

@@ -1,0 +1,323 @@
+name: Auto-rebase PR branches
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+  schedule:
+    # Run daily to keep PRs up to date
+    - cron: '0 6 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-rebase:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request_target' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Get PRs to rebase
+        id: get-prs
+        if: github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              sort: 'updated',
+              direction: 'desc'
+            });
+            
+            // Filter for PRs that might need rebasing (not from forks for security)
+            const rebasePrs = prs.filter(pr => 
+              !pr.head.repo.fork && 
+              pr.head.ref !== 'main' &&
+              pr.mergeable_state !== 'clean'
+            ).slice(0, 5); // Limit to 5 PRs to avoid overwhelming
+            
+            return rebasePrs.map(pr => ({ number: pr.number, ref: pr.head.ref }));
+            
+      - name: Set PR info for PR event
+        id: set-pr-info
+        if: github.event_name == 'pull_request_target'
+        run: |
+          echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "pr_ref=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.ref || '' }}
+          fetch-depth: 0
+          
+      - name: Configure Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git config --global rerere.enabled true
+          git config --global rerere.autoupdate true
+          
+      - name: Configure merge drivers
+        run: |
+          git config --global merge.theirs.name "Prefer incoming"
+          git config --global merge.theirs.driver "cp -f '%B' '%A'"
+          git config --global merge.union.name "Line union"
+          git config --global merge.union.driver "git merge-file -p %A %O %B > %A"
+          
+      - name: Setup rerere cache
+        run: |
+          # Check if rerere cache branch exists
+          if git ls-remote --heads origin tools/rerere-cache | grep -q tools/rerere-cache; then
+            echo "Loading shared rerere cache..."
+            git fetch origin tools/rerere-cache:tools/rerere-cache || true
+            git checkout tools/rerere-cache 2>/dev/null || true
+            cp -r .git/rr-cache/* ./ 2>/dev/null || true
+            git checkout - 2>/dev/null || true
+            cp -r tools/rerere-cache/* .git/rr-cache/ 2>/dev/null || true
+          fi
+          
+      - name: Rebase single PR
+        if: github.event_name == 'pull_request_target'
+        id: rebase-single
+        run: |
+          set -e
+          
+          # Fetch latest main
+          git fetch origin main
+          
+          # Check if rebase is needed
+          BEHIND_COUNT=$(git rev-list --count HEAD..origin/main)
+          echo "Branch is $BEHIND_COUNT commits behind main"
+          
+          if [ "$BEHIND_COUNT" -eq "0" ]; then
+            echo "Branch is already up to date"
+            echo "rebase_needed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          if [ "$BEHIND_COUNT" -gt "10" ]; then
+            echo "Branch is too far behind ($BEHIND_COUNT commits), skipping auto-rebase"
+            echo "rebase_needed=false" >> $GITHUB_OUTPUT
+            echo "rebase_skipped=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "Attempting rebase..."
+          echo "rebase_needed=true" >> $GITHUB_OUTPUT
+          
+          # Attempt rebase with conflict detection
+          if git rebase origin/main; then
+            echo "Rebase completed successfully"
+            echo "rebase_success=true" >> $GITHUB_OUTPUT
+            
+            # Push rebased branch
+            git push --force-with-lease origin HEAD
+            echo "Rebased branch pushed successfully"
+            
+          else
+            echo "Rebase failed due to conflicts"
+            echo "rebase_success=false" >> $GITHUB_OUTPUT
+            
+            # Abort the rebase
+            git rebase --abort
+            
+            # Check if conflicts can be resolved with rerere
+            if git rerere status | grep -q "Resolved"; then
+              echo "Rerere has resolutions available, retrying..."
+              if git rebase origin/main; then
+                echo "Rebase completed with rerere"
+                echo "rebase_success=true" >> $GITHUB_OUTPUT
+                git push --force-with-lease origin HEAD
+              else
+                echo "Rebase still failed after rerere"
+                git rebase --abort
+                echo "rebase_success=false" >> $GITHUB_OUTPUT
+              fi
+            fi
+          fi
+          
+      - name: Update rerere cache
+        if: steps.rebase-single.outputs.rebase_success == 'true'
+        run: |
+          # Update shared rerere cache if successful rebase
+          if [ -d ".git/rr-cache" ] && [ "$(ls -A .git/rr-cache)" ]; then
+            echo "Updating shared rerere cache..."
+            
+            # Create/update rerere cache branch
+            git checkout --orphan tools/rerere-cache 2>/dev/null || git checkout tools/rerere-cache
+            git rm -rf . 2>/dev/null || true
+            cp -r .git/rr-cache/* . 2>/dev/null || true
+            
+            if [ "$(ls -A .)" ]; then
+              git add .
+              git commit -m "Update rerere cache from successful rebase" || true
+              git push origin tools/rerere-cache || true
+            fi
+            
+            # Return to original branch
+            git checkout -
+          fi
+          
+      - name: Comment on PR if rebase failed
+        if: github.event_name == 'pull_request_target' && steps.rebase-single.outputs.rebase_success == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              body: `🔄 **Auto-rebase failed**
+              
+              This PR could not be automatically rebased onto main due to merge conflicts.
+              
+              **Next steps:**
+              1. Rebase your branch manually: \`git rebase origin/main\`
+              2. Resolve any conflicts
+              3. Force-push your branch: \`git push --force-with-lease\`
+              
+              The autonomous backlog management system will retry after you resolve the conflicts.
+              
+              *This message was generated by the auto-rebase workflow.*`
+            });
+            
+      - name: Comment on PR if rebase skipped
+        if: github.event_name == 'pull_request_target' && steps.rebase-single.outputs.rebase_skipped == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.pull_request.number }},
+              body: `⚠️ **Auto-rebase skipped**
+              
+              This PR is too far behind main (>10 commits) for safe auto-rebasing.
+              
+              **Recommendation:**
+              Consider rebasing manually or creating a fresh branch from main.
+              
+              *This message was generated by the auto-rebase workflow.*`
+            });
+
+  # Separate job for batch processing on schedule
+  batch-rebase:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    strategy:
+      matrix:
+        include: [] # Will be populated by previous job
+        
+    steps:
+      - name: Get open PRs
+        id: get-prs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: prs } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              sort: 'updated',
+              direction: 'desc'
+            });
+            
+            // Filter for autonomous PRs that might need rebasing
+            const rebasePrs = prs.filter(pr => 
+              !pr.head.repo.fork && 
+              pr.head.ref.includes('autonomous') &&
+              pr.head.ref !== 'main'
+            ).slice(0, 3); // Limit to 3 to avoid overwhelming
+            
+            if (rebasePrs.length === 0) {
+              console.log('No autonomous PRs found that need rebasing');
+              return [];
+            }
+            
+            console.log(`Found ${rebasePrs.length} autonomous PRs to check for rebase`);
+            return rebasePrs.map(pr => ({ 
+              number: pr.number, 
+              ref: pr.head.ref,
+              title: pr.title
+            }));
+            
+      - name: Process autonomous PRs
+        if: steps.get-prs.outputs.result != '[]'
+        run: |
+          echo "Would process PRs: ${{ steps.get-prs.outputs.result }}"
+          # This would trigger individual rebase jobs for each PR
+          # For now, just log what would happen
+          
+  # Conflict metrics collection
+  collect-conflict-metrics:
+    runs-on: ubuntu-latest
+    if: always() && (github.event_name == 'pull_request_target')
+    needs: [auto-rebase]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt || echo "No requirements.txt found"
+          
+      - name: Record conflict metrics
+        if: needs.auto-rebase.outputs.rebase_success != 'true'
+        run: |
+          python3 -c "
+          import json
+          import time
+          from pathlib import Path
+          
+          # Create metrics directory
+          Path('metrics').mkdir(exist_ok=True)
+          
+          # Record conflict event
+          conflict_event = {
+              'timestamp': time.time(),
+              'pr_number': ${{ github.event.pull_request.number }},
+              'branch': '${{ github.event.pull_request.head.ref }}',
+              'resolution_method': 'failed',
+              'resolution_time_seconds': 0,
+              'success': False,
+              'automated': True
+          }
+          
+          # Append to conflict log
+          conflict_file = Path('metrics/conflict_events.jsonl')
+          with open(conflict_file, 'a') as f:
+              f.write(json.dumps(conflict_event) + '\n')
+              
+          print(f'Recorded conflict event for PR #{conflict_event[\"pr_number\"]}')
+          "
+          
+      - name: Update Prometheus metrics
+        run: |
+          # Update conflict metrics for monitoring
+          mkdir -p metrics
+          
+          if [ "${{ needs.auto-rebase.outputs.rebase_success }}" == "true" ]; then
+            echo "auto_rebase_success_total 1" >> metrics/rebase.prom
+          else
+            echo "auto_rebase_failure_total 1" >> metrics/rebase.prom
+          fi
+          
+          # Calculate recent success rate
+          RECENT_SUCCESS=$(grep -c "rebase_success=true" .github/workflows/auto-rebase.yml 2>/dev/null || echo "0")
+          RECENT_TOTAL=$(grep -c "rebase_" .github/workflows/auto-rebase.yml 2>/dev/null || echo "1")
+          SUCCESS_RATE=$(echo "scale=2; $RECENT_SUCCESS * 100 / $RECENT_TOTAL" | bc 2>/dev/null || echo "100")
+          
+          echo "auto_rebase_success_rate_percent $SUCCESS_RATE" >> metrics/rebase.prom
+          
+          echo "Metrics updated - Success rate: $SUCCESS_RATE%"
