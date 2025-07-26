@@ -281,7 +281,9 @@ def assess_urgency(content: str) -> float:
             urgency_score += weight
             logger.debug(f"Found urgency keyword '{keyword}' (+{weight})")
     
-    # FIXME vs TODO urgency difference
+    # FIXME indicates higher urgency than TODO (3.0 vs 1.0)
+    # FIXME suggests something is broken and needs immediate attention
+    # TODO suggests planned future work with lower time criticality
     if content.startswith('FIXME'):
         urgency_score += 3.0
     elif content.startswith('TODO'):
