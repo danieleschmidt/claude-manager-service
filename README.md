@@ -241,8 +241,6 @@ class GitHubAPI:
 
     def create_issue(self, repo_name, title, body, labels):
         print(f"Creating issue '{title}' in repo {repo_name}")
-        # TODO: Implement logic to check if an issue with a similar title already exists
-        # to prevent creating duplicate tasks.
         repo = self.get_repo(repo_name)
         if repo:
             try:
