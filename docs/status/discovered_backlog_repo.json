@@ -3,7 +3,7 @@
   "total_tasks": 206,
   "tasks": [
     {
-      "id": "todo--307195209275678060",
+      "id": "todo-7733015642192705716",
       "title": "id=f\"todo_{hash(todo_result.get('title', ''))}__{int(now.timestamp())}\",",
       "description": "TODO comment in src/continuous_backlog_executor.py:324",
       "type": "Feature",
@@ -17,7 +17,7 @@
       "wsjf_score": 5.0
     },
     {
-      "id": "todo--3094791534088872296",
+      "id": "todo--5386222550679101378",
       "title": "title=todo_result.get('title', 'Unknown TODO'),",
       "description": "TODO comment in src/continuous_backlog_executor.py:325",
       "type": "Feature",
@@ -31,7 +31,7 @@
       "wsjf_score": 5.0
     },
     {
-      "id": "todo--2789815267271743108",
+      "id": "todo--3927002403082328173",
       "title": "print(f\"Is task processed now: {tracker.is_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this')}\")",
       "description": "TODO comment in src/task_tracker.py:290",
       "type": "Bug",
@@ -45,7 +45,7 @@
       "wsjf_score": 5.0
     },
     {
-      "id": "todo--879324527355366747",
+      "id": "todo-5639779472525686963",
       "title": "self.logger.error(f\"Error during async TODO scan for {repo.full_name}: {e}\")",
       "description": "TODO comment in src/async_task_analyzer.py:117",
       "type": "Bug",
@@ -59,7 +59,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--6131780068549071651",
+      "id": "todo--9039453412750603080",
       "title": "raise NetworkError(f\"TODO scan failed for {repo.full_name}\", \"find_todo_comments_async\", e)",
       "description": "TODO comment in src/async_task_analyzer.py:118",
       "type": "Bug",
@@ -73,7 +73,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-9196464421205288819",
+      "id": "todo--5155819361230847939",
       "title": "self.logger.error(f\"Error processing TODO result for {file_path}: {e}\")",
       "description": "TODO comment in src/async_task_analyzer.py:229",
       "type": "Bug",
@@ -87,7 +87,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--8714972557876347105",
+      "id": "todo--6431678555196660625",
       "title": "todos_found = 1   Assume 1 if no error (could be enhanced later)",
       "description": "TODO comment in src/concurrent_repository_scanner.py:192",
       "type": "Bug",
@@ -101,7 +101,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-1989943994424628130",
+      "id": "todo--2260766274403802782",
       "title": "self.logger.error(f\"Error discovering TODO tasks: {e}\")",
       "description": "TODO comment in src/continuous_backlog_executor.py:310",
       "type": "Bug",
@@ -115,7 +115,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--7409428712286280604",
+      "id": "todo-1666216108309544766",
       "title": "\"\"\"Extract security considerations from TODO content\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:409",
       "type": "Security",
@@ -129,7 +129,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--7996705027692815539",
+      "id": "todo-728392956069939601",
       "title": "@with_error_recovery(\"find_todo_comments\")",
       "description": "TODO comment in src/task_analyzer.py:18",
       "type": "Bug",
@@ -143,7 +143,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-5659684875619696369",
+      "id": "todo--5103915316120863361",
       "title": "logger.debug(f\"Processed maximum TODOs for file {file_path}\")",
       "description": "TODO comment in src/task_analyzer.py:102",
       "type": "Bug",
@@ -157,7 +157,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-2038890180628779216",
+      "id": "todo-3544597964042624499",
       "title": "logger.error(f\"Error executing optimized TODO search: {e}\")",
       "description": "TODO comment in src/task_analyzer.py:109",
       "type": "Bug",
@@ -171,7 +171,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--2425132347441049147",
+      "id": "todo-4877360704230000628",
       "title": "logger.error(f\"Fatal error in find_todo_comments for {repo.full_name}: {e}\")",
       "description": "TODO comment in src/task_analyzer.py:115",
       "type": "Bug",
@@ -185,7 +185,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-8367248609329877405",
+      "id": "todo-5898167910604485876",
       "title": "logger.debug(f\"Running TODO scan for {repo_name}\")",
       "description": "TODO comment in src/task_analyzer.py:274",
       "type": "Bug",
@@ -199,7 +199,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-670971763265402726",
+      "id": "todo--8753553186037903051",
       "title": "if any(keyword in content_lower for keyword in bug_indicators) or content.startswith('FIXME'):",
       "description": "TODO comment in src/task_prioritization.py:127",
       "type": "Bug",
@@ -213,7 +213,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-7777342590939509773",
+      "id": "todo-1671074106391327913",
       "title": "TODO suggests planned future work with lower time criticality",
       "description": "TODO comment in src/task_prioritization.py:302",
       "type": "Feature",
@@ -227,7 +227,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-4827316324611229745",
+      "id": "todo-980146303200875330",
       "title": "'content': 'TODO: Fix SQL injection vulnerability in user authentication',",
       "description": "TODO comment in src/task_prioritization.py:583",
       "type": "Security",
@@ -241,7 +241,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--8415183996324105751",
+      "id": "todo-5343936708634551273",
       "title": "\"default\": [\"TODO:\", \"FIXME:\", \"HACK:\", \"BUG:\"]",
       "description": "TODO comment in src/validation.py:99",
       "type": "Bug",
@@ -255,7 +255,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-445020593151691613",
+      "id": "todo--4661962266205159189",
       "title": "@with_enhanced_error_handling(\"scan_repository_todos\", use_circuit_breaker=True)",
       "description": "TODO comment in src/services/repository_service.py:126",
       "type": "Bug",
@@ -269,7 +269,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--4122292592732286005",
+      "id": "todo-3703353137297573989",
       "title": "self.logger.error(f\"TODO scan failed for {repo_info.full_name}: {e}\")",
       "description": "TODO comment in src/services/repository_service.py:181",
       "type": "Bug",
@@ -283,7 +283,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--6404319958524210604",
+      "id": "todo--8279031341662672102",
       "title": "raise NetworkError(f\"TODO scan failed for {repo_info.full_name}\", \"scan_repository_todos\", e)",
       "description": "TODO comment in src/services/repository_service.py:182",
       "type": "Bug",
@@ -297,7 +297,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo--1825998862860506876",
+      "id": "todo-3060995033131961648",
       "title": "self.logger.error(f\"Error processing TODO result for {file_path}: {e}\")",
       "description": "TODO comment in src/services/repository_service.py:304",
       "type": "Bug",
@@ -311,7 +311,7 @@
       "wsjf_score": 4.5
     },
     {
-      "id": "todo-6583187029615841567",
+      "id": "todo-7823697606027031947",
       "title": "f\"{task_results.get('todos_found', 0)} TODOs, \"",
       "description": "TODO comment in src/async_orchestrator.py:161",
       "type": "Feature",
@@ -325,7 +325,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6711748518022733300",
+      "id": "todo-7610875301794981504",
       "title": "async def find_todo_comments_async(self, github_api: AsyncGitHubAPI, repo: Repository.Repository,",
       "description": "TODO comment in src/async_task_analyzer.py:66",
       "type": "Feature",
@@ -339,7 +339,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3691013007167955733",
+      "id": "todo-944436655816820738",
       "title": "Async version of find_todo_comments with concurrent processing",
       "description": "TODO comment in src/async_task_analyzer.py:69",
       "type": "Feature",
@@ -353,7 +353,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7321413520781511807",
+      "id": "todo--8396455191786108357",
       "title": "Number of TODO comments processed",
       "description": "TODO comment in src/async_task_analyzer.py:77",
       "type": "Feature",
@@ -367,7 +367,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-43835509421149531",
+      "id": "todo--8751706702333226206",
       "title": "self.logger.info(f\"Scanning {repo.full_name} for TODO comments (async)\")",
       "description": "TODO comment in src/async_task_analyzer.py:79",
       "type": "Feature",
@@ -381,7 +381,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2078634828484660790",
+      "id": "todo--6514011652622406295",
       "title": "todo_count = 0",
       "description": "TODO comment in src/async_task_analyzer.py:80",
       "type": "Feature",
@@ -395,7 +395,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7782930685026400978",
+      "id": "todo--993347489198009323",
       "title": "Search for TODO and FIXME comments using optimized query",
       "description": "TODO comment in src/async_task_analyzer.py:83",
       "type": "Bug",
@@ -409,7 +409,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5415187319740580606",
+      "id": "todo--5272617380350112131",
       "title": "combined_query = f\"(TODO: OR FIXME: OR TODO OR FIXME) repo:{repo.full_name}\"",
       "description": "TODO comment in src/async_task_analyzer.py:84",
       "type": "Bug",
@@ -423,7 +423,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7581261774344949412",
+      "id": "todo--8224084794959537149",
       "title": "task = self._process_todo_result_async(",
       "description": "TODO comment in src/async_task_analyzer.py:96",
       "type": "Feature",
@@ -437,7 +437,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--781083720141213954",
+      "id": "todo-4909936592018414184",
       "title": "with monitor_performance(\"concurrent_todo_processing\"):",
       "description": "TODO comment in src/async_task_analyzer.py:103",
       "type": "Performance",
@@ -451,7 +451,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7889581703313910445",
+      "id": "todo--1767410967532623258",
       "title": "self.logger.warning(f\"TODO processing failed: {result}\")",
       "description": "TODO comment in src/async_task_analyzer.py:109",
       "type": "Feature",
@@ -465,7 +465,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7126677042965896035",
+      "id": "todo-2821863914218949851",
       "title": "todo_count += result",
       "description": "TODO comment in src/async_task_analyzer.py:111",
       "type": "Feature",
@@ -479,7 +479,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7710061257347538605",
+      "id": "todo-3099306212754478417",
       "title": "self.logger.info(f\"Completed async TODO scan for {repo.full_name}: {todo_count} issues created\")",
       "description": "TODO comment in src/async_task_analyzer.py:113",
       "type": "Bug",
@@ -493,7 +493,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1626594746525992250",
+      "id": "todo-2211225159254123547",
       "title": "return todo_count",
       "description": "TODO comment in src/async_task_analyzer.py:114",
       "type": "Feature",
@@ -507,7 +507,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--115557095241470082",
+      "id": "todo-681371645746016568",
       "title": "async def _process_todo_result_async(self, github_api: AsyncGitHubAPI, repo: Repository.Repository,",
       "description": "TODO comment in src/async_task_analyzer.py:120",
       "type": "Feature",
@@ -521,7 +521,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8970853398397244141",
+      "id": "todo-5597063170324547763",
       "title": "Process a single TODO search result asynchronously",
       "description": "TODO comment in src/async_task_analyzer.py:123",
       "type": "Feature",
@@ -535,7 +535,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4926126013931257686",
+      "id": "todo--7439664564734245552",
       "title": "search_terms = ['TODO:', 'FIXME:', 'TODO', 'FIXME']",
       "description": "TODO comment in src/async_task_analyzer.py:145",
       "type": "Bug",
@@ -549,7 +549,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6958055269562256441",
+      "id": "todo--2882381666510094741",
       "title": "Limit to max 3 TODOs per file to avoid spam",
       "description": "TODO comment in src/async_task_analyzer.py:152",
       "type": "Feature",
@@ -563,7 +563,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6115753067717854517",
+      "id": "todo--1204714863144870061",
       "title": "Check if line contains TODO/FIXME",
       "description": "TODO comment in src/async_task_analyzer.py:156",
       "type": "Bug",
@@ -577,7 +577,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7050097140230450626",
+      "id": "todo--506717008437300392",
       "title": "'todos_found': 0,",
       "description": "TODO comment in src/async_task_analyzer.py:279",
       "type": "Feature",
@@ -591,7 +591,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--934627710704432534",
+      "id": "todo--5165365049332341337",
       "title": "Run TODO analysis and issue analysis concurrently for each repo",
       "description": "TODO comment in src/async_task_analyzer.py:304",
       "type": "Bug",
@@ -605,7 +605,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8901431361253052409",
+      "id": "todo-1784176273757676862",
       "title": "todo_task = self.find_todo_comments_async(github_api, repo, self.manager_repo_name)",
       "description": "TODO comment in src/async_task_analyzer.py:305",
       "type": "Feature",
@@ -619,7 +619,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3806898976621401763",
+      "id": "todo--1530801274735701940",
       "title": "todo_count, issue_count = await asyncio.gather(todo_task, issue_task)",
       "description": "TODO comment in src/async_task_analyzer.py:308",
       "type": "Bug",
@@ -633,7 +633,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1370618120916927067",
+      "id": "todo--8451560110034038066",
       "title": "'todos_found': todo_count,",
       "description": "TODO comment in src/async_task_analyzer.py:312",
       "type": "Feature",
@@ -647,7 +647,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3467052698287100324",
+      "id": "todo--1322816028307083991",
       "title": "'todos_found': 0,",
       "description": "TODO comment in src/async_task_analyzer.py:324",
       "type": "Feature",
@@ -661,7 +661,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3299288639242544035",
+      "id": "todo-4323808236369594513",
       "title": "results['todos_found'] += repo_result['todos_found']",
       "description": "TODO comment in src/async_task_analyzer.py:340",
       "type": "Feature",
@@ -675,7 +675,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8628304261016874258",
+      "id": "todo--1077222492657018929",
       "title": "f\"{results['todos_found']} TODOs, \"",
       "description": "TODO comment in src/async_task_analyzer.py:348",
       "type": "Feature",
@@ -689,7 +689,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5841317560522245078",
+      "id": "todo--2484740184705441256",
       "title": "from task_analyzer import find_todo_comments, analyze_open_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:31",
       "type": "Bug",
@@ -703,7 +703,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1309720059641641798",
+      "id": "todo--6759660331928707753",
       "title": "return find_todo_comments, analyze_open_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:32",
       "type": "Bug",
@@ -717,7 +717,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--285975282635004379",
+      "id": "todo-2732366734251565013",
       "title": "todos_found: int = 0",
       "description": "TODO comment in src/concurrent_repository_scanner.py:58",
       "type": "Feature",
@@ -731,7 +731,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6022604006797037636",
+      "id": "todo--4569244146048843436",
       "title": "scan_todos: bool = True,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:156",
       "type": "Feature",
@@ -745,7 +745,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5574799156299559371",
+      "id": "todo-8963677277612157956",
       "title": "todos_found = 0",
       "description": "TODO comment in src/concurrent_repository_scanner.py:181",
       "type": "Feature",
@@ -759,7 +759,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8130403180184986615",
+      "id": "todo-7797016121487296586",
       "title": "find_todo_comments_func, analyze_open_issues_func = _get_task_analyzer_functions()",
       "description": "TODO comment in src/concurrent_repository_scanner.py:185",
       "type": "Bug",
@@ -773,7 +773,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4319855705582431263",
+      "id": "todo--4919044853031499007",
       "title": "Scan for TODOs if requested",
       "description": "TODO comment in src/concurrent_repository_scanner.py:187",
       "type": "Feature",
@@ -787,7 +787,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-9088485453050702920",
+      "id": "todo--1255236690927312997",
       "title": "if scan_todos and find_todo_comments_func:",
       "description": "TODO comment in src/concurrent_repository_scanner.py:188",
       "type": "Feature",
@@ -801,7 +801,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4226070346265443973",
+      "id": "todo--4500483450654346455",
       "title": "Note: find_todo_comments doesn't return a count, so we'll estimate",
       "description": "TODO comment in src/concurrent_repository_scanner.py:190",
       "type": "Feature",
@@ -815,7 +815,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3798429915649184044",
+      "id": "todo-5986723126058544227",
       "title": "find_todo_comments_func(github_api, repo, manager_repo_name)",
       "description": "TODO comment in src/concurrent_repository_scanner.py:191",
       "type": "Feature",
@@ -829,7 +829,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1181906534425222146",
+      "id": "todo-6511672416202177566",
       "title": "self.logger.warning(f\"TODO scanning failed for {repo_name}: {e}\")",
       "description": "TODO comment in src/concurrent_repository_scanner.py:194",
       "type": "Feature",
@@ -843,7 +843,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-951275859294377687",
+      "id": "todo--8153229175924192989",
       "title": "f\"(todos: {todos_found}, issues: {issues_found})\"",
       "description": "TODO comment in src/concurrent_repository_scanner.py:209",
       "type": "Bug",
@@ -857,7 +857,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--94081775353475272",
+      "id": "todo--7708360294976140870",
       "title": "todos_found=todos_found,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:216",
       "type": "Feature",
@@ -871,7 +871,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--932909307323110815",
+      "id": "todo-8032349417024535421",
       "title": "scan_todos: bool = True,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:251",
       "type": "Feature",
@@ -885,7 +885,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-384720148484723199",
+      "id": "todo-1001975444895227308",
       "title": "scan_todos: Whether to scan for TODO comments",
       "description": "TODO comment in src/concurrent_repository_scanner.py:261",
       "type": "Feature",
@@ -899,7 +899,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-9071893648734856218",
+      "id": "todo--4383206481947187595",
       "title": "github_api, repo_name, manager_repo_name, scan_todos, scan_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:274",
       "type": "Bug",
@@ -913,7 +913,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-898204280024322173",
+      "id": "todo-6639656368381263763",
       "title": "scan_todos: bool = True,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:313",
       "type": "Feature",
@@ -927,7 +927,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5280291128269790178",
+      "id": "todo-2243543052986002068",
       "title": "scan_todos: Whether to scan for TODO comments",
       "description": "TODO comment in src/concurrent_repository_scanner.py:323",
       "type": "Feature",
@@ -941,7 +941,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6268307532189355062",
+      "id": "todo--5403164310461382063",
       "title": "github_api, repo_name, manager_repo_name, scan_todos, scan_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:345",
       "type": "Bug",
@@ -955,7 +955,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-1711470776063990726",
+      "id": "todo--7646590482274304732",
       "title": "'todos_found': 0,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:367",
       "type": "Feature",
@@ -969,7 +969,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--287292271306577685",
+      "id": "todo--4571665507264676394",
       "title": "scan_todos: bool = True,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:408",
       "type": "Feature",
@@ -983,7 +983,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2184174350018381009",
+      "id": "todo--2650679774950352895",
       "title": "scan_todos: Whether to scan for TODO comments",
       "description": "TODO comment in src/concurrent_repository_scanner.py:421",
       "type": "Feature",
@@ -997,7 +997,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3565408277971657778",
+      "id": "todo-1929332905196813209",
       "title": "github_api, repo_names, manager_repo_name, scan_todos, scan_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:440",
       "type": "Bug",
@@ -1011,7 +1011,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--9213094393667963922",
+      "id": "todo--3650552521049076746",
       "title": "github_api, repo_names, manager_repo_name, scan_todos, scan_issues",
       "description": "TODO comment in src/concurrent_repository_scanner.py:447",
       "type": "Bug",
@@ -1025,7 +1025,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8985270159789020548",
+      "id": "todo--4715939981720190067",
       "title": "total_todos_found = sum(result.get('todos_found', 0) for result in scan_results)",
       "description": "TODO comment in src/concurrent_repository_scanner.py:454",
       "type": "Feature",
@@ -1039,7 +1039,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--9216941409256419480",
+      "id": "todo--367122786253816001",
       "title": "'total_todos_found': total_todos_found,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:464",
       "type": "Feature",
@@ -1053,7 +1053,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-513556621615880697",
+      "id": "todo-2819950863228563046",
       "title": "scan_todos: bool = True,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:488",
       "type": "Feature",
@@ -1067,7 +1067,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--177448183855960976",
+      "id": "todo--252993226635645412",
       "title": "scan_todos,",
       "description": "TODO comment in src/concurrent_repository_scanner.py:507",
       "type": "Feature",
@@ -1081,7 +1081,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2536452978224159125",
+      "id": "todo-7231279592692492989",
       "title": "required_fields = ['scanForTodos', 'scanOpenIssues']",
       "description": "TODO comment in src/config_validator.py:105",
       "type": "Bug",
@@ -1095,7 +1095,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2505526756233236189",
+      "id": "todo-8911595276561273304",
       "title": "for field in ['scanForTodos', 'scanOpenIssues']:",
       "description": "TODO comment in src/config_validator.py:114",
       "type": "Bug",
@@ -1109,7 +1109,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8830285481202765900",
+      "id": "todo-2556858627206628757",
       "title": "\"scanForTodos\": true,",
       "description": "TODO comment in src/config_validator.py:268",
       "type": "Feature",
@@ -1123,7 +1123,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8066953692482697563",
+      "id": "todo--4381815740587902300",
       "title": "Discover from TODO/FIXME comments",
       "description": "TODO comment in src/continuous_backlog_executor.py:261",
       "type": "Bug",
@@ -1137,7 +1137,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-257184215636000463",
+      "id": "todo-7129052548033156308",
       "title": "todo_items = await self._discover_todo_tasks()",
       "description": "TODO comment in src/continuous_backlog_executor.py:262",
       "type": "Feature",
@@ -1151,7 +1151,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3653997800508821359",
+      "id": "todo-1355893447708040983",
       "title": "new_items.extend(todo_items)",
       "description": "TODO comment in src/continuous_backlog_executor.py:263",
       "type": "Feature",
@@ -1165,7 +1165,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3227923418879793278",
+      "id": "todo-5823263654928563816",
       "title": "async def _discover_todo_tasks(self) -> List[BacklogItem]:",
       "description": "TODO comment in src/continuous_backlog_executor.py:286",
       "type": "Feature",
@@ -1179,7 +1179,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4061902052150490083",
+      "id": "todo-1931484163449241780",
       "title": "\"\"\"Discover tasks from TODO/FIXME comments\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:287",
       "type": "Bug",
@@ -1193,7 +1193,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6432054280456175276",
+      "id": "todo-1982296265615998616",
       "title": "todo_items = []",
       "description": "TODO comment in src/continuous_backlog_executor.py:288",
       "type": "Feature",
@@ -1207,7 +1207,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3318520933344500815",
+      "id": "todo--1994166669524288805",
       "title": "Use existing task analyzer to find TODOs",
       "description": "TODO comment in src/continuous_backlog_executor.py:294",
       "type": "Feature",
@@ -1221,7 +1221,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8074750164631331932",
+      "id": "todo--8190124666640952875",
       "title": "Get TODO results from task analyzer",
       "description": "TODO comment in src/continuous_backlog_executor.py:298",
       "type": "Feature",
@@ -1235,7 +1235,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6380166338734266060",
+      "id": "todo--7721419802664980378",
       "title": "results = await self.task_analyzer.find_todo_comments_async(",
       "description": "TODO comment in src/continuous_backlog_executor.py:299",
       "type": "Feature",
@@ -1249,7 +1249,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7201896147233079830",
+      "id": "todo-3381140436892898020",
       "title": "item = self._create_backlog_item_from_todo(result)",
       "description": "TODO comment in src/continuous_backlog_executor.py:306",
       "type": "Feature",
@@ -1263,7 +1263,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4544692718025379896",
+      "id": "todo-1803898743233729444",
       "title": "todo_items.append(item)",
       "description": "TODO comment in src/continuous_backlog_executor.py:307",
       "type": "Feature",
@@ -1277,7 +1277,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6305779831003736555",
+      "id": "todo-6930458085376079863",
       "title": "return todo_items",
       "description": "TODO comment in src/continuous_backlog_executor.py:312",
       "type": "Feature",
@@ -1291,7 +1291,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4598953450734312649",
+      "id": "todo-6548577691041223958",
       "title": "def _create_backlog_item_from_todo(self, todo_result: Dict) -> BacklogItem:",
       "description": "TODO comment in src/continuous_backlog_executor.py:314",
       "type": "Feature",
@@ -1305,7 +1305,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1812408641540278697",
+      "id": "todo--5986243637513881426",
       "title": "\"\"\"Create a backlog item from TODO discovery result\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:315",
       "type": "Feature",
@@ -1319,7 +1319,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5177088737044728592",
+      "id": "todo--5906685218779900535",
       "title": "Extract priority signals from TODO content",
       "description": "TODO comment in src/continuous_backlog_executor.py:318",
       "type": "Feature",
@@ -1333,7 +1333,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2427094912464572878",
+      "id": "todo-3695193086262682963",
       "title": "content = todo_result.get('content', '')",
       "description": "TODO comment in src/continuous_backlog_executor.py:319",
       "type": "Feature",
@@ -1347,7 +1347,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3189048294996173719",
+      "id": "todo-6722395466555016372",
       "title": "impact = self._estimate_todo_impact(content)",
       "description": "TODO comment in src/continuous_backlog_executor.py:320",
       "type": "Feature",
@@ -1361,7 +1361,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1689542005744702064",
+      "id": "todo--2741943009761909533",
       "title": "effort = self._estimate_todo_effort(content)",
       "description": "TODO comment in src/continuous_backlog_executor.py:321",
       "type": "Feature",
@@ -1375,7 +1375,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6130378508838330563",
+      "id": "todo--5008960707387093703",
       "title": "description=todo_result.get('description', ''),",
       "description": "TODO comment in src/continuous_backlog_executor.py:326",
       "type": "Feature",
@@ -1389,7 +1389,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-186510534916846510",
+      "id": "todo--5622810230221620637",
       "title": "task_type=self._classify_todo_type(content),",
       "description": "TODO comment in src/continuous_backlog_executor.py:327",
       "type": "Feature",
@@ -1403,7 +1403,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-9121490761447973500",
+      "id": "todo--8884919832174736553",
       "title": "links=[todo_result.get('url', '')],",
       "description": "TODO comment in src/continuous_backlog_executor.py:334",
       "type": "Feature",
@@ -1417,7 +1417,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3546439603632336952",
+      "id": "todo-158989493037922087",
       "title": "acceptance_criteria=self._generate_todo_acceptance_criteria(content),",
       "description": "TODO comment in src/continuous_backlog_executor.py:335",
       "type": "Feature",
@@ -1431,7 +1431,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7396320075389881299",
+      "id": "todo--3652402037496574137",
       "title": "def _estimate_todo_impact(self, content: str) -> int:",
       "description": "TODO comment in src/continuous_backlog_executor.py:340",
       "type": "Feature",
@@ -1445,7 +1445,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6209188052213964145",
+      "id": "todo--4341955502817997273",
       "title": "\"\"\"Estimate impact of TODO item (1-13 scale)\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:341",
       "type": "Feature",
@@ -1459,7 +1459,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4364521527068638402",
+      "id": "todo--8169076484172375100",
       "title": "def _estimate_todo_effort(self, content: str) -> int:",
       "description": "TODO comment in src/continuous_backlog_executor.py:360",
       "type": "Feature",
@@ -1473,7 +1473,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5277712538165446528",
+      "id": "todo-2192079350186567438",
       "title": "\"\"\"Estimate effort for TODO item (1-13 scale)\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:361",
       "type": "Feature",
@@ -1487,7 +1487,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5463837367369527477",
+      "id": "todo--2989155795012164341",
       "title": "def _classify_todo_type(self, content: str) -> TaskType:",
       "description": "TODO comment in src/continuous_backlog_executor.py:379",
       "type": "Feature",
@@ -1501,7 +1501,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2942241424879024492",
+      "id": "todo-1041862084150938538",
       "title": "\"\"\"Classify TODO based on content\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:380",
       "type": "Feature",
@@ -1515,7 +1515,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6561003744014752362",
+      "id": "todo-2445681650659927544",
       "title": "def _generate_todo_acceptance_criteria(self, content: str) -> List[str]:",
       "description": "TODO comment in src/continuous_backlog_executor.py:398",
       "type": "Feature",
@@ -1529,7 +1529,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3464118629429161112",
+      "id": "todo-7635755776305136028",
       "title": "\"\"\"Generate acceptance criteria for TODO item\"\"\"",
       "description": "TODO comment in src/continuous_backlog_executor.py:399",
       "type": "Feature",
@@ -1543,7 +1543,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5847208075757350335",
+      "id": "todo--358776954999224484",
       "title": "f\"Address the TODO comment: {content}\",",
       "description": "TODO comment in src/continuous_backlog_executor.py:401",
       "type": "Feature",
@@ -1557,7 +1557,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7429772111936424464",
+      "id": "todo-2630219937884694928",
       "title": "r'(todo|fixme|hack)[:]\\s*(.+)',",
       "description": "TODO comment in src/continuous_backlog_executor.py:618",
       "type": "Bug",
@@ -1571,7 +1571,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--933477123651550453",
+      "id": "todo--4892645999480932558",
       "title": "content (str): Content of the TODO/FIXME comment",
       "description": "TODO comment in src/database_task_tracker.py:36",
       "type": "Bug",
@@ -1585,7 +1585,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3504295187724120168",
+      "id": "todo--3517816415422751236",
       "title": "hash1 = generate_task_hash(\"test/repo\", \"src/file.py\", 42, \"TODO: Fix this\")",
       "description": "TODO comment in src/database_task_tracker.py:455",
       "type": "Bug",
@@ -1599,7 +1599,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8904610317256757486",
+      "id": "todo-4920546543845260887",
       "title": "hash2 = generate_task_hash(\"test/repo\", \"src/file.py\", 42, \"TODO: Fix this\")",
       "description": "TODO comment in src/database_task_tracker.py:456",
       "type": "Bug",
@@ -1613,7 +1613,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4695557261658839826",
+      "id": "todo-4294718144588015598",
       "title": "is_processed_before = await tracker.is_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this')",
       "description": "TODO comment in src/database_task_tracker.py:461",
       "type": "Bug",
@@ -1627,7 +1627,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4467218201431778727",
+      "id": "todo--4068034300325842296",
       "title": "task_hash = await tracker.mark_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this', 123)",
       "description": "TODO comment in src/database_task_tracker.py:464",
       "type": "Bug",
@@ -1641,7 +1641,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--9202258243478507811",
+      "id": "todo--2259363912285638052",
       "title": "is_processed_after = await tracker.is_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this')",
       "description": "TODO comment in src/database_task_tracker.py:467",
       "type": "Bug",
@@ -1655,7 +1655,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7199875647745917805",
+      "id": "todo-4531499112299455967",
       "title": "scan_todos=self.analyzer_config.get('scanForTodos', True),",
       "description": "TODO comment in src/enhanced_task_analyzer.py:118",
       "type": "Feature",
@@ -1669,7 +1669,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-1472088162135339369",
+      "id": "todo--874663134395859141",
       "title": "scan_todos=self.analyzer_config.get('scanForTodos', True),",
       "description": "TODO comment in src/enhanced_task_analyzer.py:195",
       "type": "Feature",
@@ -1683,7 +1683,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4203729121849189682",
+      "id": "todo--3246550649785168969",
       "title": "'scan_todos_enabled': self.analyzer_config.get('scanForTodos', True),",
       "description": "TODO comment in src/enhanced_task_analyzer.py:220",
       "type": "Feature",
@@ -1697,7 +1697,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4169821982386853544",
+      "id": "todo--7531267926255465854",
       "title": "from task_analyzer import find_todo_comments, analyze_open_issues",
       "description": "TODO comment in src/enhanced_task_analyzer.py:255",
       "type": "Bug",
@@ -1711,7 +1711,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7996530246134968124",
+      "id": "todo-5578675522876345329",
       "title": "if config['analyzer']['scanForTodos']:",
       "description": "TODO comment in src/enhanced_task_analyzer.py:278",
       "type": "Feature",
@@ -1725,7 +1725,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2725777300596995195",
+      "id": "todo-4021928139661982075",
       "title": "find_todo_comments(api, repo, manager_repo_name)",
       "description": "TODO comment in src/enhanced_task_analyzer.py:279",
       "type": "Feature",
@@ -1739,7 +1739,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5267289899294714869",
+      "id": "todo--4724178534282961859",
       "title": "@monitor_performance(track_memory=True, custom_name=\"scan_todo_comments\")",
       "description": "TODO comment in src/task_analyzer.py:16",
       "type": "Performance",
@@ -1753,7 +1753,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8074209717646587588",
+      "id": "todo--146458215364699892",
       "title": "def find_todo_comments(github_api: GitHubAPI, repo: Repository.Repository, manager_repo_name: str) -> None:",
       "description": "TODO comment in src/task_analyzer.py:19",
       "type": "Feature",
@@ -1767,7 +1767,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8371103106289508426",
+      "id": "todo-2143087785430244033",
       "title": "\"\"\"Scan repository for TODO and FIXME comments and create issues for them\"\"\"",
       "description": "TODO comment in src/task_analyzer.py:20",
       "type": "Bug",
@@ -1781,7 +1781,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6762947871145231725",
+      "id": "todo--8935003578958452900",
       "title": "logger.info(f\"Scanning {repo.full_name} for TODO comments\")",
       "description": "TODO comment in src/task_analyzer.py:21",
       "type": "Feature",
@@ -1795,7 +1795,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5905174302543957899",
+      "id": "todo-3380863021913586124",
       "title": "todo_count = 0",
       "description": "TODO comment in src/task_analyzer.py:22",
       "type": "Feature",
@@ -1809,7 +1809,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4925955428530158043",
+      "id": "todo-6256381855405326796",
       "title": "Search for TODO and FIXME comments in the repository using optimized single query",
       "description": "TODO comment in src/task_analyzer.py:24",
       "type": "Bug",
@@ -1823,7 +1823,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--586729079636562236",
+      "id": "todo--3648987688060709301",
       "title": "combined_query = f\"(TODO: OR FIXME: OR TODO OR FIXME) repo:{repo.full_name}\"",
       "description": "TODO comment in src/task_analyzer.py:26",
       "type": "Bug",
@@ -1837,7 +1837,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2854425299889928947",
+      "id": "todo--4091504095233272189",
       "title": "Find lines with TODO/FIXME patterns",
       "description": "TODO comment in src/task_analyzer.py:46",
       "type": "Bug",
@@ -1851,7 +1851,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2607818400044738103",
+      "id": "todo-3631342288506204979",
       "title": "search_terms = ['TODO:', 'FIXME:', 'TODO', 'FIXME']",
       "description": "TODO comment in src/task_analyzer.py:47",
       "type": "Bug",
@@ -1865,7 +1865,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8376224544928371545",
+      "id": "todo--8743981043906274731",
       "title": "Extract some context around the TODO",
       "description": "TODO comment in src/task_analyzer.py:61",
       "type": "Feature",
@@ -1879,7 +1879,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7197114671518593991",
+      "id": "todo-3071512078482440071",
       "title": "todo_count += 1",
       "description": "TODO comment in src/task_analyzer.py:98",
       "type": "Feature",
@@ -1893,7 +1893,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5233824376387611303",
+      "id": "todo--7890001418050113580",
       "title": "if len(processed_lines) >= 3:   Max 3 TODOs per file",
       "description": "TODO comment in src/task_analyzer.py:101",
       "type": "Feature",
@@ -1907,7 +1907,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-850197883591325351",
+      "id": "todo-2014312866331184774",
       "title": "logger.info(f\"TODO scan completed using optimized single-query approach. Found {todo_count} TODO/FIXME comments in {repo.full_name}\")",
       "description": "TODO comment in src/task_analyzer.py:111",
       "type": "Bug",
@@ -1921,7 +1921,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7450937710622089534",
+      "id": "todo--1098291838591870611",
       "title": "@monitor_performance(track_memory=True, custom_name=\"scan_todos_with_tracking\")",
       "description": "TODO comment in src/task_analyzer.py:118",
       "type": "Performance",
@@ -1935,7 +1935,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--291918662782316780",
+      "id": "todo-7135817490484285939",
       "title": "def find_todo_comments_with_tracking(github_api, repo, manager_repo_name):",
       "description": "TODO comment in src/task_analyzer.py:120",
       "type": "Feature",
@@ -1949,7 +1949,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4160410906665346620",
+      "id": "todo--2906086715339644177",
       "title": "Enhanced version of find_todo_comments with duplicate tracking",
       "description": "TODO comment in src/task_analyzer.py:122",
       "type": "Feature",
@@ -1963,7 +1963,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6382536564929711894",
+      "id": "todo-1263954354749920833",
       "title": "creating duplicate issues for the same TODO/FIXME comments.",
       "description": "TODO comment in src/task_analyzer.py:125",
       "type": "Bug",
@@ -1977,7 +1977,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2087067785889755667",
+      "id": "todo--1548423526457906480",
       "title": "return find_todo_comments(github_api, repo, manager_repo_name)",
       "description": "TODO comment in src/task_analyzer.py:127",
       "type": "Feature",
@@ -1991,7 +1991,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4901768673495478416",
+      "id": "todo--239332403139912279",
       "title": "scan_todos=config['analyzer']['scanForTodos'],",
       "description": "TODO comment in src/task_analyzer.py:232",
       "type": "Feature",
@@ -2005,7 +2005,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4744945004687660025",
+      "id": "todo-4926254042265982509",
       "title": "if 'total_todos_found' in scan_results:",
       "description": "TODO comment in src/task_analyzer.py:245",
       "type": "Feature",
@@ -2019,7 +2019,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-466062889397955380",
+      "id": "todo-4854292727778842173",
       "title": "logger.info(f\"Found {scan_results['total_todos_found']} TODO/FIXME comments\")",
       "description": "TODO comment in src/task_analyzer.py:246",
       "type": "Bug",
@@ -2033,7 +2033,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4895619633759340187",
+      "id": "todo-6581223802806060153",
       "title": "if config['analyzer']['scanForTodos']:",
       "description": "TODO comment in src/task_analyzer.py:273",
       "type": "Feature",
@@ -2047,7 +2047,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4123248592725707852",
+      "id": "todo-4693110682924489485",
       "title": "find_todo_comments(api, repo, manager_repo_name)",
       "description": "TODO comment in src/task_analyzer.py:275",
       "type": "Feature",
@@ -2061,7 +2061,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-1208336224717505255",
+      "id": "todo--6493685116671084504",
       "title": "FIXME indicates higher urgency than TODO (4.0 vs 1.0)",
       "description": "TODO comment in src/task_prioritization.py:300",
       "type": "Bug",
@@ -2075,7 +2075,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3966312942658455586",
+      "id": "todo--1315470379168550319",
       "title": "FIXME suggests something is broken and needs immediate attention",
       "description": "TODO comment in src/task_prioritization.py:301",
       "type": "Bug",
@@ -2089,7 +2089,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3630288948626792789",
+      "id": "todo-335171832810734523",
       "title": "if content.startswith('FIXME'):",
       "description": "TODO comment in src/task_prioritization.py:303",
       "type": "Bug",
@@ -2103,7 +2103,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-590770127772139076",
+      "id": "todo--4819623141941074980",
       "title": "elif content.startswith('TODO'):",
       "description": "TODO comment in src/task_prioritization.py:305",
       "type": "Feature",
@@ -2117,7 +2117,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3552366959769787501",
+      "id": "todo--2810166868062162660",
       "title": "'content': 'TODO: Add unit tests for utility functions',",
       "description": "TODO comment in src/task_prioritization.py:589",
       "type": "Testing",
@@ -2131,7 +2131,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--93416332798224763",
+      "id": "todo--5733640943112213068",
       "title": "'content': 'TODO: Update README documentation',",
       "description": "TODO comment in src/task_prioritization.py:595",
       "type": "Feature",
@@ -2145,7 +2145,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5260735540612632091",
+      "id": "todo--7010538509621183405",
       "title": "creating duplicate issues for the same TODO/FIXME comments.",
       "description": "TODO comment in src/task_tracker.py:5",
       "type": "Bug",
@@ -2159,7 +2159,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2963230981950678285",
+      "id": "todo-1229136206468136075",
       "title": "content (str): Content of the TODO/FIXME comment",
       "description": "TODO comment in src/task_tracker.py:25",
       "type": "Bug",
@@ -2173,7 +2173,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-9153429895573921588",
+      "id": "todo--4551885333021093544",
       "title": "hash1 = generate_task_hash(\"test/repo\", \"src/file.py\", 42, \"TODO: Fix this\")",
       "description": "TODO comment in src/task_tracker.py:279",
       "type": "Bug",
@@ -2187,7 +2187,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-5229970371857945737",
+      "id": "todo--2491701023163833741",
       "title": "hash2 = generate_task_hash(\"test/repo\", \"src/file.py\", 42, \"TODO: Fix this\")",
       "description": "TODO comment in src/task_tracker.py:280",
       "type": "Bug",
@@ -2201,7 +2201,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--200598025694489330",
+      "id": "todo--3983461177003661376",
       "title": "print(f\"Is task processed: {tracker.is_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this')}\")",
       "description": "TODO comment in src/task_tracker.py:285",
       "type": "Bug",
@@ -2215,7 +2215,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-113055908841328483",
+      "id": "todo-4855347416611432288",
       "title": "task_hash = tracker.mark_task_processed('test/repo', 'src/file.py', 42, 'TODO: Fix this', 123)",
       "description": "TODO comment in src/task_tracker.py:287",
       "type": "Bug",
@@ -2229,7 +2229,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4636286921064420",
+      "id": "todo--7511933930312677452",
       "title": "\"required\": [\"scanForTodos\", \"scanOpenIssues\"],",
       "description": "TODO comment in src/validation.py:86",
       "type": "Bug",
@@ -2243,7 +2243,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7737411444695764455",
+      "id": "todo--2616054391647431424",
       "title": "\"scanForTodos\": {\"type\": \"boolean\"},",
       "description": "TODO comment in src/validation.py:88",
       "type": "Feature",
@@ -2257,7 +2257,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1495002764790633563",
+      "id": "todo-8809379940961493813",
       "title": "\"todoPatterns\": {",
       "description": "TODO comment in src/validation.py:96",
       "type": "Feature",
@@ -2271,7 +2271,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5113803007441151841",
+      "id": "todo--4020652611024679512",
       "title": "'maxTodosPerFile': 3",
       "description": "TODO comment in src/services/configuration_service.py:186",
       "type": "Feature",
@@ -2285,7 +2285,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3477717388868205285",
+      "id": "todo--5774418706735905041",
       "title": "content=\"TODO: Fix this\",",
       "description": "TODO comment in src/services/database_service.py:653",
       "type": "Bug",
@@ -2299,7 +2299,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--7351902233524781139",
+      "id": "todo-1212006259531901679",
       "title": "source_type: str = \"manual\"   manual, todo, fixme, pr_feedback",
       "description": "TODO comment in src/services/issue_service.py:53",
       "type": "Bug",
@@ -2313,7 +2313,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--460788602666368264",
+      "id": "todo-8627585357412813200",
       "title": "todos_found: int",
       "description": "TODO comment in src/services/repository_service.py:46",
       "type": "Feature",
@@ -2327,7 +2327,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8008723670612899978",
+      "id": "todo-6402363087081484578",
       "title": "scanning for TODOs, analyzing issues, and managing repository state.",
       "description": "TODO comment in src/services/repository_service.py:59",
       "type": "Bug",
@@ -2341,7 +2341,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8821351720228744173",
+      "id": "todo--3777211011515697633",
       "title": "async def scan_repository_todos(self, repo_info: RepositoryInfo, manager_repo_name: str) -> ScanResult:",
       "description": "TODO comment in src/services/repository_service.py:127",
       "type": "Feature",
@@ -2355,7 +2355,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4157722250006258077",
+      "id": "todo-86312672437874830",
       "title": "Scan repository for TODO comments",
       "description": "TODO comment in src/services/repository_service.py:129",
       "type": "Feature",
@@ -2369,7 +2369,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-4694072425712502233",
+      "id": "todo-7690301448679434950",
       "title": "self.logger.info(f\"Scanning {repo_info.full_name} for TODOs\")",
       "description": "TODO comment in src/services/repository_service.py:139",
       "type": "Feature",
@@ -2383,7 +2383,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2265508462604947879",
+      "id": "todo--5770468336962807367",
       "title": "todos_found=0,",
       "description": "TODO comment in src/services/repository_service.py:143",
       "type": "Feature",
@@ -2397,7 +2397,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1955045143836339592",
+      "id": "todo-2841295141620664332",
       "title": "Search for TODO/FIXME comments",
       "description": "TODO comment in src/services/repository_service.py:152",
       "type": "Bug",
@@ -2411,7 +2411,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7963677354747818820",
+      "id": "todo-5412805901196675497",
       "title": "combined_query = f\"(TODO: OR FIXME: OR TODO OR FIXME) repo:{repo_info.full_name}\"",
       "description": "TODO comment in src/services/repository_service.py:153",
       "type": "Bug",
@@ -2425,7 +2425,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8681749060407801747",
+      "id": "todo--843520879653223850",
       "title": "todo_tasks = [",
       "description": "TODO comment in src/services/repository_service.py:161",
       "type": "Feature",
@@ -2439,7 +2439,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3502207947164757844",
+      "id": "todo--4541403637355951561",
       "title": "self._process_todo_result(github_api, repo_info.repository, result, manager_repo_name)",
       "description": "TODO comment in src/services/repository_service.py:162",
       "type": "Feature",
@@ -2453,7 +2453,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-6436172386034687272",
+      "id": "todo-3927093391851627793",
       "title": "with monitor_performance(\"concurrent_todo_processing\"):",
       "description": "TODO comment in src/services/repository_service.py:166",
       "type": "Performance",
@@ -2467,7 +2467,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-2218247291346627689",
+      "id": "todo--2113045027309334374",
       "title": "todo_results = await asyncio.gather(*todo_tasks, return_exceptions=True)",
       "description": "TODO comment in src/services/repository_service.py:167",
       "type": "Feature",
@@ -2481,7 +2481,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3500950525657574803",
+      "id": "todo-8992638612956307660",
       "title": "Count successful TODOs",
       "description": "TODO comment in src/services/repository_service.py:169",
       "type": "Feature",
@@ -2495,7 +2495,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--4501679730137635719",
+      "id": "todo-5604760134885484643",
       "title": "for result in todo_results:",
       "description": "TODO comment in src/services/repository_service.py:170",
       "type": "Feature",
@@ -2509,7 +2509,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8073396801126310590",
+      "id": "todo-3510847054211640984",
       "title": "self.logger.warning(f\"TODO processing failed: {result}\")",
       "description": "TODO comment in src/services/repository_service.py:172",
       "type": "Feature",
@@ -2523,7 +2523,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8599812191565063587",
+      "id": "todo--6040062570565210978",
       "title": "scan_result.todos_found += result",
       "description": "TODO comment in src/services/repository_service.py:174",
       "type": "Feature",
@@ -2537,7 +2537,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7477611886891071579",
+      "id": "todo--2516125340460672418",
       "title": "self.logger.info(f\"TODO scan completed for {repo_info.full_name}: {scan_result.todos_found} TODOs found\")",
       "description": "TODO comment in src/services/repository_service.py:177",
       "type": "Feature",
@@ -2551,7 +2551,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3706398185260607054",
+      "id": "todo--3268085376732067192",
       "title": "'todos_found': scan_result.todos_found,",
       "description": "TODO comment in src/services/repository_service.py:190",
       "type": "Feature",
@@ -2565,7 +2565,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-527405488113800922",
+      "id": "todo--1741273325860587837",
       "title": "async def _process_todo_result(self, github_api: AsyncGitHubAPI, repo: Repository.Repository,",
       "description": "TODO comment in src/services/repository_service.py:199",
       "type": "Feature",
@@ -2579,7 +2579,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-3858977045173852958",
+      "id": "todo-8818877382758715432",
       "title": "Process a single TODO search result",
       "description": "TODO comment in src/services/repository_service.py:202",
       "type": "Feature",
@@ -2593,7 +2593,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2925736617296402473",
+      "id": "todo--7519598349956683721",
       "title": "search_terms = ['TODO:', 'FIXME:', 'TODO', 'FIXME']",
       "description": "TODO comment in src/services/repository_service.py:224",
       "type": "Bug",
@@ -2607,7 +2607,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-649291921004359473",
+      "id": "todo--4528196569862499587",
       "title": "Limit to max 3 TODOs per file",
       "description": "TODO comment in src/services/repository_service.py:231",
       "type": "Feature",
@@ -2621,7 +2621,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-7672806214625949918",
+      "id": "todo-3257285614979874944",
       "title": "Check if line contains TODO/FIXME",
       "description": "TODO comment in src/services/repository_service.py:235",
       "type": "Bug",
@@ -2635,7 +2635,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--9025150548199925759",
+      "id": "todo-2129769523442823105",
       "title": "return await self.scan_repository_todos(repo_info, manager_repo_name)",
       "description": "TODO comment in src/services/repository_service.py:333",
       "type": "Feature",
@@ -2649,7 +2649,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8291474881144899623",
+      "id": "todo-2174967521494382675",
       "title": "todos_found=0,",
       "description": "TODO comment in src/services/repository_service.py:348",
       "type": "Feature",
@@ -2663,7 +2663,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--1160091899452614282",
+      "id": "todo--5481753047844424822",
       "title": "'total_todos_found': 0,",
       "description": "TODO comment in src/services/repository_service.py:378",
       "type": "Feature",
@@ -2677,7 +2677,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-8943601218159861124",
+      "id": "todo-2704198542656225060",
       "title": "stats['total_todos_found'] += repo_info.scan_results.get('todos_found', 0)",
       "description": "TODO comment in src/services/repository_service.py:399",
       "type": "Feature",
@@ -2691,7 +2691,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--6606589793602383399",
+      "id": "todo--838788142191068430",
       "title": "logger.info(f\"Statistics: {stats['total_todos_found']} TODOs found\")",
       "description": "TODO comment in src/services/repository_service.py:456",
       "type": "Feature",
@@ -2705,7 +2705,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3812297024504099211",
+      "id": "todo-6845673259979679335",
       "title": "description=f\"Scan repository {repo_name} for TODOs and issues\",",
       "description": "TODO comment in src/services/task_service.py:312",
       "type": "Bug",
@@ -2719,7 +2719,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--3160147382944040714",
+      "id": "todo-3280352781772678524",
       "title": "scan_result = await repo_service.scan_repository_todos(repo_infos[0], manager_repo)",
       "description": "TODO comment in src/services/task_service.py:413",
       "type": "Feature",
@@ -2733,7 +2733,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2983372592204820588",
+      "id": "todo-2431877403694096216",
       "title": "'todos_found': scan_result.todos_found,",
       "description": "TODO comment in src/services/task_service.py:417",
       "type": "Feature",
@@ -2747,7 +2747,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-667081148748149562",
+      "id": "todo-6907594496964239674",
       "title": "total_todos = 0",
       "description": "TODO comment in src/services/task_service.py:471",
       "type": "Feature",
@@ -2761,7 +2761,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--2028746351144973498",
+      "id": "todo--3338145560791354560",
       "title": "if 'todos_found' in task_result.result_data:",
       "description": "TODO comment in src/services/task_service.py:475",
       "type": "Feature",
@@ -2775,7 +2775,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--5322822485854799805",
+      "id": "todo--5794773429964844042",
       "title": "total_todos += task_result.result_data['todos_found']",
       "description": "TODO comment in src/services/task_service.py:476",
       "type": "Feature",
@@ -2789,7 +2789,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo-325403243193091706",
+      "id": "todo--3078776374261494132",
       "title": "'total_todos_found': total_todos,",
       "description": "TODO comment in src/services/task_service.py:482",
       "type": "Feature",
@@ -2803,7 +2803,7 @@
       "wsjf_score": 3.5
     },
     {
-      "id": "todo--8951993984144009380",
+      "id": "todo-6620110856909613681",
       "title": "logger.debug(f\"Selected refactor template based on labels: {[l for l in label_names if l in ['refactor', 'todo', 'cleanup', 'tech-debt']]}\")",
       "description": "TODO comment in src/prompt_builder.py:313",
       "type": "Bug",
@@ -2817,7 +2817,7 @@
       "wsjf_score": 2.25
     },
     {
-      "id": "todo--5700070211758711343",
+      "id": "todo--3748182613636750758",
       "title": "'labels': [\"task-proposal\", \"refactor\", \"todo\"],",
       "description": "TODO comment in src/async_task_analyzer.py:195",
       "type": "Refactoring",
@@ -2831,7 +2831,7 @@
       "wsjf_score": 1.75
     },
     {
-      "id": "todo-454514262991925655",
+      "id": "todo-1732546250468896582",
       "title": "elif any(word in label_names for word in ['refactor', 'todo', 'cleanup', 'tech-debt']):",
       "description": "TODO comment in src/prompt_builder.py:311",
       "type": "Refactoring",
@@ -2845,7 +2845,7 @@
       "wsjf_score": 1.75
     },
     {
-      "id": "todo--2877940551921713503",
+      "id": "todo--3416137264967106381",
       "title": "[\"task-proposal\", \"refactor\", \"todo\"]",
       "description": "TODO comment in src/task_analyzer.py:92",
       "type": "Refactoring",
@@ -2859,7 +2859,7 @@
       "wsjf_score": 1.75
     },
     {
-      "id": "todo-4297216964331194260",
+      "id": "todo--142283894442400825",
       "title": "'refactor': 3, 'todo': 2, 'consider': 2,",
       "description": "TODO comment in src/task_prioritization.py:93",
       "type": "Refactoring",
@@ -2873,7 +2873,7 @@
       "wsjf_score": 1.75
     },
     {
-      "id": "todo-848062263637844044",
+      "id": "todo-7474243257379326134",
       "title": "'labels': [\"task-proposal\", \"refactor\", \"todo\"],",
       "description": "TODO comment in src/services/repository_service.py:273",
       "type": "Refactoring",
