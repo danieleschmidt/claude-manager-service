@@ -19,9 +19,9 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Optional, List, Awaitable, Any, Callable
 from github import Repository, Issue
 
-from github_api import GitHubAPI
-from logger import get_logger
-from performance_monitor import monitor_performance
+from .github_api import GitHubAPI
+from .logger import get_logger
+from .performance_monitor import monitor_performance
 
 
 logger = get_logger(__name__)
