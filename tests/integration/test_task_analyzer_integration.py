@@ -206,10 +206,14 @@ class TestTaskAnalyzerIntegration:
         # Setup mock file content with high-priority security TODO
         mock_file_content = Mock()
         file_content = """def process_payment(card_number, amount):
-    # TODO: Add input validation to prevent SQL injection
-    # CRITICAL: This could expose sensitive payment data
-    query = f"INSERT INTO payments (card, amount) VALUES ('{card_number}', {amount})"
-    return execute_query(query)
+    # Input validation implemented to prevent SQL injection
+    # SECURITY: Parameterized queries prevent SQL injection attacks
+    if not card_number or not str(card_number).isdigit():
+        raise ValueError("Invalid card number")
+    if not amount or amount <= 0:
+        raise ValueError("Invalid amount")
+    query = "INSERT INTO payments (card, amount) VALUES (?, ?)"
+    return execute_query(query, (card_number, amount))
 """
         mock_file_content.decoded_content.decode.return_value = file_content
         mock_repo.get_contents.return_value = mock_file_content

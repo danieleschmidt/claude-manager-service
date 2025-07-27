@@ -129,7 +129,7 @@ def estimate_value(todo_text: str, file_path: str) -> int:
     else:
         base_value = 3
         
-    # Security-related todos are critical
+    # Security-related TODOs are critical
     if any(word in todo_lower for word in ['security', 'vulnerability', 'auth', 'permission']):
         return min(13, base_value + 5)
     elif any(word in todo_lower for word in ['performance', 'memory', 'leak']):
