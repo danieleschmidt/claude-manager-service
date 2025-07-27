@@ -1,0 +1,112 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'claude-manager'
+    environment: 'development'
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Claude Manager application
+  - job_name: 'claude-manager'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 10s
+    metrics_path: /metrics
+    scrape_timeout: 5s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Claude Manager health checks
+  - job_name: 'claude-manager-health'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 30s
+    metrics_path: /health
+    scrape_timeout: 10s
+
+  # Redis metrics
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 15s
+
+  # PostgreSQL metrics
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 15s
+
+  # Node exporter for system metrics
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+
+  # Docker metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['docker-exporter:9323']
+    scrape_interval: 15s
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:8080']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # GitHub API monitoring
+  - job_name: 'github-api'
+    static_configs:
+      - targets: ['api.github.com:443']
+    scrape_interval: 60s
+    scheme: https
+    metrics_path: /
+    params:
+      module: [http_2xx]
+
+  # Custom application metrics
+  - job_name: 'claude-manager-custom'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 30s
+    metrics_path: /api/metrics
+    scrape_timeout: 10s
+    honor_labels: true
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: http://victoriametrics:8428/api/v1/write
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+
+# Remote read configuration
+remote_read:
+  - url: http://victoriametrics:8428/api/v1/read
+
+# Storage configuration
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 7d
+    retention.size: 10GB
+    wal-compression: true

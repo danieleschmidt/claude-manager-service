@@ -1,0 +1,227 @@
+groups:
+  - name: claude-manager-alerts
+    rules:
+      # Application Health Alerts
+      - alert: ApplicationDown
+        expr: up{job="claude-manager"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: claude-manager
+        annotations:
+          summary: "Claude Manager application is down"
+          description: "The Claude Manager application has been down for more than 30 seconds."
+          runbook_url: "https://docs.claude-manager.com/runbooks/application-down"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: claude-manager
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} for the last 5 minutes."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: claude-manager
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is {{ $value }}s for the last 5 minutes."
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: system_cpu_usage_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% for more than 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: system_memory_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% for more than 5 minutes."
+
+      - alert: LowDiskSpace
+        expr: system_disk_usage_percent > 90
+        for: 1m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value }}% and critically low."
+
+      # Database Alerts
+      - alert: DatabaseConnectionFailure
+        expr: database_connections_failed_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection failures"
+          description: "Database connection failures detected."
+
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 5
+        for: 3m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries"
+          description: "95th percentile query time is {{ $value }}s."
+
+      # GitHub API Alerts
+      - alert: GitHubAPIRateLimitLow
+        expr: github_api_rate_limit_remaining < 100
+        for: 0s
+        labels:
+          severity: warning
+          service: github-api
+        annotations:
+          summary: "GitHub API rate limit low"
+          description: "Only {{ $value }} GitHub API requests remaining."
+
+      - alert: GitHubAPIDown
+        expr: github_api_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: github-api
+        annotations:
+          summary: "GitHub API is down"
+          description: "Cannot reach GitHub API for more than 1 minute."
+
+      # Task Processing Alerts
+      - alert: HighFailedTasksCount
+        expr: tasks_failed_total > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: task-processor
+        annotations:
+          summary: "High number of failed tasks"
+          description: "{{ $value }} tasks have failed recently."
+
+      - alert: TaskProcessingStalled
+        expr: increase(tasks_completed_total[10m]) == 0 and tasks_pending_total > 0
+        for: 10m
+        labels:
+          severity: critical
+          service: task-processor
+        annotations:
+          summary: "Task processing appears stalled"
+          description: "No tasks completed in 10 minutes while {{ $value }} tasks are pending."
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis has been down for more than 30 seconds."
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis high memory usage"
+          description: "Redis memory usage is {{ $value | humanizePercentage }}."
+
+      # PostgreSQL Alerts
+      - alert: PostgreSQLDown
+        expr: up{job="postgres"} == 0
+        for: 30s
+        labels:
+          severity: critical
+          service: postgresql
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL has been down for more than 30 seconds."
+
+      - alert: PostgreSQLTooManyConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 2m
+        labels:
+          severity: warning
+          service: postgresql
+        annotations:
+          summary: "PostgreSQL too many connections"
+          description: "PostgreSQL has {{ $value | humanizePercentage }} connections used."
+
+  - name: infrastructure-alerts
+    rules:
+      # Container/Pod Alerts
+      - alert: ContainerRestarting
+        expr: increase(container_restart_count[1h]) > 3
+        for: 0s
+        labels:
+          severity: warning
+          service: infrastructure
+        annotations:
+          summary: "Container restarting frequently"
+          description: "Container {{ $labels.container }} has restarted {{ $value }} times in the last hour."
+
+      - alert: PodCrashLooping
+        expr: rate(container_restart_count[15m]) * 60 * 15 > 5
+        for: 0s
+        labels:
+          severity: critical
+          service: infrastructure
+        annotations:
+          summary: "Pod is crash looping"
+          description: "Pod {{ $labels.pod }} is crash looping."
+
+      # Network Alerts
+      - alert: HighNetworkLatency
+        expr: probe_duration_seconds > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          service: network
+        annotations:
+          summary: "High network latency"
+          description: "Network latency is {{ $value }}s for {{ $labels.instance }}."
+
+  - name: business-alerts
+    rules:
+      # Business Logic Alerts
+      - alert: LowTaskCompletionRate
+        expr: rate(tasks_completed_total[1h]) < 10
+        for: 30m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Low task completion rate"
+          description: "Task completion rate is {{ $value }} per second over the last hour."
+
+      - alert: HighTaskFailureRate
+        expr: rate(tasks_failed_total[30m]) / rate(tasks_started_total[30m]) > 0.2
+        for: 15m
+        labels:
+          severity: critical
+          service: business
+        annotations:
+          summary: "High task failure rate"
+          description: "Task failure rate is {{ $value | humanizePercentage }} over the last 30 minutes."
