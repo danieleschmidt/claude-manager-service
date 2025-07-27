@@ -1,0 +1,101 @@
+# Automation Scope Configuration
+# Defines what external operations the autonomous backlog management system is allowed to perform
+
+version: "1.0"
+
+# Workspace boundary - all operations within this path are automatically allowed
+workspace_root: "./"
+
+# External operations that require explicit whitelisting
+external_operations:
+  # Git operations outside the repository
+  git:
+    allowed: false
+    whitelisted_repos: []
+    
+  # Network operations  
+  network:
+    allowed: false
+    whitelisted_domains: []
+    
+  # File system operations outside workspace
+  filesystem:
+    allowed: false
+    whitelisted_paths: []
+    
+  # Package management operations
+  package_management:
+    allowed: true
+    operations:
+      - "pip install"
+      - "pip upgrade"
+      - "npm install"
+      - "npm update"
+    restrictions:
+      - "no_global_installs"
+      - "require_requirements_file"
+      
+  # CI/CD operations
+  cicd:
+    allowed: true
+    operations:
+      - "github_actions"
+      - "pr_creation"
+      - "issue_creation"
+    restrictions:
+      - "no_workflow_modification"
+      - "require_approval_for_releases"
+
+# Safety constraints
+safety:
+  # Maximum number of files that can be modified in a single operation
+  max_files_per_operation: 10
+  
+  # Require human approval for high-risk operations
+  require_approval:
+    - "public_api_changes"
+    - "security_sensitive_files"
+    - "large_refactorings"  # > 200 LOC
+    - "external_dependencies"
+    
+  # Files that cannot be modified without explicit approval
+  protected_files:
+    - ".github/workflows/*"
+    - "*.yml"
+    - "*.yaml" 
+    - "Dockerfile*"
+    - "docker-compose*"
+    - "requirements.txt"
+    - "package.json"
+    - "setup.py"
+    - "pyproject.toml"
+    
+  # Patterns that trigger security review
+  security_triggers:
+    - "subprocess"
+    - "exec"
+    - "eval"
+    - "shell=True"
+    - "sql"
+    - "password"
+    - "secret"
+    - "token"
+    - "api_key"
+
+# Escalation rules
+escalation:
+  # When to escalate to human review
+  triggers:
+    - "protected_file_modification"
+    - "security_trigger_detected"
+    - "test_failure_after_change"
+    - "effort_estimate_exceeds_threshold"  # > 5 story points
+    - "external_operation_required"
+    
+  # Contact method for escalation
+  method: "github_issue"
+  
+  # Labels to apply to escalation issues
+  labels:
+    - "autonomous-escalation"
+    - "needs-human-review"

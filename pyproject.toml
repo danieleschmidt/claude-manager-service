@@ -1,0 +1,241 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "claude-code-manager"
+version = "0.1.0"
+description = "Autonomous software development lifecycle management system"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Terragon Labs", email = "dev@terragon.ai"},
+]
+maintainers = [
+    {name = "Terragon Labs", email = "dev@terragon.ai"},
+]
+keywords = [
+    "automation",
+    "ai",
+    "github",
+    "devops",
+    "sdlc",
+    "task-management",
+    "continuous-integration"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: System :: Monitoring",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "PyGithub>=2.0.0",
+    "requests>=2.31.0",
+    "aiohttp>=3.9.0",
+    "asyncio-throttle>=1.0.2",
+    "flask>=3.0.0",
+    "jinja2>=3.1.0",
+    "psutil>=5.9.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "structlog>=23.0.0",
+    "typer>=0.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pylint>=3.0.0",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "pre-commit>=3.4.0",
+    "bandit>=1.7.5",
+    "safety>=2.3.0",
+    "coverage[toml]>=7.3.0",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "coverage[toml]>=7.3.0",
+]
+docs = [
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
+    "mkdocs-mermaid2-plugin>=1.0.0",
+]
+monitoring = [
+    "prometheus-client>=0.17.0",
+    "statsd>=4.0.0",
+]
+security = [
+    "cryptography>=41.0.0",
+    "bcrypt>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/terragon-labs/claude-code-manager"
+Documentation = "https://claude-code-manager.readthedocs.io/"
+Repository = "https://github.com/terragon-labs/claude-code-manager.git"
+"Bug Tracker" = "https://github.com/terragon-labs/claude-code-manager/issues"
+Changelog = "https://github.com/terragon-labs/claude-code-manager/blob/main/CHANGELOG.md"
+
+[project.scripts]
+claude-manager = "src.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"*" = ["*.j2", "*.txt", "*.yaml", "*.yml"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | venv
+  | env
+  | _build
+  | buck-out
+  | build
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_first_party = ["src"]
+known_third_party = [
+    "github",
+    "requests",
+    "flask",
+    "pytest",
+    "asyncio",
+    "aiohttp",
+    "jinja2",
+    "psutil",
+    "pydantic",
+    "structlog",
+    "typer"
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "--verbose",
+    "--tb=short",
+    "--cov=src",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-report=html:htmlcov",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "asyncio: marks tests as asyncio tests",
+    "github: marks tests that require GitHub API access",
+    "security: marks tests related to security features",
+    "performance: marks tests related to performance",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "error",
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/tests/*",
+    "*/venv/*",
+    "*/env/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "setup.py",
+]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+ignore_errors = true
+show_missing = true
+precision = 2
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+show_error_codes = true
+
+[tool.bandit]
+exclude_dirs = ["tests", "venv", "env", ".venv", ".env"]
+skips = ["B101", "B601"]
+
+[tool.bandit.assert_used]
+skips = ["**/test_*.py", "**/*_test.py"]

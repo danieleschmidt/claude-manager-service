@@ -16,15 +16,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 
-from async_github_api import AsyncGitHubAPI
-from async_task_analyzer import AsyncTaskAnalyzer
-from async_orchestrator import AsyncOrchestrator
-from task_prioritization import TaskPrioritizer, calculate_wsjf_score
-from task_tracker import TaskTracker
-from services.configuration_service import ConfigurationService
-from services.repository_service import RepositoryService
-from logger import get_logger
-from error_handler import ErrorHandler
+from .async_github_api import AsyncGitHubAPI
+from .async_task_analyzer import AsyncTaskAnalyzer
+from .async_orchestrator import AsyncOrchestrator
+from .task_prioritization import TaskPrioritizer, calculate_wsjf_score
+from .task_tracker import TaskTracker
+from .services.configuration_service import ConfigurationService
+from .services.repository_service import RepositoryService
+from .logger import get_logger
+from .error_handler import ErrorHandler
 
 
 class TaskStatus(Enum):
@@ -320,9 +320,13 @@ class ContinuousBacklogExecutor:
         impact = self._estimate_todo_impact(content)
         effort = self._estimate_todo_effort(content)
         
+        # Generate stable ID based on content and file location for deduplication
+        todo_title = todo_result.get('title', 'Unknown TODO')
+        todo_hash = hash(f"{todo_result.get('file_path', '')}{todo_result.get('line_number', 0)}{todo_title}")
+        
         return BacklogItem(
-            id=f"todo_{hash(todo_result.get('title', ''))}__{int(now.timestamp())}",
-            title=todo_result.get('title', 'Unknown TODO'),
+            id=f"todo_{todo_hash}__{int(now.timestamp())}",
+            title=todo_title,
             description=todo_result.get('description', ''),
             task_type=self._classify_todo_type(content),
             impact=impact,

@@ -1,0 +1,110 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+  external_labels:
+    cluster: 'claude-manager'
+    environment: 'production'
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+      timeout: 10s
+      api_version: v2
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+    metrics_path: /metrics
+
+  # Claude Manager application (production)
+  - job_name: 'claude-manager-prod'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 15s
+    metrics_path: /metrics
+    scrape_timeout: 10s
+    honor_labels: true
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
+
+  # Claude Manager health checks (critical)
+  - job_name: 'claude-manager-health-prod'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 10s
+    metrics_path: /health
+    scrape_timeout: 5s
+
+  # Redis production metrics
+  - job_name: 'redis-prod'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+
+  # PostgreSQL production metrics
+  - job_name: 'postgres-prod'
+    static_configs:
+      - targets: ['postgres:5432']
+    scrape_interval: 30s
+
+  # Production system metrics
+  - job_name: 'node-prod'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+
+  # Load balancer metrics
+  - job_name: 'nginx-prod'
+    static_configs:
+      - targets: ['nginx:8080']
+    scrape_interval: 30s
+    metrics_path: /metrics
+
+  # External service monitoring
+  - job_name: 'github-api-prod'
+    static_configs:
+      - targets: ['api.github.com:443']
+    scrape_interval: 300s  # 5 minutes
+    scheme: https
+    metrics_path: /
+    params:
+      module: [http_2xx]
+
+  # Business metrics
+  - job_name: 'business-metrics'
+    static_configs:
+      - targets: ['claude-manager:5000']
+    scrape_interval: 60s
+    metrics_path: /api/business-metrics
+    scrape_timeout: 15s
+
+# Production remote write
+remote_write:
+  - url: http://victoriametrics:8428/api/v1/write
+    queue_config:
+      max_samples_per_send: 2000
+      max_shards: 500
+      capacity: 10000
+      batch_send_deadline: 5s
+    write_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'prometheus_.*'
+        action: drop
+
+# Production storage
+storage:
+  tsdb:
+    path: /prometheus
+    retention.time: 30d
+    retention.size: 50GB
+    wal-compression: true
