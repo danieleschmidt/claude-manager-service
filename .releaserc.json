@@ -1,0 +1,179 @@
+{
+  "branches": [
+    "main",
+    {
+      "name": "develop",
+      "prerelease": "beta"
+    },
+    {
+      "name": "release/*",
+      "prerelease": "rc"
+    }
+  ],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "releaseRules": [
+          {
+            "type": "feat",
+            "release": "minor"
+          },
+          {
+            "type": "fix",
+            "release": "patch"
+          },
+          {
+            "type": "perf",
+            "release": "patch"
+          },
+          {
+            "type": "refactor",
+            "release": "patch"
+          },
+          {
+            "type": "docs",
+            "release": false
+          },
+          {
+            "type": "test",
+            "release": false
+          },
+          {
+            "type": "ci",
+            "release": false
+          },
+          {
+            "type": "chore",
+            "release": false
+          },
+          {
+            "scope": "breaking",
+            "release": "major"
+          }
+        ],
+        "parserOpts": {
+          "noteKeywords": [
+            "BREAKING CHANGE",
+            "BREAKING CHANGES",
+            "BREAKING"
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            {
+              "type": "feat",
+              "section": "🚀 Features"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes"
+            },
+            {
+              "type": "perf",
+              "section": "⚡ Performance Improvements"
+            },
+            {
+              "type": "refactor",
+              "section": "♻️ Code Refactoring"
+            },
+            {
+              "type": "docs",
+              "section": "📚 Documentation"
+            },
+            {
+              "type": "test",
+              "section": "🧪 Tests"
+            },
+            {
+              "type": "build",
+              "section": "🏗️ Build System"
+            },
+            {
+              "type": "ci",
+              "section": "👷 CI/CD"
+            },
+            {
+              "type": "chore",
+              "section": "🔧 Chores"
+            }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md",
+        "changelogTitle": "# Changelog\n\nAll notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines."
+      }
+    ],
+    [
+      "@semantic-release/npm",
+      {
+        "npmPublish": false,
+        "tarballDir": "dist"
+      }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "verifyReleaseCmd": "echo \"Verifying release ${nextRelease.version}\"",
+        "generateNotesCmd": "echo \"Generating release notes for ${nextRelease.version}\"",
+        "prepareCmd": "echo \"${nextRelease.version}\" > VERSION && python scripts/update_version.py ${nextRelease.version}",
+        "publishCmd": "docker build -t claude-code-manager:${nextRelease.version} . && docker tag claude-code-manager:${nextRelease.version} claude-code-manager:latest",
+        "successCmd": "echo \"Successfully released ${nextRelease.version}\""
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "package.json",
+          "package-lock.json",
+          "pyproject.toml",
+          "VERSION",
+          "src/__init__.py"
+        ],
+        "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": [
+          {
+            "path": "dist/*.tar.gz",
+            "label": "Source distribution"
+          },
+          {
+            "path": "dist/*.whl",
+            "label": "Python wheel"
+          }
+        ],
+        "successComment": "🎉 This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version [${nextRelease.version}](${releases.filter(release => /^v\\d/.test(release.name))[0].html_url}) 🎉",
+        "failComment": "😞 This release from branch `${branch.name}` had failed due to the following errors:\n- ${errors.map(err => err.message).join('\\n- ')}",
+        "labels": [
+          "released"
+        ],
+        "releasedLabels": [
+          "released-${nextRelease.channel || 'latest'}"
+        ]
+      }
+    ]
+  ],
+  "preset": "conventionalcommits",
+  "tagFormat": "v${version}",
+  "repositoryUrl": "https://github.com/terragon-labs/claude-code-manager.git",
+  "debug": false,
+  "ci": true,
+  "dryRun": false
+}
