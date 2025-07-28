@@ -1,0 +1,19 @@
+{
+  "name": "claude-code-manager",
+  "version": "1.0.0",
+  "description": "Autonomous task management and code generation system",
+  "scripts": {
+    "lint": "echo 'Use make lint for Python linting'",
+    "test": "echo 'Use make test for Python testing'",
+    "dev": "python start_dashboard.py",
+    "clean": "make clean",
+    "setup": "make install-dev"
+  },
+  "keywords": ["automation", "github", "task-management", "ai"],
+  "author": "Terragon Labs",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
