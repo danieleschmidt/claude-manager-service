@@ -1,0 +1,27 @@
+# Global code owners
+* @terragon-labs
+
+# Core system components
+/src/ @terragon-labs
+/tests/ @terragon-labs
+
+# Configuration and infrastructure
+/.github/ @terragon-labs
+/docker-compose*.yml @terragon-labs
+/Dockerfile @terragon-labs
+/monitoring/ @terragon-labs
+
+# Documentation
+/docs/ @terragon-labs
+/README.md @terragon-labs
+/CHANGELOG.md @terragon-labs
+
+# Security and compliance
+/SECURITY.md @terragon-labs
+/src/security*.py @terragon-labs
+/tests/security/ @terragon-labs
+
+# Performance monitoring
+/src/performance_monitor.py @terragon-labs
+/src/database_performance_monitor.py @terragon-labs
+/tests/performance/ @terragon-labs
