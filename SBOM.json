@@ -1,0 +1,59 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "SPDX-2.3",
+  "creationInfo": {
+    "created": "2025-07-31T10:00:00Z",
+    "creators": [
+      "Tool: claude-code-manager-sbom-generator",
+      "Organization: Terragon Labs"
+    ],
+    "licenseListVersion": "3.21"
+  },
+  "name": "claude-code-manager",
+  "dataLicense": "CC0-1.0",
+  "documentDescribes": [
+    "SPDXRef-Package-claude-code-manager"
+  ],
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-claude-code-manager",
+      "name": "claude-code-manager",
+      "versionInfo": "0.1.0",
+      "downloadLocation": "https://github.com/terragon-labs/claude-code-manager",
+      "filesAnalyzed": true,
+      "homepage": "https://github.com/terragon-labs/claude-code-manager",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "copyrightText": "Copyright 2025 Terragon Labs",
+      "supplier": "Organization: Terragon Labs",
+      "originator": "Organization: Terragon Labs",
+      "description": "Autonomous software development lifecycle management system",
+      "hasFiles": []
+    }
+  ],
+  "relationships": [
+    {
+      "spdxElementId": "SPDXRef-DOCUMENT",
+      "relationshipType": "DESCRIBES",
+      "relatedSpdxElement": "SPDXRef-Package-claude-code-manager"
+    }
+  ],
+  "annotations": [
+    {
+      "annotationType": "REVIEW",
+      "annotator": "Tool: claude-code-manager-sbom-generator",
+      "annotationDate": "2025-07-31T10:00:00Z",
+      "annotationComment": "SBOM generated for claude-code-manager project. Dependencies should be validated regularly for security vulnerabilities."
+    }
+  ],
+  "externalDocumentRefs": [
+    {
+      "externalDocumentId": "DocumentRef-security-advisories",
+      "document": "https://github.com/advisories",
+      "checksum": {
+        "algorithm": "SHA1",
+        "checksumValue": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+      }
+    }
+  ]
+}
