@@ -1,0 +1,497 @@
+# Intelligent Release Automation Configuration
+# Comprehensive configuration for AI-powered release orchestration
+
+# Release Windows Configuration
+release_windows:
+  production:
+    # Allowed deployment times (UTC hours)
+    allowed_hours: [2, 3, 4, 5]  # 2-5 AM UTC (maintenance window)
+    
+    # Allowed deployment days
+    allowed_days: ["tuesday", "wednesday", "thursday"]  # Mid-week deployments
+    
+    # Blackout dates (no deployments)
+    blackout_dates:
+      - "2024-12-24"  # Christmas Eve
+      - "2024-12-25"  # Christmas Day
+      - "2024-12-31"  # New Year's Eve
+      - "2024-01-01"  # New Year's Day
+      - "2024-11-28"  # Thanksgiving (US)
+      - "2024-07-04"  # Independence Day (US)
+    
+    # Emergency hotfix overrides
+    emergency_override:
+      enabled: true
+      approval_required: true
+      max_duration_hours: 4
+      approvers: ["on_call_engineer", "tech_lead"]
+  
+  staging:
+    # More flexible staging windows
+    allowed_hours: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    allowed_days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    blackout_dates: []
+  
+  development:
+    # Always available for development
+    allowed_hours: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    allowed_days: ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    blackout_dates: []
+
+# Approval Requirements by Release Type
+approval_requirements:
+  major:
+    required_approvals: ["tech_lead", "product_owner", "security_team", "platform_team"]
+    minimum_approval_count: 3
+    approval_timeout_hours: 48
+    auto_approve_after_timeout: false
+    
+  minor:
+    required_approvals: ["tech_lead", "platform_team"]
+    minimum_approval_count: 2
+    approval_timeout_hours: 24
+    auto_approve_after_timeout: false
+    
+  patch:
+    required_approvals: ["automated"]
+    minimum_approval_count: 0
+    approval_timeout_hours: 2
+    auto_approve_after_timeout: true
+    automated_criteria:
+      max_risk_score: 0.3
+      min_test_coverage: 85
+      max_high_vulnerabilities: 0
+      max_changed_files: 10
+      
+  hotfix:
+    required_approvals: ["tech_lead", "on_call_engineer"]
+    minimum_approval_count: 2
+    approval_timeout_hours: 4
+    auto_approve_after_timeout: false
+    emergency_bypass: true
+    
+  rollback:
+    required_approvals: ["on_call_engineer"]
+    minimum_approval_count: 1
+    approval_timeout_hours: 0.5
+    auto_approve_after_timeout: true
+
+# Testing Requirements Configuration
+testing_requirements:
+  unit_tests:
+    required: true
+    min_coverage: 85
+    max_duration_minutes: 10
+    failure_threshold: 0
+    
+  integration_tests:
+    required: true
+    max_duration_minutes: 30
+    failure_threshold: 0
+    parallel_execution: true
+    
+  e2e_tests:
+    required: true
+    max_duration_minutes: 45
+    failure_threshold: 0
+    browser_matrix: ["chrome", "firefox", "safari"]
+    
+  security_tests:
+    required: true
+    max_duration_minutes: 20
+    tools: ["bandit", "safety", "semgrep", "trivy"]
+    max_high_vulnerabilities: 0
+    max_medium_vulnerabilities: 5
+    
+  performance_tests:
+    required: false  # Optional for most releases
+    required_for_major: true
+    max_duration_minutes: 60
+    load_test_duration_minutes: 10
+    response_time_p95_threshold_ms: 2000
+    error_rate_threshold: 0.01
+    
+  accessibility_tests:
+    required: false
+    wcag_level: "AA"
+    tools: ["axe", "lighthouse"]
+    
+  compatibility_tests:
+    required: false
+    required_for_major: true
+    browsers: ["chrome", "firefox", "safari", "edge"]
+    devices: ["desktop", "tablet", "mobile"]
+
+# Deployment Strategy Configuration
+deployment_strategies:
+  low_risk:
+    strategy: "rolling"
+    rollout_percentage_steps: [25, 50, 75, 100]
+    step_duration_minutes: 5
+    rollback_threshold:
+      error_rate: 0.02
+      response_time_p95: 3000
+      
+  medium_risk:
+    strategy: "blue_green"
+    warmup_duration_minutes: 5
+    validation_duration_minutes: 10
+    traffic_switch_steps: [0, 100]
+    rollback_threshold:
+      error_rate: 0.01
+      response_time_p95: 2500
+      
+  high_risk:
+    strategy: "canary"
+    canary_percentage_steps: [1, 5, 10, 25, 50, 100]
+    step_duration_minutes: 10
+    validation_duration_minutes: 15
+    rollback_threshold:
+      error_rate: 0.005
+      response_time_p95: 2000
+      business_metric_degradation: 0.02
+      
+  critical_risk:
+    strategy: "manual_approval_required"
+    pre_deployment_checklist:
+      - "Database backup completed"
+      - "Rollback plan validated"
+      - "On-call team notified"
+      - "Business stakeholders informed"
+      - "Monitoring alerts configured"
+
+# Risk Assessment Configuration
+risk_assessment:
+  factors:
+    code_complexity:
+      weight: 0.2
+      calculation_method: "cyclomatic_complexity"
+      thresholds:
+        low: 10
+        medium: 25
+        high: 50
+        critical: 100
+      tools: ["radon", "sonarqube"]
+      
+    test_coverage:
+      weight: 0.25
+      calculation_method: "branch_coverage"
+      thresholds:
+        critical: 60  # Below 60% is critical risk
+        high: 75      # 60-75% is high risk
+        medium: 85    # 75-85% is medium risk
+        low: 95       # Above 95% is low risk
+      tools: ["coverage.py", "pytest-cov"]
+      
+    change_volume:
+      weight: 0.15
+      calculation_method: "files_changed_count"
+      thresholds:
+        low: 5
+        medium: 20
+        high: 50
+        critical: 100
+      include_patterns: ["src/**", "tests/**", "requirements.txt", "package.json"]
+      
+    critical_path_changes:
+      weight: 0.3
+      calculation_method: "critical_file_changes"
+      critical_paths:
+        - "src/security/**"
+        - "src/authentication/**"
+        - "src/payment/**"
+        - "src/database/**"
+        - "migrations/**"
+        - "docker/**"
+        - ".github/workflows/**"
+      thresholds:
+        low: 0
+        medium: 2
+        high: 5
+        critical: 10
+        
+    dependency_updates:
+      weight: 0.1
+      calculation_method: "dependency_changes"
+      high_risk_dependencies:
+        - "django"
+        - "flask"
+        - "requests"
+        - "urllib3"
+        - "cryptography"
+      thresholds:
+        low: 2
+        medium: 5
+        high: 10
+        critical: 20
+        
+  machine_learning:
+    enabled: true
+    models:
+      success_predictor:
+        algorithm: "random_forest"
+        features: ["risk_score", "test_coverage", "change_volume", "time_since_last_release", "team_velocity"]
+        training_data_days: 180
+        retrain_frequency_days: 30
+        
+      strategy_selector:
+        algorithm: "decision_tree"
+        features: ["risk_score", "release_type", "change_complexity", "business_impact"]
+        training_data_days: 90
+        retrain_frequency_days: 14
+
+# Monitoring and Alerting Configuration
+monitoring:
+  pre_deployment:
+    duration_minutes: 5
+    metrics:
+      - "system_health"
+      - "error_rate_baseline"
+      - "response_time_baseline"
+      - "database_performance"
+      - "external_service_health"
+      
+  during_deployment:
+    check_interval_seconds: 30
+    metrics:
+      - "deployment_progress"
+      - "error_rate"
+      - "response_time"
+      - "system_resources"
+      - "service_health"
+      
+  post_deployment:
+    duration_minutes: 60
+    extended_monitoring_hours: 24
+    metrics:
+      - "error_rate"
+      - "response_time"
+      - "throughput"
+      - "business_metrics"
+      - "user_satisfaction"
+      - "system_stability"
+      
+  rollback_triggers:
+    automatic:
+      - error_rate > 0.05
+      - response_time_p95 > 5000
+      - service_unavailable > 30s
+      - database_connection_failures > 10
+      - memory_usage > 95%
+      - cpu_usage > 95%
+      
+    manual_review_required:
+      - error_rate > 0.02
+      - response_time_p95 > 3000
+      - business_metric_degradation > 0.05
+      - user_complaint_spike > 50%
+      
+  data_sources:
+    prometheus:
+      endpoint: "http://prometheus:9090"
+      metrics:
+        - "http_requests_total"
+        - "http_request_duration_seconds"
+        - "system_cpu_usage"
+        - "system_memory_usage"
+        
+    application_logs:
+      endpoint: "http://elasticsearch:9200"
+      error_patterns:
+        - "ERROR"
+        - "CRITICAL"
+        - "Exception"
+        - "Traceback"
+        
+    business_metrics:
+      endpoint: "http://analytics-api:8080"
+      metrics:
+        - "conversion_rate"
+        - "revenue_per_minute"
+        - "active_users"
+        - "feature_adoption_rate"
+
+# Notification Configuration
+notifications:
+  channels:
+    slack:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channels:
+        releases: "#releases"
+        alerts: "#alerts"
+        emergencies: "#on-call"
+      message_templates:
+        release_start: "🚀 Release {version} deployment started"
+        release_success: "✅ Release {version} deployed successfully"
+        release_failure: "❌ Release {version} failed: {reason}"
+        rollback_start: "⏪ Rolling back {version}: {reason}"
+        
+    email:
+      smtp_server: "smtp.company.com"
+      recipients:
+        tech_leads: ["tech-lead@terragon.ai"]
+        platform_team: ["platform@terragon.ai"]
+        on_call: ["oncall@terragon.ai"]
+        
+    pagerduty:
+      integration_key: "${PAGERDUTY_INTEGRATION_KEY}"
+      escalation_policy: "Engineering Escalation"
+      trigger_conditions:
+        - "release_failure"
+        - "rollback_failure"
+        - "critical_system_alert"
+        
+    microsoft_teams:
+      webhook_url: "${TEAMS_WEBHOOK_URL}"
+      enabled: false
+
+# Feature Flag Integration
+feature_flags:
+  provider: "launchdarkly"  # or "flagsmith", "split", "custom"
+  api_key: "${FEATURE_FLAG_API_KEY}"
+  
+  release_flags:
+    # Automatically create feature flags for new features
+    auto_create: true
+    naming_convention: "release_{version}_{feature_name}"
+    default_rollout_percentage: 0
+    
+  rollback_integration:
+    # Use feature flags for quick rollback
+    enabled: true
+    flag_prefix: "rollback_"
+    
+  gradual_rollout:
+    # Configuration for gradual feature rollouts
+    default_steps: [1, 5, 10, 25, 50, 100]
+    step_duration_hours: 2
+    monitoring_metrics:
+      - "error_rate"
+      - "user_satisfaction"  
+      - "business_conversion"
+
+# Database Migration Configuration
+database_migrations:
+  strategy: "backward_compatible"
+  
+  validation:
+    # Validate migrations before deployment
+    syntax_check: true
+    performance_impact_analysis: true
+    data_integrity_check: true
+    rollback_validation: true
+    
+  execution:
+    timeout_minutes: 30
+    batch_size: 1000
+    pause_between_batches_seconds: 1
+    
+  rollback:
+    automatic_rollback_triggers:
+      - "migration_timeout"
+      - "data_integrity_failure"
+      - "application_startup_failure"
+    backup_retention_days: 7
+
+# Security Configuration
+security:
+  vulnerability_scanning:
+    tools: ["trivy", "snyk", "safety"]
+    fail_on_high: true
+    fail_on_medium: false
+    whitelist_cves: []
+    
+  secrets_scanning:
+    tools: ["truffelhog", "gitleaks"]
+    patterns: ["api_key", "password", "token", "secret"]
+    
+  compliance_checks:
+    frameworks: ["OWASP", "NIST", "SOC2"]
+    required_controls: ["authentication", "authorization", "encryption", "logging"]
+    
+  penetration_testing:
+    enabled: false
+    required_for_major: true
+    tools: ["zap", "burp"]
+
+# Performance Configuration  
+performance:
+  load_testing:
+    tool: "locust"
+    duration_minutes: 10
+    concurrent_users: 100
+    ramp_up_seconds: 60
+    
+  benchmarking:
+    baseline_comparison: true
+    regression_threshold: 0.1  # 10% performance regression allowed
+    
+  resource_monitoring:
+    cpu_threshold: 80
+    memory_threshold: 85
+    disk_threshold: 90
+    network_threshold: 80
+
+# Rollback Configuration
+rollback:
+  strategies:
+    instant:
+      max_downtime_seconds: 30
+      use_cases: ["configuration_errors", "startup_failures"]
+      
+    gradual:
+      traffic_reduction_steps: [75, 50, 25, 0]
+      step_duration_minutes: 2
+      use_cases: ["performance_degradation", "error_rate_increase"]
+      
+    gradual_with_migration:
+      data_migration_required: true
+      max_duration_minutes: 30
+      use_cases: ["database_schema_changes", "data_format_changes"]
+      
+  automation:
+    auto_rollback_enabled: true
+    confirmation_timeout_seconds: 300  # 5 minutes to confirm rollback
+    
+  validation:
+    post_rollback_checks:
+      - "system_health"
+      - "data_integrity" 
+      - "service_availability"
+      - "performance_restoration"
+
+# Resource Requirements
+resource_requirements:
+  deployment:
+    min_cpu_cores: 2
+    min_memory_gb: 4
+    min_disk_gb: 20
+    
+  monitoring:
+    retention_days: 30
+    storage_gb: 50
+    
+  testing:
+    parallel_jobs: 4
+    max_duration_hours: 2
+
+# Integration Configuration
+integrations:
+  github:
+    api_token: "${GITHUB_API_TOKEN}"
+    organization: "terragon-labs"
+    repository: "claude-code-manager"
+    
+  docker_registry:
+    url: "ghcr.io"
+    username: "${DOCKER_REGISTRY_USERNAME}"
+    token: "${DOCKER_REGISTRY_TOKEN}"
+    
+  kubernetes:
+    config_path: "~/.kube/config"
+    namespace: "claude-manager"
+    
+  monitoring_tools:
+    prometheus: "http://prometheus:9090"
+    grafana: "http://grafana:3000"
+    jaeger: "http://jaeger:16686"
