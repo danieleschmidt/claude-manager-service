@@ -1,0 +1,328 @@
+# Chaos Engineering Configuration
+# Defines controlled chaos experiments for system resilience testing
+
+experiments:
+  # Network chaos experiments
+  - name: "api_latency_injection"
+    type: "network_latency"
+    description: "Inject network latency to API endpoints to test client timeout handling"
+    target: "claude-manager-api"
+    parameters:
+      latency_ms: 500
+      jitter_ms: 100
+      interface: "eth0"
+    duration: 120
+    rollback_duration: 30
+    enabled: true
+    schedule: "0 */6 * * *"  # Every 6 hours
+    prerequisites:
+      - "system_healthy"
+      - "low_traffic"
+      - "business_hours"
+    success_criteria:
+      response_time_p95: 2000  # ms
+      error_rate: 0.05  # 5%
+      timeout_handling: true
+    safety_checks:
+      - "health_check"
+      - "error_rate_check"
+      - "response_time_check"
+
+  - name: "network_partition_simulation"
+    type: "network_partition"
+    description: "Simulate network partition between services"
+    target: "claude-manager-worker"
+    parameters:
+      partition_duration: 30
+      affected_services: ["database", "redis"]
+    duration: 90
+    rollback_duration: 60
+    enabled: false  # High-risk experiment
+    prerequisites:
+      - "system_healthy"
+      - "low_traffic"
+      - "maintenance_window"
+    success_criteria:
+      service_discovery: true
+      circuit_breaker_activation: true
+      fallback_success_rate: 0.8
+    safety_checks:
+      - "health_check"
+      - "traffic_level_check"
+
+  # Resource exhaustion experiments
+  - name: "memory_pressure_test"
+    type: "memory_stress"
+    description: "Create memory pressure to test garbage collection and OOM handling"
+    target: "claude-manager"
+    parameters:
+      memory_percentage: 85
+      ramp_up_duration: 10
+      pattern: "gradual"  # gradual, spike, sustained
+    duration: 180
+    rollback_duration: 60
+    enabled: true
+    schedule: "0 2 * * 0"  # Weekly on Sunday at 2 AM
+    prerequisites:
+      - "system_healthy"
+      - "low_traffic"
+    success_criteria:
+      oom_kill_count: 0
+      restart_count: 0
+      gc_performance: "acceptable"
+      memory_leak_detection: false
+    safety_checks:
+      - "memory_usage_check"
+      - "health_check"
+
+  - name: "cpu_stress_test"
+    type: "cpu_stress"
+    description: "Create CPU load to test auto-scaling and performance degradation"
+    target: "claude-manager"
+    parameters:
+      cpu_percentage: 90
+      duration_pattern: "wave"  # constant, wave, spike
+      cores_affected: 2
+    duration: 300
+    rollback_duration: 60
+    enabled: true
+    prerequisites:
+      - "system_healthy"
+      - "autoscaling_enabled"
+    success_criteria:
+      autoscaling_triggered: true
+      response_time_degradation: 0.2  # Max 20% degradation
+      cpu_throttling: false
+    safety_checks:
+      - "cpu_usage_check"
+      - "autoscaling_check"
+
+  - name: "disk_space_exhaustion"
+    type: "disk_stress"
+    description: "Fill disk space to test cleanup mechanisms and monitoring"
+    target: "claude-manager"
+    parameters:
+      disk_percentage: 95
+      fill_rate: "slow"  # slow, fast
+      target_path: "/tmp"
+    duration: 120
+    rollback_duration: 30
+    enabled: false  # High-risk experiment
+    prerequisites:
+      - "system_healthy"
+      - "disk_cleanup_enabled"
+    success_criteria:
+      cleanup_triggered: true
+      service_degradation: "minimal"
+      monitoring_alerts: true
+    safety_checks:
+      - "disk_usage_check"
+      - "cleanup_mechanism_check"
+
+  # Service failure experiments
+  - name: "database_connection_failure"
+    type: "database_failure"
+    description: "Simulate database connection failures to test resilience patterns"
+    target: "postgres"
+    parameters:
+      failure_rate: 0.3
+      failure_pattern: "intermittent"  # constant, intermittent, burst
+      affected_operations: ["read", "write"]
+    duration: 180
+    rollback_duration: 60
+    enabled: true
+    schedule: "0 */8 * * *"  # Every 8 hours
+    prerequisites:
+      - "system_healthy"
+      - "database_replica_available"
+    success_criteria:
+      fallback_success_rate: 0.85
+      connection_pool_recovery: true
+      data_consistency: true
+    safety_checks:
+      - "database_health_check"
+      - "replica_status_check"
+
+  - name: "redis_cache_failure"
+    type: "service_failure"
+    description: "Simulate Redis cache failures to test cache-aside patterns"
+    target: "redis"
+    parameters:
+      failure_type: "connection_timeout"
+      failure_duration: 60
+    duration: 180
+    rollback_duration: 30
+    enabled: true
+    prerequisites:
+      - "system_healthy"
+      - "cache_fallback_enabled"
+    success_criteria:
+      cache_miss_handling: true
+      performance_degradation: 0.3  # Max 30% slower
+      data_correctness: true
+    safety_checks:
+      - "cache_health_check"
+      - "fallback_mechanism_check"
+
+  # Container chaos experiments
+  - name: "random_container_kill"
+    type: "container_kill"
+    description: "Randomly kill application containers to test restart and recovery"
+    target: "claude-manager"
+    parameters:
+      kill_signal: "SIGKILL"
+      instances_affected: 1
+      kill_interval: 30
+    duration: 300
+    rollback_duration: 120
+    enabled: false  # Requires careful planning
+    prerequisites:
+      - "system_healthy"
+      - "multiple_instances_running"
+      - "load_balancer_healthy"
+    success_criteria:
+      restart_time: 30  # seconds
+      zero_downtime: true
+      load_balancer_update: true
+    safety_checks:
+      - "instance_count_check"
+      - "load_balancer_check"
+
+  - name: "container_resource_limit"
+    type: "resource_exhaustion"
+    description: "Restrict container resources to test resource management"
+    target: "claude-manager"
+    parameters:
+      memory_limit: "512Mi"
+      cpu_limit: "0.5"
+      enforcement: "hard"
+    duration: 240
+    rollback_duration: 60
+    enabled: true
+    prerequisites:
+      - "system_healthy"
+      - "resource_monitoring_enabled"
+    success_criteria:
+      resource_adaptation: true
+      performance_within_limits: true
+      no_oom_kills: true
+    safety_checks:
+      - "resource_monitoring_check"
+      - "performance_baseline_check"
+
+  # Application-level chaos
+  - name: "configuration_corruption"
+    type: "config_corruption"
+    description: "Corrupt configuration to test validation and fallback"
+    target: "claude-manager-config"
+    parameters:
+      corruption_type: "invalid_json"
+      backup_available: true
+    duration: 60
+    rollback_duration: 30
+    enabled: true
+    prerequisites:
+      - "system_healthy"
+      - "config_validation_enabled"
+    success_criteria:
+      validation_triggered: true
+      fallback_activated: true
+      service_stability: true
+    safety_checks:
+      - "config_validation_check"
+      - "backup_availability_check"
+
+  - name: "dependency_service_latency"
+    type: "network_latency"
+    description: "Inject latency to external service calls"
+    target: "external-api-calls"
+    parameters:
+      latency_ms: 2000
+      jitter_ms: 500
+      affected_endpoints: ["github-api", "terragon-api"]
+    duration: 180
+    rollback_duration: 30
+    enabled: true
+    prerequisites:
+      - "system_healthy"
+      - "timeout_configured"
+    success_criteria:
+      timeout_handling: true
+      circuit_breaker_activation: true
+      fallback_success_rate: 0.7
+    safety_checks:
+      - "timeout_configuration_check"
+      - "circuit_breaker_check"
+
+# Global safety settings
+safety:
+  max_concurrent_experiments: 2
+  emergency_stop_triggers:
+    - "error_rate > 0.1"
+    - "response_time_p99 > 5000"
+    - "cpu_usage > 95"
+    - "memory_usage > 95"
+  
+  prerequisites_global:
+    - "monitoring_active"
+    - "alerting_configured"
+    - "oncall_engineer_available"
+  
+  safety_checks_global:
+    - "system_health_check"
+    - "business_impact_check"
+    - "rollback_capability_check"
+
+# Scheduling configuration
+scheduling:
+  enabled: true
+  timezone: "UTC"
+  blackout_periods:
+    - name: "business_hours_weekdays"
+      start: "09:00"
+      end: "17:00"
+      days: ["monday", "tuesday", "wednesday", "thursday", "friday"]
+      severity: "low_risk_only"
+    
+    - name: "deployment_window"
+      start: "14:00"
+      end: "16:00"
+      days: ["tuesday", "thursday"]
+      severity: "none"
+
+# Monitoring and alerting
+monitoring:
+  metrics_endpoint: "http://prometheus:9090"
+  alert_manager_endpoint: "http://alertmanager:9093"
+  
+  key_metrics:
+    - "http_requests_total"
+    - "http_request_duration_seconds"
+    - "system_cpu_usage"
+    - "system_memory_usage"
+    - "database_connections_active"
+    - "cache_hit_rate"
+  
+  alert_thresholds:
+    error_rate: 0.05
+    response_time_p95: 1000
+    cpu_usage: 80
+    memory_usage: 85
+    disk_usage: 90
+
+# Reporting configuration
+reporting:
+  enabled: true
+  formats: ["json", "html", "slack"]
+  destinations:
+    slack:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#chaos-engineering"
+    
+    email:
+      recipients: ["oncall@terragon.ai", "platform@terragon.ai"]
+      smtp_server: "smtp.company.com"
+  
+  report_schedule: "0 8 * * 1"  # Weekly on Monday at 8 AM
+  include_metrics: true
+  include_recommendations: true

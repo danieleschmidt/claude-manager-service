@@ -1,0 +1,554 @@
+# Gatekeeper Constraint Templates and Constraints
+# Implements policy enforcement using Open Policy Agent Gatekeeper
+
+---
+# Container Security Constraint Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: containersecurity
+  annotations:
+    description: "Enforces container security best practices"
+    terragon.ai/policy-category: "security"
+spec:
+  crd:
+    spec:
+      names:
+        kind: ContainerSecurity
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            allowedCapabilities:
+              type: array
+              items:
+                type: string
+            requiredSecurityContext:
+              type: boolean
+            allowPrivileged:
+              type: boolean
+            allowRunAsRoot:
+              type: boolean
+            requireReadOnlyRootFilesystem:
+              type: boolean
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package containersecurity
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext
+          input.parameters.requiredSecurityContext
+          msg := sprintf("Container '%s' must define securityContext", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.securityContext.privileged
+          not input.parameters.allowPrivileged
+          msg := sprintf("Container '%s' must not run in privileged mode", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.securityContext.runAsUser == 0
+          not input.parameters.allowRunAsRoot
+          msg := sprintf("Container '%s' must not run as root user", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.securityContext.readOnlyRootFilesystem
+          input.parameters.requireReadOnlyRootFilesystem
+          msg := sprintf("Container '%s' must have read-only root filesystem", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          capability := container.securityContext.capabilities.add[_]
+          not capability in input.parameters.allowedCapabilities
+          msg := sprintf("Container '%s' uses disallowed capability '%s'", [container.name, capability])
+        }
+
+---
+# Resource Management Constraint Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: resourcemanagement
+  annotations:
+    description: "Enforces resource limits and requests"
+    terragon.ai/policy-category: "resource-management"
+spec:
+  crd:
+    spec:
+      names:
+        kind: ResourceManagement
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requireLimits:
+              type: boolean
+            requireRequests:
+              type: boolean
+            maxCpuLimit:
+              type: string
+            maxMemoryLimit:
+              type: string
+            ratioLimit:
+              type: number
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package resourcemanagement
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.resources.limits
+          input.parameters.requireLimits
+          msg := sprintf("Container '%s' must define resource limits", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not container.resources.requests
+          input.parameters.requireRequests
+          msg := sprintf("Container '%s' must define resource requests", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          container.resources.limits.memory
+          container.resources.requests.memory
+          limit := parse_memory(container.resources.limits.memory)
+          request := parse_memory(container.resources.requests.memory)
+          ratio := limit / request
+          ratio > input.parameters.ratioLimit
+          msg := sprintf("Container '%s' memory limit/request ratio %.1f exceeds maximum %.1f", [container.name, ratio, input.parameters.ratioLimit])
+        }
+        
+        parse_memory(memory_str) = result {
+          endswith(memory_str, "Mi")
+          result := to_number(trim_suffix(memory_str, "Mi"))
+        }
+        
+        parse_memory(memory_str) = result {
+          endswith(memory_str, "Gi")
+          result := to_number(trim_suffix(memory_str, "Gi")) * 1024
+        }
+
+---
+# Image Security Constraint Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: imagesecurity
+  annotations:
+    description: "Enforces image security policies"
+    terragon.ai/policy-category: "image-security"
+spec:
+  crd:
+    spec:
+      names:
+        kind: ImageSecurity
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            trustedRegistries:
+              type: array
+              items:
+                type: string
+            allowLatestTag:
+              type: boolean
+            requireDigest:
+              type: boolean
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package imagesecurity
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not image_from_trusted_registry(container.image)
+          msg := sprintf("Container '%s' image must be from trusted registry", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          endswith(container.image, ":latest")
+          not input.parameters.allowLatestTag
+          msg := sprintf("Container '%s' must not use 'latest' tag", [container.name])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          not contains(container.image, ":")
+          msg := sprintf("Container '%s' must specify image tag", [container.name])
+        }
+        
+        image_from_trusted_registry(image) {
+          some registry
+          registry := input.parameters.trustedRegistries[_]
+          startswith(image, registry)
+        }
+
+---
+# Compliance Constraint Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: compliance
+  annotations:
+    description: "Enforces compliance and governance policies"
+    terragon.ai/policy-category: "compliance"
+spec:
+  crd:
+    spec:
+      names:
+        kind: Compliance
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requiredLabels:
+              type: array
+              items:
+                type: string
+            requiredAnnotations:
+              type: array
+              items:
+                type: string
+            namingPattern:
+              type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package compliance
+        
+        violation[{"msg": msg}] {
+          required_label := input.parameters.requiredLabels[_]
+          not input.review.object.metadata.labels[required_label]
+          msg := sprintf("Resource must have label '%s'", [required_label])
+        }
+        
+        violation[{"msg": msg}] {
+          required_annotation := input.parameters.requiredAnnotations[_]
+          not input.review.object.metadata.annotations[required_annotation]
+          msg := sprintf("Resource must have annotation '%s'", [required_annotation])
+        }
+        
+        violation[{"msg": msg}] {
+          input.parameters.namingPattern
+          not re_match(input.parameters.namingPattern, input.review.object.metadata.name)
+          msg := sprintf("Resource name '%s' must match pattern '%s'", [input.review.object.metadata.name, input.parameters.namingPattern])
+        }
+
+---
+# Container Security Constraint Instance
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: ContainerSecurity
+metadata:
+  name: container-security-policy
+  annotations:
+    terragon.ai/environment: "all"
+    terragon.ai/enforcement: "warn"  # Start with warn, then enforce
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces: ["default", "claude-manager", "production"]
+    excludedNamespaces: ["kube-system", "gatekeeper-system"]
+  parameters:
+    allowedCapabilities:
+      - "NET_BIND_SERVICE"
+      - "CHOWN"
+      - "DAC_OVERRIDE"
+      - "FOWNER"
+      - "SETGID"
+      - "SETUID"
+    requiredSecurityContext: true
+    allowPrivileged: false
+    allowRunAsRoot: false
+    requireReadOnlyRootFilesystem: true
+
+---
+# Resource Management Constraint Instance
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: ResourceManagement
+metadata:
+  name: resource-management-policy
+  annotations:
+    terragon.ai/environment: "production"
+    terragon.ai/enforcement: "enforce"
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces: ["production", "staging"]
+  parameters:
+    requireLimits: true
+    requireRequests: true
+    maxCpuLimit: "2000m"
+    maxMemoryLimit: "4Gi"
+    ratioLimit: 4.0
+
+---
+# Image Security Constraint Instance
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: ImageSecurity
+metadata:
+  name: image-security-policy
+  annotations:
+    terragon.ai/environment: "all"
+    terragon.ai/enforcement: "enforce"
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+    namespaces: ["default", "claude-manager", "production", "staging"]
+  parameters:
+    trustedRegistries:
+      - "ghcr.io/terragon-labs/"
+      - "gcr.io/terragon-prod/"
+      - "registry.terragon.ai/"
+      - "docker.io/library/"
+    allowLatestTag: false
+    requireDigest: false
+
+---
+# Production Compliance Constraint Instance
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: Compliance
+metadata:
+  name: production-compliance-policy
+  annotations:
+    terragon.ai/environment: "production"
+    terragon.ai/enforcement: "enforce"
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "Service"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces: ["production"]
+  parameters:
+    requiredLabels:
+      - "app.kubernetes.io/name"
+      - "app.kubernetes.io/version"
+      - "app.kubernetes.io/component"
+      - "terragon.ai/cost-center"
+      - "terragon.ai/team"
+    requiredAnnotations:
+      - "terragon.ai/owner"
+      - "terragon.ai/environment"
+    namingPattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+
+---
+# Development Environment Compliance (More Relaxed)
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: Compliance
+metadata:
+  name: development-compliance-policy
+  annotations:
+    terragon.ai/environment: "development"
+    terragon.ai/enforcement: "warn"
+spec:
+  enforcementAction: warn
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "Service"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+    namespaces: ["development", "dev", "sandbox"]
+  parameters:
+    requiredLabels:
+      - "app.kubernetes.io/name"
+      - "terragon.ai/team"
+    requiredAnnotations:
+      - "terragon.ai/owner"
+    namingPattern: "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+
+---
+# Cost Management Constraint Template
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: costmanagement
+  annotations:
+    description: "Enforces cost management policies"
+    terragon.ai/policy-category: "cost-management"
+spec:
+  crd:
+    spec:
+      names:
+        kind: CostManagement
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            requiredCostLabels:
+              type: array
+              items:
+                type: string
+            maxGpuLimit:
+              type: integer
+            maxStorageSize:
+              type: string
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package costmanagement
+        
+        violation[{"msg": msg}] {
+          required_label := input.parameters.requiredCostLabels[_]
+          not input.review.object.metadata.labels[required_label]
+          msg := sprintf("Resource must have cost label '%s' for billing allocation", [required_label])
+        }
+        
+        violation[{"msg": msg}] {
+          container := input.review.object.spec.containers[_]
+          gpu_request := container.resources.requests["nvidia.com/gpu"]
+          to_number(gpu_request) > input.parameters.maxGpuLimit
+          msg := sprintf("Container '%s' cannot request more than %d GPUs", [container.name, input.parameters.maxGpuLimit])
+        }
+
+---
+# Cost Management Constraint Instance
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: CostManagement
+metadata:
+  name: cost-management-policy
+  annotations:
+    terragon.ai/environment: "all"
+    terragon.ai/enforcement: "enforce"
+spec:
+  enforcementAction: deny
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod", "PersistentVolumeClaim"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+  parameters:
+    requiredCostLabels:
+      - "terragon.ai/cost-center"
+      - "terragon.ai/project"
+      - "terragon.ai/team"
+    maxGpuLimit: 2
+    maxStorageSize: "1Ti"
+
+---
+# Monitoring Configuration for Gatekeeper
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gatekeeper-monitoring
+  namespace: gatekeeper-system
+  annotations:
+    terragon.ai/monitoring: "enabled"
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'gatekeeper'
+        static_configs:
+          - targets: ['gatekeeper-controller-manager:8888']
+        metrics_path: /metrics
+        scrape_interval: 10s
+  
+  alerts.yml: |
+    groups:
+      - name: gatekeeper
+        rules:
+          - alert: GatekeeperViolations
+            expr: increase(gatekeeper_violations_total[5m]) > 10
+            for: 2m
+            labels:
+              severity: warning
+            annotations:
+              summary: "High number of Gatekeeper policy violations"
+              description: "{{ $value }} policy violations in the last 5 minutes"
+          
+          - alert: GatekeeperDown
+            expr: up{job="gatekeeper"} == 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Gatekeeper is down"
+              description: "Gatekeeper controller is not responding"
+
+---
+# Policy Testing ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: policy-tests
+  namespace: gatekeeper-system
+  annotations:
+    terragon.ai/testing: "enabled"
+data:
+  test-container-security.yaml: |
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: test-secure-pod
+      labels:
+        app.kubernetes.io/name: test-app
+        terragon.ai/cost-center: engineering
+        terragon.ai/team: platform
+      annotations:
+        terragon.ai/owner: platform-team
+        terragon.ai/environment: test
+    spec:
+      containers:
+        - name: test-container
+          image: ghcr.io/terragon-labs/test:1.0.0
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - NET_BIND_SERVICE
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+  
+  test-violations.yaml: |
+    # This pod should trigger multiple violations
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: test-violation-pod
+    spec:
+      containers:
+        - name: bad-container
+          image: untrusted-registry/app:latest
+          securityContext:
+            runAsUser: 0
+            privileged: true
+            readOnlyRootFilesystem: false

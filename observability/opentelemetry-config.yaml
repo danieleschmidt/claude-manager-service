@@ -1,0 +1,179 @@
+# OpenTelemetry Configuration for Advanced Observability
+# This configuration enables distributed tracing, metrics, and logging correlation
+
+receivers:
+  # OTLP receiver for applications
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus receiver for metrics
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: 'claude-manager'
+          static_configs:
+            - targets: ['localhost:8000']
+          scrape_interval: 15s
+          metrics_path: /metrics
+
+  # Host metrics receiver
+  hostmetrics:
+    collection_interval: 10s
+    scrapers:
+      cpu:
+        metrics:
+          system.cpu.utilization:
+            enabled: true
+      disk:
+      filesystem:
+      load:
+      memory:
+      network:
+      processes:
+
+  # Docker stats receiver
+  docker_stats:
+    endpoint: unix:///var/run/docker.sock
+    collection_interval: 10s
+    timeout: 5s
+
+processors:
+  # Batch processor for performance
+  batch:
+    timeout: 1s
+    send_batch_size: 1024
+    send_batch_max_size: 2048
+
+  # Memory limiter to prevent OOM
+  memory_limiter:
+    limit_mib: 512
+    spike_limit_mib: 128
+    check_interval: 5s
+
+  # Resource processor to add service information
+  resource:
+    attributes:
+      - key: service.name
+        value: claude-code-manager
+        action: upsert
+      - key: service.version
+        from_attribute: version
+        action: upsert
+      - key: deployment.environment
+        from_attribute: env
+        action: upsert
+
+  # Span processor for trace enhancement
+  span:
+    name:
+      to_attributes:
+        rules:
+          - ^\/api\/v(?P<version>\d+)\/(?P<operation>.*)$
+      from_attributes: ["http.method", "http.route"]
+
+  # Sampling processor
+  probabilistic_sampler:
+    sampling_percentage: 10
+
+  # Tail sampling for intelligent sampling
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 1000
+    expected_new_traces_per_sec: 10
+    policies:
+      - name: error_policy
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: slow_policy
+        type: latency
+        latency:
+          threshold_ms: 1000
+      - name: random_policy
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 1
+
+exporters:
+  # Jaeger exporter for traces
+  jaeger:
+    endpoint: http://jaeger-collector:14268/api/traces
+    headers:
+      x-api-key: ${JAEGER_API_KEY}
+
+  # Prometheus exporter for metrics
+  prometheus:
+    endpoint: "0.0.0.0:8889"
+    namespace: claude_manager
+    const_labels:
+      environment: ${ENVIRONMENT}
+      service: claude-code-manager
+
+  # Loki exporter for logs
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    headers:
+      x-api-key: ${LOKI_API_KEY}
+
+  # OTLP exporter for external systems
+  otlp:
+    endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+    headers:
+      x-api-key: ${OTEL_API_KEY}
+
+  # Logging exporter for debugging
+  logging:
+    loglevel: info
+    sampling_initial: 5
+    sampling_thereafter: 200
+
+extensions:
+  # Health check extension
+  health_check:
+    endpoint: 0.0.0.0:13133
+
+  # pprof extension for performance profiling
+  pprof:
+    endpoint: 0.0.0.0:1777
+
+  # zpages extension for internal telemetry
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, pprof, zpages]
+  
+  pipelines:
+    # Traces pipeline
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource, span, tail_sampling]
+      exporters: [jaeger, otlp, logging]
+
+    # Metrics pipeline
+    metrics:
+      receivers: [otlp, prometheus, hostmetrics, docker_stats]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus, otlp]
+
+    # Logs pipeline
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, resource]
+      exporters: [loki, otlp, logging]
+
+  # Telemetry settings
+  telemetry:
+    logs:
+      level: info
+      development: false
+      sampling:
+        initial: 5
+        thereafter: 200
+    metrics:
+      level: detailed
+      address: 0.0.0.0:8888
