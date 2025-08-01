@@ -1,0 +1,260 @@
+name: Dependency Management
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM
+  workflow_dispatch:
+    inputs:
+      update_type:
+        description: 'Type of update to perform'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # Update Python dependencies
+  update-python-deps:
+    name: Update Python Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install pip-tools
+        run: |
+          pip install pip-tools
+
+      - name: Update dependencies
+        run: |
+          # Compile updated requirements
+          pip-compile --upgrade --resolver=backtracking requirements.in -o requirements.txt
+          pip-compile --upgrade --resolver=backtracking requirements-dev.in -o requirements-dev.txt
+
+      - name: Test updated dependencies
+        run: |
+          pip install -r requirements.txt -r requirements-dev.txt
+          pytest tests/unit/ -x
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update Python dependencies'
+          title: '[Auto] Update Python Dependencies'
+          body: |
+            ## Automated Dependency Update
+
+            This PR updates Python dependencies to their latest compatible versions.
+
+            ### Update Type: ${{ github.event.inputs.update_type || 'patch' }}
+
+            Please review the changes and ensure all tests pass before merging.
+
+            - [ ] All tests pass
+            - [ ] No breaking changes identified
+            - [ ] Security vulnerabilities addressed
+          branch: auto-update/python-deps
+          delete-branch: true
+
+  # Renovate for comprehensive updates
+  renovate:
+    name: Renovate Bot Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Renovate config
+        run: |
+          cat > renovate.json << 'EOF'
+          {
+            "extends": [
+              "config:base",
+              ":dependencyDashboard",
+              ":semanticCommits",
+              "group:allNonMajor",
+              "schedule:weekly"
+            ],
+            "python": {
+              "enabled": true
+            },
+            "pip_requirements": {
+              "enabled": true,
+              "fileMatch": ["(^|/)requirements.*\\.txt$"]
+            },
+            "dockerfile": {
+              "enabled": true
+            },
+            "github-actions": {
+              "enabled": true
+            },
+            "packageRules": [
+              {
+                "matchUpdateTypes": ["major"],
+                "automerge": false
+              },
+              {
+                "matchUpdateTypes": ["minor", "patch"],
+                "automerge": true,
+                "automergeType": "pr",
+                "automergeStrategy": "squash"
+              },
+              {
+                "matchPackagePatterns": ["*"],
+                "matchUpdateTypes": ["pin", "digest"],
+                "automerge": true
+              }
+            ],
+            "vulnerabilityAlerts": {
+              "enabled": true,
+              "labels": ["security"]
+            },
+            "prConcurrentLimit": 10,
+            "prCreation": "immediate",
+            "labels": ["dependencies"],
+            "assignees": ["@renovate-bot"]
+          }
+          EOF
+
+      - name: Validate Renovate config
+        uses: renovatebot/github-action@v39.2.4
+        with:
+          configurationFile: renovate.json
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Check for outdated dependencies
+  check-outdated:
+    name: Check Outdated Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Check Python dependencies
+        run: |
+          pip install pip-audit pip-outdated
+          
+          echo "## Outdated Dependencies Report" > outdated-report.md
+          echo "Generated on: $(date)" >> outdated-report.md
+          echo "" >> outdated-report.md
+          
+          echo "### Python Dependencies" >> outdated-report.md
+          pip list --outdated --format=json | python -m json.tool >> outdated-report.md
+          
+          echo "" >> outdated-report.md
+          echo "### Security Vulnerabilities" >> outdated-report.md
+          pip-audit --desc >> outdated-report.md
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: outdated-dependencies-report
+          path: outdated-report.md
+
+  # License scanning for new dependencies
+  license-check:
+    name: License Compatibility Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Check licenses
+        run: |
+          pip install pip-licenses
+          
+          echo "## License Report" > license-report.md
+          echo "Generated on: $(date)" >> license-report.md
+          echo "" >> license-report.md
+          
+          pip-licenses --format=markdown --with-urls --with-description >> license-report.md
+          
+          # Check for problematic licenses
+          PROBLEMATIC_LICENSES="GPL|AGPL|LGPL|CC-BY-SA"
+          if pip-licenses --format=csv | grep -E "$PROBLEMATIC_LICENSES"; then
+            echo "" >> license-report.md
+            echo "⚠️ **Warning**: Found potentially incompatible licenses" >> license-report.md
+            pip-licenses --format=csv | grep -E "$PROBLEMATIC_LICENSES" >> license-report.md
+          fi
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: license-report.md
+
+  # Auto-merge security updates
+  auto-merge-security:
+    name: Auto-merge Security Updates
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'security')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auto-merge security PRs
+        uses: pascalgn/merge-action@v0.1.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_LABELS: "security,dependencies"
+          MERGE_METHOD: "squash"
+          MERGE_COMMIT_MESSAGE: "pull-request-title"
+          MERGE_FORKS: "false"
+          MERGE_RETRIES: "6"
+          MERGE_RETRY_SLEEP: "10000"
+
+  # Update lock files
+  update-lockfiles:
+    name: Update Lock Files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Update pip-tools lock
+        run: |
+          pip install pip-tools
+          pip-compile --generate-hashes requirements.in -o requirements.lock
+          pip-compile --generate-hashes requirements-dev.in -o requirements-dev.lock
+
+      - name: Create lock file PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update dependency lock files'
+          title: '[Auto] Update Dependency Lock Files'
+          body: |
+            Updates dependency lock files with hash verification.
+            
+            This ensures reproducible builds and enhanced security.
+          branch: auto-update/lockfiles
+          delete-branch: true

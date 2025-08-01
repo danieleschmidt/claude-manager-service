@@ -1,0 +1,264 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * *'  # Daily at midnight
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  # CodeQL Analysis
+  codeql:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python' ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  # Dependency scanning
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+      - name: Run pip-audit
+        run: |
+          pip install pip-audit
+          pip-audit --desc
+
+      - name: Run safety check
+        run: |
+          pip install safety
+          safety check --json --output safety-report.json
+
+      - name: Upload safety results
+        uses: actions/upload-artifact@v4
+        with:
+          name: safety-report
+          path: safety-report.json
+
+  # Container scanning
+  container-scan:
+    name: Container Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t claude-manager:scan .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'claude-manager:scan'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: Run Docker Bench Security
+        run: |
+          docker run --rm --net host --pid host --userns host --cap-add audit_control \
+            -e DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST \
+            -v /var/lib:/var/lib:ro \
+            -v /var/run/docker.sock:/var/run/docker.sock:ro \
+            -v /etc:/etc:ro \
+            docker/docker-bench-security
+
+  # Secret scanning
+  secret-scan:
+    name: Secret Detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: Detect secrets with detect-secrets
+        run: |
+          pip install detect-secrets
+          detect-secrets scan --baseline .secrets.baseline
+          detect-secrets audit .secrets.baseline
+
+  # SAST with multiple tools
+  sast:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install bandit[toml] semgrep
+
+      - name: Run Bandit
+        run: |
+          bandit -r src/ -f json -o bandit-report.json
+          bandit -r src/ -f sarif -o bandit-results.sarif
+
+      - name: Upload Bandit SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: bandit-results.sarif
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: |
+            - auto
+            - p/security-audit
+            - p/python
+            - p/owasp-top-ten
+
+  # License compliance
+  license-compliance:
+    name: License Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check licenses
+        uses: fossa-contrib/fossa-action@v3
+        with:
+          api-key: ${{ secrets.FOSSA_API_KEY }}
+          github-token: ${{ github.token }}
+
+  # SBOM generation
+  sbom:
+    name: Generate Software Bill of Materials
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate SBOM with Syft
+        uses: anchore/sbom-action@v0
+        with:
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Generate CycloneDX SBOM
+        run: |
+          pip install cyclonedx-bom
+          cyclonedx-bom -i requirements.txt -o sbom.cyclonedx.json
+
+      - name: Upload SBOM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-reports
+          path: |
+            sbom.spdx.json
+            sbom.cyclonedx.json
+
+  # Security scorecard
+  scorecard:
+    name: OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@v2.3.1
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  # Compliance report
+  compliance-report:
+    name: Generate Compliance Report
+    runs-on: ubuntu-latest
+    needs: [codeql, dependency-scan, container-scan, secret-scan, sast, license-compliance]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate compliance report
+        run: |
+          echo "# Security Compliance Report" > compliance-report.md
+          echo "Generated on: $(date)" >> compliance-report.md
+          echo "" >> compliance-report.md
+          echo "## Summary" >> compliance-report.md
+          echo "- CodeQL Status: ${{ needs.codeql.result }}" >> compliance-report.md
+          echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> compliance-report.md
+          echo "- Container Scan: ${{ needs.container-scan.result }}" >> compliance-report.md
+          echo "- Secret Scan: ${{ needs.secret-scan.result }}" >> compliance-report.md
+          echo "- SAST: ${{ needs.sast.result }}" >> compliance-report.md
+          echo "- License Compliance: ${{ needs.license-compliance.result }}" >> compliance-report.md
+
+      - name: Upload compliance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: compliance-report
+          path: compliance-report.md
