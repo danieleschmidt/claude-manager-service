@@ -1,0 +1,262 @@
+# Terragon Value Discovery Configuration
+# This file configures the autonomous SDLC enhancement system
+
+version: "1.0"
+repository_info:
+  name: "claude-code-manager"
+  type: "python"
+  maturity_level: "advanced"  # nascent/developing/maturing/advanced
+  primary_language: "python"
+  framework: ["flask", "pytest", "asyncio"]
+
+# Value Discovery Configuration
+value_discovery:
+  enabled: true
+  
+  # Code Analysis Settings
+  code_analysis:
+    patterns:
+      todo_patterns: ["TODO:", "FIXME:", "HACK:", "XXX:", "BUG:"]
+      debt_patterns: ["@deprecated", "# DEBT:", "# TECHNICAL_DEBT"]
+      security_patterns: ["# SECURITY:", "# VULN:", "password", "secret", "token"]
+    
+    # File inclusion/exclusion
+    include_paths:
+      - "src/**/*.py"
+      - "tests/**/*.py"
+      - "*.py"
+      - "docs/**/*.md"
+    
+    exclude_paths:
+      - "__pycache__/**"
+      - ".git/**"
+      - "node_modules/**"
+      - "venv/**"
+      - "env/**"
+      - "*.pyc"
+      - ".mypy_cache/**"
+      - ".pytest_cache/**"
+  
+  # Scoring Configuration
+  scoring:
+    algorithm: "WSJF"  # WSJF, ICE, Technical Debt
+    
+    # WSJF Components (Weighted Shortest Job First)
+    wsjf:
+      business_value:
+        security_critical: 5
+        core_functionality: 4
+        performance_critical: 3
+        documentation: 2
+        refactoring: 1
+      
+      time_criticality:
+        blocking: 5
+        urgent: 4
+        normal: 3
+        low: 2
+        can_wait: 1
+      
+      risk_reduction:
+        security_fix: 5
+        bug_fix: 4
+        stability: 3
+        maintainability: 2
+        optimization: 1
+      
+      job_size:
+        very_small: 1     # < 1 hour 
+        small: 2          # 1-4 hours
+        medium: 3         # 1-2 days
+        large: 4          # 3-5 days
+        very_large: 5     # > 1 week
+    
+    # ICE Scoring (Impact, Confidence, Ease)
+    ice:
+      impact_multiplier: 1.0
+      confidence_multiplier: 1.0
+      ease_multiplier: 1.0
+    
+    # Technical Debt Scoring
+    technical_debt:
+      complexity_weight: 0.3
+      maintainability_weight: 0.4
+      security_weight: 0.3
+
+  # Backlog Management
+  backlog:
+    max_items: 100
+    auto_refresh_interval: "24h"
+    priority_threshold: 3.0  # Minimum score to include in active backlog
+    
+    # Item categorization
+    categories:
+      security:
+        keywords: ["security", "vulnerability", "auth", "token", "password"]
+        priority_boost: 2.0
+      
+      performance:
+        keywords: ["performance", "slow", "timeout", "optimization"]
+        priority_boost: 1.5
+      
+      testing:
+        keywords: ["test", "coverage", "pytest", "mock"]
+        priority_boost: 1.2
+      
+      documentation:
+        keywords: ["docs", "documentation", "readme", "guide"]
+        priority_boost: 0.8
+
+# Autonomous Execution Configuration
+autonomous_execution:
+  enabled: true
+  
+  # Safety Configuration
+  safety:
+    require_approval_for:
+      - "security_changes"
+      - "api_changes" 
+      - "database_schema"
+      - "dependencies"
+    
+    max_concurrent_tasks: 3
+    sandbox_mode: false
+    backup_before_changes: true
+  
+  # TDD Configuration
+  tdd:
+    enforce_red_green_refactor: true
+    minimum_test_coverage: 80
+    require_tests_for_bugs: true
+    test_first_development: true
+  
+  # Quality Gates
+  quality_gates:
+    run_linting: true
+    run_type_checking: true
+    run_security_scan: true
+    require_passing_tests: true
+    coverage_threshold: 80
+
+# Integration Configuration
+integrations:
+  github:
+    enabled: true
+    repository: "danieleschmidt/claude-manager-service"
+    create_issues: true
+    create_pull_requests: true
+    auto_assign: true
+    labels:
+      - "terragon-generated"
+      - "autonomous-sdlc"
+  
+  monitoring:
+    enabled: true
+    metrics_retention_days: 30
+    
+    # DORA Metrics
+    dora_metrics:
+      deployment_frequency: true
+      lead_time_for_changes: true
+      change_failure_rate: true
+      time_to_restore_service: true
+  
+  notifications:
+    slack:
+      enabled: false
+      webhook_url: ""
+    
+    email:
+      enabled: false
+      recipients: []
+
+# Advanced Features (for advanced maturity repositories)
+advanced_features:
+  # Predictive Analytics
+  predictive_analytics:
+    enabled: true
+    models:
+      - "bug_prediction"
+      - "complexity_growth"
+      - "performance_degradation"
+  
+  # Intelligent Code Review
+  code_review:
+    enabled: true
+    auto_review_threshold: 0.7
+    focus_areas:
+      - "security_vulnerabilities"
+      - "performance_issues"
+      - "code_smells"
+      - "test_coverage_gaps"
+  
+  # Automated Refactoring
+  refactoring:
+    enabled: true
+    safe_refactoring_only: true
+    patterns:
+      - "duplicate_code_elimination"
+      - "complexity_reduction"
+      - "performance_optimization"
+  
+  # Continuous Architecture Evolution
+  architecture:
+    enabled: true
+    track_architecture_debt: true
+    suggest_architectural_improvements: true
+    
+    patterns:
+      - "service_decomposition"
+      - "dependency_optimization"
+      - "performance_patterns"
+
+# Reporting Configuration
+reporting:
+  enabled: true
+  
+  formats:
+    - "json"
+    - "markdown"
+    - "dashboard"
+  
+  frequency: "daily"
+  
+  metrics:
+    - "backlog_velocity"
+    - "wsjf_distribution"
+    - "category_breakdown"
+    - "completion_rate"
+    - "quality_metrics"
+    - "dora_metrics"
+  
+  export:
+    enabled: true
+    destinations:
+      - "local_file"
+      - "github_issues"
+      - "dashboard"
+
+# Custom Rules (Repository-specific)
+custom_rules:
+  # High-priority patterns for this specific repository
+  priority_patterns:
+    critical:
+      - "security.*vulnerability"
+      - "command.*injection"
+      - "sql.*injection"
+    
+    high:
+      - "async.*performance"
+      - "database.*optimization"
+      - "test.*coverage"
+    
+    medium:
+      - "documentation.*update"
+      - "refactor.*duplicate"
+      - "type.*hints"
+  
+  # Repository-specific exclusions
+  exclusions:
+    - "generated_code/**"
+    - "third_party/**"
+    - "legacy/**"
