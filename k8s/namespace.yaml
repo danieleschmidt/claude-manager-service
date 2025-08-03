@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: claude-manager
+  labels:
+    name: claude-manager
+    app: claude-manager-service
+    version: v1
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: claude-manager-quota
+  namespace: claude-manager
+spec:
+  hard:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    persistentvolumeclaims: "10"
+    services.loadbalancers: "2"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: claude-manager-limits
+  namespace: claude-manager
+spec:
+  limits:
+  - default:
+      memory: "1Gi"
+      cpu: "500m"
+    defaultRequest:
+      memory: "256Mi"
+      cpu: "100m"
+    type: Container
