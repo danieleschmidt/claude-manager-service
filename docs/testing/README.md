@@ -26,8 +26,12 @@ tests/
 │   ├── test_full_workflow.py   # Complete workflow tests
 ├── performance/                # Performance tests
 │   ├── test_performance_benchmarks.py
-└── security/                   # Security tests
-    └── test_security_validation.py
+├── security/                   # Security tests
+│   └── test_security_validation.py
+├── load_testing/               # Load and stress tests
+│   └── test_api_load.py        # Concurrent operations and load testing
+└── contract/                   # Contract and schema tests
+    └── test_api_contracts.py   # API contract validation
 ```
 
 ## Running Tests
@@ -62,6 +66,16 @@ pytest tests/performance/ --benchmark-only
 pytest tests/security/
 ```
 
+### Load Tests Only
+```bash
+pytest tests/load_testing/ -m "slow"
+```
+
+### Contract Tests Only
+```bash
+pytest tests/contract/
+```
+
 ### With Coverage Report
 ```bash
 pytest --cov=src --cov-report=html --cov-report=term-missing
@@ -94,6 +108,8 @@ Tests are organized using pytest markers:
 - `@pytest.mark.github` - Tests requiring GitHub API access
 - `@pytest.mark.slow` - Slow tests (>5 seconds)
 - `@pytest.mark.asyncio` - Async tests
+- `@pytest.mark.load` - Load and stress tests
+- `@pytest.mark.contract` - Contract validation tests
 
 ### Running Tests by Marker
 ```bash
