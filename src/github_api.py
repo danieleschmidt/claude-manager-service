@@ -1,6 +1,6 @@
 import os
 from typing import Optional, List
-from github import Github, GithubException, Repository, Issue
+# from github import Github, GithubException, Repository, Issue
 from logger import get_logger, log_performance
 from performance_monitor import monitor_api_call
 from security import get_secure_config, validate_repo_name, sanitize_issue_content
