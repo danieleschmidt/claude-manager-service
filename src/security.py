@@ -20,7 +20,7 @@ import hashlib
 import time
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Union
-from logger import get_logger
+from .logger import get_logger
 
 logger = get_logger(__name__)
 

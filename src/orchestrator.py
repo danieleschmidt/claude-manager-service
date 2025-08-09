@@ -6,13 +6,13 @@ import shutil
 import shlex
 from typing import Dict, Any, List
 from github import Issue
-from github_api import GitHubAPI
-from prompt_builder import build_prompt, get_template_for_labels
-from logger import get_logger, log_performance
-from performance_monitor import monitor_performance
-from security import get_secure_subprocess, SecureTempDir, validate_repo_name
-from config_validator import get_validated_config
-from quantum_task_planner import create_quantum_task_planner, QuantumTaskPlanner
+from .github_api import GitHubAPI
+from .prompt_builder import build_prompt, get_template_for_labels
+from .logger import get_logger, log_performance
+from .performance_monitor import monitor_performance
+from .security import get_secure_subprocess, SecureTempDir, validate_repo_name
+from .config_validator import get_validated_config
+from .quantum_task_planner import create_quantum_task_planner, QuantumTaskPlanner
 
 logger = get_logger(__name__)
 

@@ -23,8 +23,8 @@ from enum import Enum
 import json
 from datetime import datetime, timedelta
 
-from logger import get_logger
-from task_prioritization import (
+from .logger import get_logger
+from .task_prioritization import (
     classify_task_type, 
     analyze_task_complexity, 
     determine_business_impact,

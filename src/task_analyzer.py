@@ -3,12 +3,12 @@ import datetime
 import time
 from typing import Optional
 from github import Repository
-from github_api import GitHubAPI
-from logger import get_logger, log_performance
-from performance_monitor import monitor_performance
-from task_tracker import get_task_tracker
-from config_validator import get_validated_config
-from error_handler import with_error_recovery, safe_github_operation
+from .github_api import GitHubAPI
+from .logger import get_logger, log_performance
+from .performance_monitor import monitor_performance
+from .task_tracker import get_task_tracker
+from .config_validator import get_validated_config
+from .error_handler import with_error_recovery, safe_github_operation
 # Import ConcurrentRepositoryScanner lazily to avoid circular import
 
 logger = get_logger(__name__)
