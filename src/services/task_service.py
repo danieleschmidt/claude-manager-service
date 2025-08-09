@@ -19,13 +19,13 @@ from datetime import datetime, timedelta
 from enum import Enum
 import uuid
 
-from logger import get_logger
-from performance_monitor import monitor_performance, get_monitor
-from error_handler import NetworkError, with_enhanced_error_handling
-from task_tracker import get_task_tracker
-from services.configuration_service import get_configuration_service
-from services.repository_service import RepositoryService
-from services.issue_service import get_issue_service
+from ..logger import get_logger
+from ..performance_monitor import monitor_performance, get_monitor
+from ..error_handler import NetworkError, with_enhanced_error_handling
+from ..task_tracker import get_task_tracker
+from .configuration_service import get_configuration_service
+from .repository_service import RepositoryService
+from .issue_service import get_issue_service
 
 
 logger = get_logger(__name__)

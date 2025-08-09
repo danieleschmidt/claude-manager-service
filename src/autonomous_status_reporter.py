@@ -17,9 +17,9 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dataclasses import asdict
 
-from dora_metrics import DoraMetricsCollector
-from performance_monitor import PerformanceMonitor
-from logger import get_logger
+from .dora_metrics import DoraMetricsCollector
+from .performance_monitor import PerformanceMonitor
+from .logger import get_logger
 
 logger = get_logger(__name__)
 

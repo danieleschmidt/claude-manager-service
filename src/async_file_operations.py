@@ -18,9 +18,9 @@ import aiofiles
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 
-from logger import get_logger
-from performance_monitor import monitor_performance
-from error_handler import FileOperationError, JsonParsingError
+from .logger import get_logger
+from .performance_monitor import monitor_performance
+from .error_handler import FileOperationError, JsonParsingError
 
 
 logger = get_logger(__name__)

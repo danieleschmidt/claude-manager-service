@@ -1,12 +1,12 @@
 import os
 from typing import Optional, List
-# from github import Github, GithubException, Repository, Issue
-from logger import get_logger, log_performance
-from performance_monitor import monitor_api_call
-from security import get_secure_config, validate_repo_name, sanitize_issue_content
-from error_handler import with_error_recovery, safe_github_operation, github_api_operation, get_rate_limiter, NetworkError, RateLimitError
-from security import sanitize_repo_name, sanitize_issue_content_enhanced
-from validation import validate_api_parameters
+from github import Github, GithubException, Repository, Issue
+from .logger import get_logger, log_performance
+from .performance_monitor import monitor_api_call
+from .security import get_secure_config, validate_repo_name, sanitize_issue_content
+from .error_handler import with_error_recovery, safe_github_operation, github_api_operation, get_rate_limiter, NetworkError, RateLimitError
+from .security import sanitize_repo_name, sanitize_issue_content_enhanced
+from .validation import validate_api_parameters
 
 class GitHubAPI:
     def __init__(self) -> None:

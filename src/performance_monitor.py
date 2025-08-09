@@ -11,6 +11,7 @@ This module provides comprehensive performance tracking including:
 """
 
 import json
+import os
 import time
 import psutil
 import threading
@@ -22,7 +23,7 @@ from dataclasses import dataclass, asdict
 from functools import wraps
 import statistics
 
-from logger import get_logger
+from .logger import get_logger
 
 
 @dataclass
@@ -96,7 +97,7 @@ class PerformanceMonitor:
         
         # Configuration (configurable via environment variables)
         try:
-            from config_env import get_env_config
+            from .config_env import get_env_config
             config = get_env_config()
             self.max_operations_in_memory = config.perf_max_operations
             self.retention_days = config.perf_retention_days

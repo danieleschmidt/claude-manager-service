@@ -22,8 +22,8 @@ from pathlib import Path
 from dataclasses import dataclass, asdict
 import logging
 
-from logger import get_logger
-from error_handler import with_enhanced_error_handling, NetworkError
+from ..logger import get_logger
+from ..error_handler import with_enhanced_error_handling, NetworkError
 
 # Define DatabaseError for database-specific errors
 class DatabaseError(Exception):

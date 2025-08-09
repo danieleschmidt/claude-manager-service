@@ -24,7 +24,7 @@ from pathlib import Path
 import logging
 import functools
 
-from logger import get_logger
+from .logger import get_logger
 
 
 # Custom Exception Classes

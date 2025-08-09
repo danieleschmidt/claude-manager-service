@@ -17,7 +17,7 @@ from typing import Dict, List, Any, Optional, Union, Callable
 from datetime import datetime, timedelta
 import logging
 
-from logger import get_logger
+from .logger import get_logger
 
 
 # Custom Validation Exceptions
