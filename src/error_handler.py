@@ -48,7 +48,26 @@ class FileOperationError(EnhancedError):
         )
         self.file_path = file_path
         self.operation = operation
-        self.original_error = original_error
+
+
+class CacheError(EnhancedError):
+    """Cache operation error"""
+    pass
+
+
+class ConnectionError(EnhancedError):
+    """Connection error"""
+    pass
+
+
+class WorkerError(EnhancedError):
+    """Worker pool error"""
+    pass
+
+
+class TaskError(EnhancedError):
+    """Task execution error"""
+    pass
 
 
 class JsonParsingError(EnhancedError):
