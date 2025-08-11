@@ -10,7 +10,7 @@ from typing import AsyncGenerator, Dict, Generator
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
+# import pytest_asyncio  # Not available in this environment
 
 
 @pytest.fixture(scope="session")
@@ -62,7 +62,7 @@ def mock_github_api():
     return mock_api
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def mock_async_github_api():
     """Mock async GitHub API client."""
     mock_api = AsyncMock()
@@ -135,7 +135,7 @@ def mock_database():
     return mock_db
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def mock_async_database():
     """Mock async database service."""
     mock_db = AsyncMock()
@@ -225,11 +225,11 @@ def task_data():
     }
 
 
-# Pytest plugins configuration
+# Pytest plugins configuration (reduced for this environment)
 pytest_plugins = [
-    "pytest_asyncio",
-    "pytest_mock",
-    "pytest_cov",
+    # "pytest_asyncio",  # Not available
+    # "pytest_mock",     # Not available  
+    # "pytest_cov",      # Not available
 ]
 
 
