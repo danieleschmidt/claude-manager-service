@@ -1,0 +1,294 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terragon-sdlc
+  namespace: terragon-production
+  labels:
+    app: terragon-sdlc
+    version: v4.0
+    generation: "3"
+    tier: application
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: terragon-sdlc
+      tier: application
+  template:
+    metadata:
+      labels:
+        app: terragon-sdlc
+        version: v4.0
+        generation: "3"
+        tier: application
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: terragon-sdlc
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+      - name: terragon-sdlc
+        image: terragon/autonomous-sdlc:v4.0-production
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: metrics
+          containerPort: 8081
+          protocol: TCP
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: GENERATION
+          value: "3"
+        - name: OPTIMIZATION_LEVEL
+          value: "advanced"
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: terragon-secrets
+              key: database-url
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: terragon-secrets
+              key: github-token
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: terragon-secrets
+              key: redis-url
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "512Mi"
+          limits:
+            cpu: "2000m"
+            memory: "2Gi"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: /health/startup
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 30
+        volumeMounts:
+        - name: config
+          mountPath: /app/config
+          readOnly: true
+        - name: data
+          mountPath: /app/data
+        - name: logs
+          mountPath: /app/logs
+      volumes:
+      - name: config
+        configMap:
+          name: terragon-config
+      - name: data
+        persistentVolumeClaim:
+          claimName: terragon-data
+      - name: logs
+        emptyDir: {}
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      tolerations:
+      - key: "terragon.ai/dedicated"
+        operator: "Equal"
+        value: "sdlc"
+        effect: "NoSchedule"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - terragon-sdlc
+              topologyKey: kubernetes.io/hostname
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terragon-sdlc-service
+  namespace: terragon-production
+  labels:
+    app: terragon-sdlc
+    tier: application
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  - name: https
+    port: 443
+    targetPort: 8080
+    protocol: TCP
+  - name: metrics
+    port: 8081
+    targetPort: 8081
+    protocol: TCP
+  selector:
+    app: terragon-sdlc
+    tier: application
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terragon-config
+  namespace: terragon-production
+data:
+  production.json: |
+    {
+      "environment": "production",
+      "generation": 3,
+      "optimization_level": "advanced",
+      "monitoring": {
+        "metrics": {"enabled": true},
+        "health_checks": {"enabled": true}
+      },
+      "security": {
+        "authentication": {"required": true},
+        "rate_limiting": {"enabled": true}
+      }
+    }
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: terragon-data
+  namespace: terragon-production
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ssd-retain
+  resources:
+    requests:
+      storage: 20Gi
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: terragon-sdlc-hpa
+  namespace: terragon-production
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: terragon-sdlc
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior:
+    scaleUp:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 100
+        periodSeconds: 60
+    scaleDown:
+      stabilizationWindowSeconds: 600
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 60
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: terragon-sdlc-network-policy
+  namespace: terragon-production
+spec:
+  podSelector:
+    matchLabels:
+      app: terragon-sdlc
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: terragon-production
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: TCP
+      port: 8080
+    - protocol: TCP
+      port: 8081
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: terragon-production
+    ports:
+    - protocol: TCP
+      port: 5432  # PostgreSQL
+    - protocol: TCP
+      port: 6379  # Redis
+  - to: []  # Allow external GitHub API access
+    ports:
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

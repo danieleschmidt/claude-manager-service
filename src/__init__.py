@@ -11,7 +11,10 @@ __license__ = "MIT"
 
 # Core components that should always be available
 from .logger import get_logger
-from .performance_monitor import get_monitor
+try:
+    from .performance_monitor import get_monitor
+except ImportError:
+    get_monitor = None  # Disabled due to missing psutil dependency
 
 # Core services with error handling for missing dependencies
 _available_services = []
