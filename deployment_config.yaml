@@ -1,0 +1,145 @@
+# TERRAGON SDLC v4.0 - Production Deployment Configuration
+
+environments:
+  development:
+    strategy: "recreate"
+    replicas: 1
+    resources:
+      cpu: "250m"
+      memory: "512Mi"
+    health_checks:
+      readiness_timeout: 60
+      liveness_timeout: 30
+    autoscaling:
+      enabled: false
+
+  staging:
+    strategy: "rolling"
+    replicas: 2
+    resources:
+      cpu: "500m"
+      memory: "1Gi"
+    health_checks:
+      readiness_timeout: 120
+      liveness_timeout: 60
+    autoscaling:
+      enabled: true
+      min_replicas: 2
+      max_replicas: 5
+      target_cpu: 70
+
+  production:
+    strategy: "blue_green"
+    replicas: 3
+    resources:
+      cpu: "1"
+      memory: "2Gi"
+    health_checks:
+      readiness_timeout: 300
+      liveness_timeout: 60
+    autoscaling:
+      enabled: true
+      min_replicas: 3
+      max_replicas: 10
+      target_cpu: 60
+    monitoring:
+      metrics_enabled: true
+      tracing_enabled: true
+      logging_level: "INFO"
+
+# Global health check configuration
+health_checks:
+  readiness_timeout: 300
+  liveness_timeout: 60
+  health_endpoint: "/health"
+  metrics_endpoint: "/metrics"
+
+# Rollback configuration
+rollback:
+  enabled: true
+  automatic: true
+  threshold: 0.95  # Success rate threshold for automatic rollback
+  timeout: 600     # Timeout in seconds for rollback operation
+
+# Security configuration
+security:
+  network_policies: true
+  pod_security_standards: "restricted"
+  service_mesh: "istio"
+  tls_enabled: true
+  image_scanning: true
+
+# Monitoring and observability
+monitoring:
+  prometheus:
+    enabled: true
+    scrape_interval: "30s"
+    retention: "30d"
+  
+  grafana:
+    enabled: true
+    dashboard_provisioning: true
+  
+  jaeger:
+    enabled: true
+    sampling_rate: 0.1
+  
+  alerts:
+    - name: "high_error_rate"
+      condition: "error_rate > 0.05"
+      severity: "critical"
+    - name: "high_latency"
+      condition: "p99_latency > 2s"
+      severity: "warning"
+    - name: "low_availability"
+      condition: "availability < 0.99"
+      severity: "critical"
+
+# Backup and disaster recovery
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "30d"
+  storage_class: "fast-ssd"
+
+# Performance optimization
+performance:
+  caching:
+    redis:
+      enabled: true
+      replicas: 3
+      memory: "2Gi"
+  
+  database:
+    connection_pooling: true
+    max_connections: 100
+    query_timeout: 30
+  
+  cdn:
+    enabled: true
+    provider: "cloudflare"
+
+# CI/CD integration
+cicd:
+  pipeline_triggers:
+    - "main"
+    - "release/*"
+  
+  quality_gates:
+    - "code_quality > 0.8"
+    - "test_coverage > 0.85"
+    - "security_scan_pass"
+    - "performance_benchmark_pass"
+  
+  approval_required:
+    - "production"
+  
+  notifications:
+    slack:
+      enabled: true
+      channel: "#deployments"
+    email:
+      enabled: true
+      recipients:
+        - "devops@terragon.ai"
+        - "engineering@terragon.ai"
