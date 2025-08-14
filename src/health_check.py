@@ -312,7 +312,7 @@ class HealthChecker:
         try:
             system_metrics = self._check_system_resources()
             
-            metrics = {
+            metrics = [
                 "# HELP system_cpu_usage_percent Current CPU usage percentage",
                 "# TYPE system_cpu_usage_percent gauge",
                 f"system_cpu_usage_percent {system_metrics.get('cpu_percent', 0)}",

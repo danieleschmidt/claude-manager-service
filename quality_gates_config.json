@@ -1,0 +1,14 @@
+{
+  "version": "1.0",
+  "thresholds": {
+    "code_quality_score": 0.8,
+    "test_coverage": 0.85,
+    "security_score": 0.9
+  },
+  "enabled_gates": [
+    "syntax_check",
+    "security_scan",
+    "test_execution",
+    "performance_check"
+  ]
+}

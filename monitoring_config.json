@@ -1,0 +1,16 @@
+{
+  "collection_interval": 30,
+  "alert_evaluation_interval": 60,
+  "alert_thresholds": {
+    "cpu_usage": 80.0,
+    "memory_usage": 85.0,
+    "error_rate": 5.0
+  },
+  "notifications": {
+    "enabled": true,
+    "handlers": [
+      "log",
+      "email"
+    ]
+  }
+}
