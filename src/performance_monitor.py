@@ -23,7 +23,7 @@ from dataclasses import dataclass, asdict
 from functools import wraps
 import statistics
 
-from .logger import get_logger
+from src.logger import get_logger
 
 
 @dataclass

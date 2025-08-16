@@ -20,12 +20,12 @@ from typing import Optional, List, Dict, Any
 from datetime import datetime
 from github import Repository
 
-from .async_github_api import AsyncGitHubAPI
-from .logger import get_logger, log_performance
-from .performance_monitor import monitor_performance
-from .task_tracker import get_task_tracker
-from .config_validator import get_validated_config
-from .error_handler import NetworkError
+from src.async_github_api import AsyncGitHubAPI
+from src.logger import get_logger, log_performance
+from src.performance_monitor import monitor_performance
+from src.task_tracker import get_task_tracker
+from src.config_validator import get_validated_config
+from src.error_handler import NetworkError
 
 
 logger = get_logger(__name__)

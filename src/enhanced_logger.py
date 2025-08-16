@@ -22,7 +22,7 @@ import os
 import sys
 from pathlib import Path
 
-from .logger import get_logger as base_get_logger
+from src.logger import get_logger as base_get_logger
 
 
 @dataclass

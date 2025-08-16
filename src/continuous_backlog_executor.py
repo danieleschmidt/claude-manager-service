@@ -16,15 +16,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from enum import Enum
 
-from .async_github_api import AsyncGitHubAPI
-from .async_task_analyzer import AsyncTaskAnalyzer
-from .async_orchestrator import AsyncOrchestrator
-from .task_prioritization import TaskPrioritizer, calculate_wsjf_score
-from .task_tracker import TaskTracker
-from .services.configuration_service import ConfigurationService
-from .services.repository_service import RepositoryService
-from .logger import get_logger
-from .error_handler import ErrorHandler
+from src.async_github_api import AsyncGitHubAPI
+from src.async_task_analyzer import AsyncTaskAnalyzer
+from src.async_orchestrator import AsyncOrchestrator
+from src.task_prioritization import TaskPrioritizer, calculate_wsjf_score
+from src.task_tracker import TaskTracker
+from src.services.configuration_service import ConfigurationService
+from src.services.repository_service import RepositoryService
+from src.logger import get_logger
+from src.error_handler import ErrorHandler
 
 
 class TaskStatus(Enum):

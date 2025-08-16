@@ -6,15 +6,43 @@ import shutil
 import shlex
 from typing import Dict, Any, List
 from github import Issue
-from .github_api import GitHubAPI
-from .prompt_builder import build_prompt, get_template_for_labels
-from .logger import get_logger, log_performance
-from .performance_monitor import monitor_performance
-from .security import get_secure_subprocess, SecureTempDir, validate_repo_name
-from .config_validator import get_validated_config
-from .quantum_task_planner import create_quantum_task_planner, QuantumTaskPlanner
+from src.github_api import GitHubAPI
+from src.prompt_builder import build_prompt, get_template_for_labels
+from src.logger import get_logger, log_performance
+from src.performance_monitor import monitor_performance
+from src.security import get_secure_subprocess, SecureTempDir, validate_repo_name
+from src.config_validator import get_validated_config
+from src.quantum_task_planner import create_quantum_task_planner, QuantumTaskPlanner
 
 logger = get_logger(__name__)
+
+
+class Orchestrator:
+    """Main orchestrator class for managing task execution."""
+    
+    def __init__(self, config: Dict[str, Any]):
+        self.config = config
+        self.api = GitHubAPI()
+        self.logger = get_logger(__name__)
+    
+    def trigger_task(self, repo_name: str, issue_number: int) -> None:
+        """Trigger task execution for a given issue."""
+        issue = self.api.get_issue(repo_name, issue_number)
+        if not issue:
+            raise Exception(f"Could not retrieve issue #{issue_number} from {repo_name}")
+        
+        # Get issue labels
+        labels = {label.name.lower() for label in issue.labels}
+        
+        # Determine which executor to use based on labels
+        if "terragon-task" in labels:
+            trigger_terragon_task(self.api, repo_name, issue, self.config)
+        elif "claude-flow-task" in labels:
+            trigger_claude_flow_task(self.api, repo_name, issue)
+        else:
+            # Default to Terragon if no specific label is found
+            self.logger.info("No specific executor label found, defaulting to Terragon.")
+            trigger_terragon_task(self.api, repo_name, issue, self.config)
 
 @monitor_performance(track_memory=True, custom_name="terragon_task_orchestration")
 @log_performance

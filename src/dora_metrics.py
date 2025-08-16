@@ -23,7 +23,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, asdict
 from enum import Enum
 
-from .logger import get_logger
+from src.logger import get_logger
 
 logger = get_logger(__name__)
 

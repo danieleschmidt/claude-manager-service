@@ -10,9 +10,9 @@ __email__ = "dev@terragon.ai"
 __license__ = "MIT"
 
 # Core components that should always be available
-from .logger import get_logger
+from src.logger import get_logger
 try:
-    from .performance_monitor import get_monitor
+    from src.performance_monitor import get_monitor
 except ImportError:
     get_monitor = None  # Disabled due to missing psutil dependency
 
@@ -22,37 +22,37 @@ _available_components = []
 
 # Try importing core components
 try:
-    from .github_api import GitHubAPI
+    from src.github_api import GitHubAPI
     _available_components.append('GitHubAPI')
 except ImportError:
     GitHubAPI = None
 
 try:
-    from .orchestrator import Orchestrator
+    from src.orchestrator import Orchestrator
     _available_components.append('Orchestrator')
 except ImportError:
     Orchestrator = None
 
 try:
-    from .task_analyzer import analyze_open_issues, find_todo_comments
+    from src.task_analyzer import analyze_open_issues, find_todo_comments
     _available_components.extend(['analyze_open_issues', 'find_todo_comments'])
 except ImportError:
     analyze_open_issues = None
     find_todo_comments = None
 
 try:
-    from .core_system import CoreSystem
+    from src.core_system import CoreSystem
     _available_components.append('CoreSystem')
 except ImportError:
     CoreSystem = None
 
 # Try importing services (these may fail due to external dependencies like aiofiles)
 try:
-    from .services.configuration_service import ConfigurationService
-    from .services.database_service import DatabaseService
-    from .services.issue_service import IssueService
-    from .services.repository_service import RepositoryService
-    from .services.task_service import TaskService
+    from src.services.configuration_service import ConfigurationService
+    from src.services.database_service import DatabaseService
+    from src.services.issue_service import IssueService
+    from src.services.repository_service import RepositoryService
+    from src.services.task_service import TaskService
     _available_services.extend([
         'ConfigurationService', 'DatabaseService', 'IssueService',
         'RepositoryService', 'TaskService'

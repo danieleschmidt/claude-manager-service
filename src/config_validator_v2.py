@@ -18,8 +18,8 @@ from pathlib import Path
 from dataclasses import dataclass
 import logging
 
-from .enhanced_logger import get_enhanced_logger
-from .validation import (
+from src.enhanced_logger import get_enhanced_logger
+from src.validation import (
     ValidationError, ConfigurationValidationError, 
     JsonSchemaValidator, CONFIG_SCHEMA
 )

@@ -31,9 +31,9 @@ import signal
 import traceback
 import concurrent.futures
 
-from .logger import get_logger
-from .performance_monitor import monitor_performance, get_monitor
-from .error_handler import WorkerError, TaskError, with_enhanced_error_handling
+from src.logger import get_logger
+from src.performance_monitor import monitor_performance, get_monitor
+from src.error_handler import WorkerError, TaskError, with_enhanced_error_handling
 
 
 logger = get_logger(__name__)

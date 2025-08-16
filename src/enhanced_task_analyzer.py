@@ -18,13 +18,13 @@ import time
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 
-from .logger import get_logger
-from .github_api import GitHubAPI
-from .concurrent_repository_scanner import ConcurrentRepositoryScanner
-from .config_validator import get_validated_config
-from .task_tracker import get_task_tracker
-from .performance_monitor import monitor_performance, get_monitor
-from .error_handler import get_error_tracker
+from src.logger import get_logger
+from src.github_api import GitHubAPI
+from src.concurrent_repository_scanner import ConcurrentRepositoryScanner
+from src.config_validator import get_validated_config
+from src.task_tracker import get_task_tracker
+from src.performance_monitor import monitor_performance, get_monitor
+from src.error_handler import get_error_tracker
 
 
 logger = get_logger(__name__)

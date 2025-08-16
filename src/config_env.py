@@ -7,7 +7,7 @@ with validation, defaults, and proper error handling.
 import os
 import sys
 from typing import Dict, Any, Union, Optional, Callable
-from .logger import get_logger
+from src.logger import get_logger
 
 logger = get_logger(__name__)
 
