@@ -3,12 +3,12 @@ import datetime
 import time
 from typing import Optional
 from github import Repository
-from .github_api import GitHubAPI
-from .logger import get_logger, log_performance
-from .performance_monitor import monitor_performance
-from .task_tracker import get_task_tracker
-from .config_validator import get_validated_config
-from .error_handler import with_error_recovery, safe_github_operation
+from src.github_api import GitHubAPI
+from src.logger import get_logger, log_performance
+from src.performance_monitor import monitor_performance
+from src.task_tracker import get_task_tracker
+from src.config_validator import get_validated_config
+from src.error_handler import with_error_recovery, safe_github_operation
 # Import ConcurrentRepositoryScanner lazily to avoid circular import
 
 logger = get_logger(__name__)
@@ -216,7 +216,7 @@ if __name__ == "__main__":
             logger.info(f"Starting concurrent analysis of {len(repos_to_scan)} repositories")
             
             # Import here to avoid circular import
-            from concurrent_repository_scanner import ConcurrentRepositoryScanner
+            from src.concurrent_repository_scanner import ConcurrentRepositoryScanner
             
             # Initialize concurrent scanner with reasonable defaults
             scanner = ConcurrentRepositoryScanner(

@@ -21,15 +21,15 @@ from datetime import datetime
 from dataclasses import dataclass
 from contextlib import asynccontextmanager
 
-from .robust_system_v2 import RobustSystem, SecurityContext, create_robust_system
-from .enhanced_logger import (
+from src.robust_system_v2 import RobustSystem, SecurityContext, create_robust_system
+from src.enhanced_logger import (
     get_enhanced_logger, log_context, log_security_event, 
     LogContext, monitor_performance
 )
-from .security_v2 import get_security_manager, SecurityPolicy
-from .config_validator_v2 import validate_configuration, generate_validation_report
-from .health_check_v2 import get_health_check
-from .services.configuration_service import ConfigurationService
+from src.security_v2 import get_security_manager, SecurityPolicy
+from src.config_validator_v2 import validate_configuration, generate_validation_report
+from src.health_check_v2 import get_health_check
+from src.services.configuration_service import ConfigurationService
 
 
 @dataclass
@@ -571,7 +571,7 @@ async def create_generation_2_system(config_service: ConfigurationService) -> Ge
 # Example usage and testing
 async def demonstrate_generation_2_features():
     """Demonstrate Generation 2 robustness features"""
-    from .services.configuration_service import ConfigurationService
+    from src.services.configuration_service import ConfigurationService
     
     try:
         # Initialize configuration service

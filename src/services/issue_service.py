@@ -18,12 +18,12 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
 
-from ..async_github_api import AsyncGitHubAPI
-from ..logger import get_logger
-from ..performance_monitor import monitor_performance
-from ..error_handler import NetworkError, with_enhanced_error_handling
-from ..task_tracker import get_task_tracker
-from ..security import sanitize_issue_content_enhanced, validate_repo_name
+from src.async_github_api import AsyncGitHubAPI
+from src.logger import get_logger
+from src.performance_monitor import monitor_performance
+from src.error_handler import NetworkError, with_enhanced_error_handling
+from src.task_tracker import get_task_tracker
+from src.security import sanitize_issue_content_enhanced, validate_repo_name
 
 
 logger = get_logger(__name__)

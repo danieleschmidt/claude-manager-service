@@ -21,9 +21,9 @@ from typing import List, Dict, Any, Optional, Callable
 from dataclasses import dataclass, asdict
 import functools
 
-from .logger import get_logger
-from .error_handler import get_error_tracker, NetworkError
-from .performance_monitor import monitor_performance
+from src.logger import get_logger
+from src.error_handler import get_error_tracker, NetworkError
+from src.performance_monitor import monitor_performance
 # Import task_analyzer functions with late import to avoid circular dependency
 def _get_task_analyzer_functions():
     """Get task analyzer functions with late import to avoid circular dependency"""
