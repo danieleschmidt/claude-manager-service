@@ -1,6 +1,6 @@
 # Terragon Autonomous SDLC - Production Docker Image
 # Multi-stage build for optimized production deployment
-FROM python:3.11-slim as builder
+FROM python:3.13.7-slim as builder
 
 # Build arguments
 ARG GENERATION=3
@@ -37,7 +37,7 @@ RUN python -m pytest tests/unit/ -x --tb=short || true
 RUN python -c "import src.core_system; print('✅ Core system validated')"
 
 # Production stage
-FROM python:3.11-slim as production
+FROM python:3.13.7-slim as production
 
 # Production environment variables
 ENV PYTHONUNBUFFERED=1
