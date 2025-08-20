@@ -1,3 +1,4 @@
+```python
 #!/usr/bin/env python3
 """
 Claude Manager Service - Robust Entry Point (Generation 2: MAKE IT ROBUST)
@@ -12,16 +13,56 @@ import os
 import sys
 import logging
 import traceback
-from pathlib import Path
-import argparse
-import datetime
 import time
 import hashlib
 import re
-from typing import Optional, List, Dict, Any, Union
+import subprocess
+from pathlib import Path
+from typing import Dict, Any, Optional, List, Union
+from datetime import datetime, timezone
+from functools import wraps
 from dataclasses import dataclass, asdict
-from contextlib import asynccontextmanager
 import signal
+import argparse
+from contextlib import asynccontextmanager
+
+import typer
+from rich import print as rprint
+from rich.console import Console
+from rich.table import Table
+from rich.logging import RichHandler
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
+# Security and validation imports
+try:
+    import validators
+    VALIDATORS_AVAILABLE = True
+except ImportError:
+    VALIDATORS_AVAILABLE = False
+
+# =============================================================================
+# ERROR CLASSES
+# =============================================================================
+
+class ClaudeManagerError(Exception):
+    """Base exception for Claude Manager"""
+    pass
+
+class ConfigurationError(ClaudeManagerError):
+    """Configuration related errors"""
+    pass
+
+class SecurityError(ClaudeManagerError):
+    """Security related errors"""
+    pass
+
+class ValidationError(ClaudeManagerError):
+    """Input validation errors"""
+    pass
+
+class GitHubAPIError(ClaudeManagerError):
+    """GitHub API related errors"""
+    pass
 
 # =============================================================================
 # SECURITY AND VALIDATION
@@ -34,13 +75,17 @@ class SecurityValidator:
     def sanitize_input(value: str, max_length: int = 1000) -> str:
         """Sanitize user input to prevent injection attacks"""
         if not isinstance(value, str):
-            raise ValueError(f"Expected string, got {type(value)}")
+            raise ValidationError(f"Expected string, got {type(value)}")
         
         if len(value) > max_length:
-            raise ValueError(f"Input too long: {len(value)} > {max_length}")
+            raise ValidationError(f"Input too long: {len(value)} > {max_length}")
         
         # Remove potentially dangerous characters
-        sanitized = re.sub(r'[<>"\';\\]', '', value)
+        sanitized = re.sub(r'[<>&"\'`$();|]', '', value)
+        
+        # Additional validation for paths
+        if '..' in sanitized or sanitized.startswith('/'):
+            raise SecurityError("Potentially unsafe path detected")
         
         # Normalize whitespace
         sanitized = ' '.join(sanitized.split())
@@ -51,15 +96,15 @@ class SecurityValidator:
     def validate_repo_name(repo_name: str) -> str:
         """Validate and sanitize repository name"""
         if not repo_name:
-            raise ValueError("Repository name cannot be empty")
+            raise ValidationError("Repository name cannot be empty")
         
         # GitHub repo format: owner/repo
         pattern = r'^[a-zA-Z0-9\-_.]+/[a-zA-Z0-9\-_.]+$'
         if not re.match(pattern, repo_name):
-            raise ValueError(f"Invalid repository name format: {repo_name}")
+            raise ValidationError(f"Invalid repository name format: {repo_name}")
         
         if len(repo_name) > 100:
-            raise ValueError(f"Repository name too long: {len(repo_name)}")
+            raise ValidationError(f"Repository name too long: {len(repo_name)}")
         
         return repo_name
     
@@ -67,58 +112,107 @@ class SecurityValidator:
     def validate_file_path(file_path: str) -> str:
         """Validate file path to prevent directory traversal"""
         if not file_path:
-            raise ValueError("File path cannot be empty")
+            raise ValidationError("File path cannot be empty")
         
         # Prevent directory traversal
         if '..' in file_path or file_path.startswith('/'):
-            raise ValueError(f"Unsafe file path: {file_path}")
+            raise ValidationError(f"Unsafe file path: {file_path}")
         
         # Sanitize path
         safe_path = os.path.normpath(file_path)
         
         if safe_path != file_path:
-            raise ValueError(f"Path normalization changed: {file_path} -> {safe_path}")
+            raise ValidationError(f"Path normalization changed: {file_path} -> {safe_path}")
         
         return safe_path
+    
+    @staticmethod
+    def validate_github_token(token: str) -> bool:
+        """Basic GitHub token validation"""
+        if not token:
+            return False
+        
+        # GitHub tokens are typically 40 characters or more
+        if len(token) < 20 or len(token) > 100:
+            return False
+        
+        # Should contain only alphanumeric characters and underscores
+        pattern = r'^[a-zA-Z0-9_]+$'
+        return bool(re.match(pattern, token))
 
 # =============================================================================
 # LOGGING AND MONITORING
 # =============================================================================
 
+@dataclass
+class LogConfig:
+    level: str = "INFO"
+    format: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    file_path: Optional[str] = None
+    max_file_size: int = 10 * 1024 * 1024  # 10MB
+    backup_count: int = 5
+
 class RobustLogger:
     """Advanced logging with structured output and performance tracking"""
     
-    def __init__(self, name: str, log_level: str = "INFO"):
+    def __init__(self, name: str, config: LogConfig = None):
+        if config is None:
+            config = LogConfig()
+            
         self.logger = logging.getLogger(name)
-        self.logger.setLevel(getattr(logging, log_level.upper()))
+        self.logger.setLevel(getattr(logging, config.level.upper()))
         
-        # Remove existing handlers to avoid duplicates
-        for handler in self.logger.handlers[:]:
-            self.logger.removeHandler(handler)
+        # Clear existing handlers to avoid duplicates
+        self.logger.handlers.clear()
         
-        # Console handler with structured format
-        console_handler = logging.StreamHandler()
-        formatter = logging.Formatter(
-            '%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
-        )
-        console_handler.setFormatter(formatter)
+        # Console handler with Rich
+        console_handler = RichHandler(rich_tracebacks=True)
+        console_handler.setLevel(getattr(logging, config.level))
+        console_formatter = logging.Formatter(config.format)
+        console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
         
-        # File handler for persistent logging
-        log_file = Path('logs') / f'{name}.log'
-        log_file.parent.mkdir(exist_ok=True)
-        
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setFormatter(formatter)
-        self.logger.addHandler(file_handler)
+        # File handler if specified
+        if config.file_path:
+            try:
+                from logging.handlers import RotatingFileHandler
+                log_file = Path(config.file_path)
+                log_file.parent.mkdir(exist_ok=True)
+                
+                file_handler = RotatingFileHandler(
+                    config.file_path,
+                    maxBytes=config.max_file_size,
+                    backupCount=config.backup_count
+                )
+                file_handler.setLevel(getattr(logging, config.level))
+                file_formatter = logging.Formatter(config.format)
+                file_handler.setFormatter(file_formatter)
+                self.logger.addHandler(file_handler)
+            except Exception as e:
+                self.logger.warning(f"Could not setup file logging: {e}")
         
         self.performance_data = []
+    
+    def sanitize_log_data(self, data: Any) -> str:
+        """Sanitize data before logging to prevent injection"""
+        if isinstance(data, dict):
+            # Remove sensitive keys
+            sensitive_keys = ['token', 'password', 'secret', 'key', 'auth']
+            sanitized = {}
+            for k, v in data.items():
+                if any(sensitive_key in k.lower() for sensitive_key in sensitive_keys):
+                    sanitized[k] = "***REDACTED***"
+                else:
+                    sanitized[k] = str(v)[:200]  # Limit length
+            return json.dumps(sanitized, indent=2)
+        
+        # Convert to string and limit length
+        return str(data)[:500]
     
     def info(self, message: str, **kwargs):
         """Log info message with optional structured data"""
         if kwargs:
-            message = f"{message} | {json.dumps(kwargs)}"
+            message = f"{message} | {self.sanitize_log_data(kwargs)}"
         self.logger.info(message)
     
     def error(self, message: str, exception: Optional[Exception] = None, **kwargs):
@@ -126,23 +220,23 @@ class RobustLogger:
         if exception:
             message = f"{message} | Exception: {str(exception)}"
             if kwargs:
-                message = f"{message} | {json.dumps(kwargs)}"
+                message = f"{message} | {self.sanitize_log_data(kwargs)}"
             self.logger.error(message, exc_info=True)
         else:
             if kwargs:
-                message = f"{message} | {json.dumps(kwargs)}"
+                message = f"{message} | {self.sanitize_log_data(kwargs)}"
             self.logger.error(message)
     
     def warning(self, message: str, **kwargs):
         """Log warning message"""
         if kwargs:
-            message = f"{message} | {json.dumps(kwargs)}"
+            message = f"{message} | {self.sanitize_log_data(kwargs)}"
         self.logger.warning(message)
     
     def debug(self, message: str, **kwargs):
         """Log debug message"""
         if kwargs:
-            message = f"{message} | {json.dumps(kwargs)}"
+            message = f"{message} | {self.sanitize_log_data(kwargs)}"
         self.logger.debug(message)
     
     def track_performance(self, operation: str, duration: float, **metadata):
@@ -150,7 +244,7 @@ class RobustLogger:
         perf_data = {
             'operation': operation,
             'duration': duration,
-            'timestamp': datetime.datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             **metadata
         }
         self.performance_data.append(perf_data)
@@ -175,6 +269,16 @@ class ErrorContext:
     traceback: str
     metadata: Dict[str, Any]
 
+@dataclass
+class PerformanceMetrics:
+    operation: str
+    start_time: float
+    end_time: float
+    duration: float
+    success: bool
+    error_message: Optional[str] = None
+    memory_usage: Optional[float] = None
+
 class RobustErrorHandler:
     """Comprehensive error handling with recovery strategies"""
     
@@ -186,7 +290,7 @@ class RobustErrorHandler:
         """Handle error with structured logging and context"""
         error_context = ErrorContext(
             operation=operation,
-            timestamp=datetime.datetime.now().isoformat(),
+            timestamp=datetime.now().isoformat(),
             error_type=type(exception).__name__,
             error_message=str(exception),
             traceback=traceback.format_exc(),
@@ -228,6 +332,47 @@ class RobustErrorHandler:
         
         raise last_exception
 
+def handle_errors(logger: RobustLogger = None):
+    """Decorator for comprehensive error handling"""
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except ClaudeManagerError as e:
+                if logger:
+                    logger.error(f"Claude Manager error in {func.__name__}: {e}")
+                rprint(f"[red]Error: {e}[/red]")
+                raise typer.Exit(1)
+            except Exception as e:
+                if logger:
+                    logger.error(f"Unexpected error in {func.__name__}: {e}")
+                rprint(f"[red]Unexpected error: {e}[/red]")
+                rprint(f"[dim]Function: {func.__name__}[/dim]")
+                raise typer.Exit(1)
+        return wrapper
+    return decorator
+
+def async_handle_errors(logger: RobustLogger = None):
+    """Decorator for async function error handling"""
+    def decorator(func):
+        @wraps(func)
+        async def wrapper(*args, **kwargs):
+            try:
+                return await func(*args, **kwargs)
+            except ClaudeManagerError as e:
+                if logger:
+                    logger.error(f"Claude Manager error in {func.__name__}: {e}")
+                rprint(f"[red]Error: {e}[/red]")
+                raise typer.Exit(1)
+            except Exception as e:
+                if logger:
+                    logger.error(f"Unexpected error in {func.__name__}: {e}")
+                rprint(f"[red]Unexpected error: {e}[/red]")
+                raise typer.Exit(1)
+        return wrapper
+    return decorator
+
 # =============================================================================
 # CONFIGURATION MANAGEMENT
 # =============================================================================
@@ -244,16 +389,20 @@ class RobustConfigManager:
     def load_config(self) -> Dict[str, Any]:
         """Load and validate configuration with integrity checking"""
         try:
-            with open(self.config_path, 'r') as f:
-                content = f.read()
+            if os.path.exists(self.config_path):
+                with open(self.config_path, 'r') as f:
+                    content = f.read()
                 
-            # Calculate content hash for integrity
-            self.config_hash = hashlib.sha256(content.encode()).hexdigest()
-            
-            self.config = json.loads(content)
-            self.logger.info(f"Configuration loaded successfully", 
-                           config_path=self.config_path,
-                           config_hash=self.config_hash[:8])
+                # Calculate content hash for integrity
+                self.config_hash = hashlib.sha256(content.encode()).hexdigest()
+                
+                self.config = json.loads(content)
+                self.logger.info(f"Configuration loaded successfully", 
+                               config_path=self.config_path,
+                               config_hash=self.config_hash[:8])
+            else:
+                self.logger.warning(f"Config file {self.config_path} not found, creating default")
+                self.config = self._create_default_config()
             
             # Validate configuration structure
             self._validate_config()
@@ -262,27 +411,27 @@ class RobustConfigManager:
             
         except FileNotFoundError:
             self.logger.error(f"Configuration file not found: {self.config_path}")
-            raise
+            raise ConfigurationError(f"Configuration file not found: {self.config_path}")
         except json.JSONDecodeError as e:
             self.logger.error(f"Invalid JSON in configuration", exception=e)
-            raise
+            raise ConfigurationError(f"Invalid JSON in config file: {e}")
         except Exception as e:
             self.logger.error(f"Failed to load configuration", exception=e)
-            raise
+            raise ConfigurationError(f"Error loading configuration: {e}")
     
     def _validate_config(self):
         """Comprehensive configuration validation"""
         required_sections = ['github', 'analyzer', 'executor']
         for section in required_sections:
             if section not in self.config:
-                raise ValueError(f"Missing required configuration section: {section}")
+                raise ConfigurationError(f"Missing required configuration section: {section}")
         
         # Validate GitHub configuration
         github_config = self.config['github']
         required_github_keys = ['username', 'managerRepo', 'reposToScan']
         for key in required_github_keys:
             if key not in github_config:
-                raise ValueError(f"Missing required GitHub configuration: {key}")
+                raise ConfigurationError(f"Missing required GitHub configuration: {key}")
         
         # Validate repository names
         for repo in github_config['reposToScan']:
@@ -293,15 +442,125 @@ class RobustConfigManager:
         # Validate analyzer configuration
         analyzer_config = self.config['analyzer']
         if not isinstance(analyzer_config.get('scanForTodos'), bool):
-            raise ValueError("analyzer.scanForTodos must be boolean")
+            raise ConfigurationError("analyzer.scanForTodos must be boolean")
         if not isinstance(analyzer_config.get('scanOpenIssues'), bool):
-            raise ValueError("analyzer.scanOpenIssues must be boolean")
+            raise ConfigurationError("analyzer.scanOpenIssues must be boolean")
         
         self.logger.info("Configuration validation passed")
+    
+    def _create_default_config(self) -> Dict[str, Any]:
+        """Create default configuration"""
+        default_config = {
+            "github": {
+                "username": "your-username",
+                "managerRepo": "your-username/claude-manager-service",
+                "reposToScan": []
+            },
+            "analyzer": {
+                "scanForTodos": True,
+                "scanOpenIssues": True,
+                "maxResults": 100
+            },
+            "executor": {
+                "terragonUsername": "@terragon-labs"
+            },
+            "security": {
+                "maxInputLength": 1000,
+                "enableValidation": True,
+                "logSensitiveData": False
+            },
+            "monitoring": {
+                "enableHealthChecks": True,
+                "metricsCollection": True,
+                "performanceTracking": True
+            }
+        }
+        
+        try:
+            with open(self.config_path, 'w') as f:
+                json.dump(default_config, f, indent=2)
+            rprint(f"[green]Created default config at {self.config_path}[/green]")
+        except Exception as e:
+            self.logger.warning(f"Could not save default config: {e}")
+        
+        return default_config
     
     def get_config(self) -> Dict[str, Any]:
         """Get current configuration"""
         return self.config.copy()
+    
+    def get(self, key: str, default=None):
+        """Get configuration value with security checks"""
+        try:
+            keys = key.split('.')
+            value = self.config
+            for k in keys:
+                if isinstance(value, dict) and k in value:
+                    value = value[k]
+                else:
+                    return default
+            
+            # Security check: don't log sensitive values
+            if any(sensitive in key.lower() for sensitive in ['token', 'password', 'secret']):
+                self.logger.info(f"Retrieved sensitive config key: {key}")
+            else:
+                self.logger.info(f"Retrieved config: {key} = {value}")
+            
+            return value
+        except Exception as e:
+            self.logger.error(f"Error retrieving config key {key}: {e}")
+            return default
+    
+    def set(self, key: str, value: Any, persist: bool = False):
+        """Set configuration value with validation"""
+        try:
+            # Validate input
+            if not isinstance(key, str) or not key:
+                raise ValidationError("Configuration key must be a non-empty string")
+            
+            keys = key.split('.')
+            config = self.config
+            
+            # Navigate to the parent of the target key
+            for k in keys[:-1]:
+                if k not in config:
+                    config[k] = {}
+                config = config[k]
+            
+            # Set the value
+            config[keys[-1]] = value
+            
+            # Persist if requested
+            if persist:
+                self._save_config()
+            
+            self.logger.info(f"Configuration updated: {key}")
+            
+        except Exception as e:
+            raise ConfigurationError(f"Error setting config key {key}: {e}")
+    
+    def _save_config(self):
+        """Save configuration to file"""
+        try:
+            # Create backup
+            backup_path = f"{self.config_path}.backup"
+            if os.path.exists(self.config_path):
+                import shutil
+                shutil.copy2(self.config_path, backup_path)
+            
+            # Save new config
+            with open(self.config_path, 'w') as f:
+                json.dump(self.config, f, indent=2)
+            
+            self.logger.info("Configuration saved successfully")
+            
+        except Exception as e:
+            # Restore backup if save failed
+            backup_path = f"{self.config_path}.backup"
+            if os.path.exists(backup_path):
+                import shutil
+                shutil.copy2(backup_path, self.config_path)
+            raise ConfigurationError(f"Error saving configuration: {e}")
     
     def watch_config_changes(self) -> bool:
         """Check if configuration file has changed"""
@@ -320,6 +579,78 @@ class RobustConfigManager:
             self.logger.error("Failed to check configuration changes", exception=e)
         
         return False
+
+# =============================================================================
+# PERFORMANCE MONITORING
+# =============================================================================
+
+class PerformanceMonitor:
+    """Monitor performance and collect metrics"""
+    
+    def __init__(self, logger: RobustLogger):
+        self.logger = logger
+        self.metrics: List[PerformanceMetrics] = []
+        self.operation_counts = {}
+    
+    def start_operation(self, operation: str) -> float:
+        """Start monitoring an operation"""
+        start_time = time.time()
+        self.operation_counts[operation] = self.operation_counts.get(operation, 0) + 1
+        self.logger.info(f"Started operation: {operation}")
+        return start_time
+    
+    def end_operation(self, operation: str, start_time: float, success: bool = True, error_message: str = None):
+        """End monitoring an operation"""
+        end_time = time.time()
+        duration = end_time - start_time
+        
+        # Get memory usage if psutil is available
+        memory_usage = None
+        try:
+            import psutil
+            process = psutil.Process()
+            memory_usage = process.memory_info().rss / 1024 / 1024  # MB
+        except ImportError:
+            pass
+        
+        metric = PerformanceMetrics(
+            operation=operation,
+            start_time=start_time,
+            end_time=end_time,
+            duration=duration,
+            success=success,
+            error_message=error_message,
+            memory_usage=memory_usage
+        )
+        
+        self.metrics.append(metric)
+        
+        if success:
+            self.logger.info(f"Completed operation {operation} in {duration:.2f}s")
+        else:
+            self.logger.error(f"Failed operation {operation} after {duration:.2f}s: {error_message}")
+    
+    def get_statistics(self) -> Dict[str, Any]:
+        """Get performance statistics"""
+        if not self.metrics:
+            return {"message": "No metrics collected"}
+        
+        successful_metrics = [m for m in self.metrics if m.success]
+        failed_metrics = [m for m in self.metrics if not m.success]
+        
+        stats = {
+            "total_operations": len(self.metrics),
+            "successful_operations": len(successful_metrics),
+            "failed_operations": len(failed_metrics),
+            "success_rate": len(successful_metrics) / len(self.metrics) * 100,
+            "average_duration": sum(m.duration for m in self.metrics) / len(self.metrics),
+            "operation_counts": self.operation_counts
+        }
+        
+        if successful_metrics:
+            stats["average_successful_duration"] = sum(m.duration for m in successful_metrics) / len(successful_metrics)
+        
+        return stats
 
 # =============================================================================
 # HEALTH MONITORING
@@ -342,6 +673,7 @@ class HealthMonitor:
         self.logger = logger
         self.config_manager = config_manager
         self.health_history = []
+        self.performance_monitor = PerformanceMonitor(logger)
     
     async def run_health_check(self) -> Dict[str, HealthCheckResult]:
         """Run comprehensive health check"""
@@ -352,7 +684,10 @@ class HealthMonitor:
             'environment': self._check_environment,
             'file_system': self._check_file_system,
             'network': self._check_network,
-            'security': self._check_security
+            'security': self._check_security,
+            'dependencies': self._check_dependencies,
+            'github_connectivity': self._check_github_connectivity,
+            'performance': self._check_performance
         }
         
         results = {}
@@ -368,7 +703,7 @@ class HealthMonitor:
                     message=result['message'],
                     details=result.get('details', {}),
                     duration=duration,
-                    timestamp=datetime.datetime.now().isoformat()
+                    timestamp=datetime.now().isoformat()
                 )
                 
             except Exception as e:
@@ -379,7 +714,7 @@ class HealthMonitor:
                     message=f"Health check failed: {str(e)}",
                     details={'error': str(e)},
                     duration=duration,
-                    timestamp=datetime.datetime.now().isoformat()
+                    timestamp=datetime.now().isoformat()
                 )
                 
                 self.logger.error(f"Health check {check_name} failed", exception=e)
@@ -387,7 +722,7 @@ class HealthMonitor:
         # Store in history
         overall_status = self._calculate_overall_status(results)
         self.health_history.append({
-            'timestamp': datetime.datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'overall_status': overall_status,
             'results': results
         })
@@ -405,7 +740,16 @@ class HealthMonitor:
         try:
             config = self.config_manager.get_config()
             
+            username = config['github']['username']
             repos_count = len(config['github']['reposToScan'])
+            
+            if not username or username == "your-username":
+                return {
+                    'status': 'degraded',
+                    'message': 'GitHub username not configured',
+                    'details': {'repos_count': repos_count}
+                }
+            
             if repos_count == 0:
                 return {
                     'status': 'degraded',
@@ -434,10 +778,16 @@ class HealthMonitor:
         github_token = bool(os.getenv('GITHUB_TOKEN'))
         python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
         
+        issues = []
         if not github_token:
+            issues.append("GITHUB_TOKEN not set")
+        elif github_token and not SecurityValidator.validate_github_token(os.getenv('GITHUB_TOKEN')):
+            issues.append("GITHUB_TOKEN appears invalid")
+        
+        if issues:
             return {
                 'status': 'degraded',
-                'message': 'GitHub token not configured',
+                'message': f'Environment issues: {", ".join(issues)}',
                 'details': {
                     'github_token': github_token,
                     'python_version': python_version
@@ -446,7 +796,7 @@ class HealthMonitor:
         
         return {
             'status': 'healthy',
-            'message': 'Environment configured correctly',
+            'message': f'Environment configured correctly, Python {python_version}',
             'details': {
                 'github_token': github_token,
                 'python_version': python_version,
@@ -473,6 +823,25 @@ class HealthMonitor:
             # Check log directory
             log_dir = Path('logs')
             log_dir.mkdir(exist_ok=True)
+            
+            # Check disk space
+            try:
+                import shutil
+                total, used, free = shutil.disk_usage(".")
+                free_gb = free / (1024**3)
+                
+                if free_gb < 1:
+                    return {
+                        'status': 'degraded',
+                        'message': f'Low disk space: {free_gb:.1f}GB free',
+                        'details': {
+                            'log_directory': str(log_dir.absolute()),
+                            'writable': True,
+                            'free_space_gb': free_gb
+                        }
+                    }
+            except:
+                pass
             
             return {
                 'status': 'healthy',
@@ -539,6 +908,133 @@ class HealthMonitor:
             }
         }
     
+    async def _check_dependencies(self) -> Dict[str, Any]:
+        """Check required dependencies"""
+        try:
+            missing_deps = []
+            optional_deps = []
+            
+            # Required dependencies
+            required = ['typer', 'rich']
+            for dep in required:
+                try:
+                    __import__(dep)
+                except ImportError:
+                    missing_deps.append(dep)
+            
+            # Optional dependencies
+            optional = ['github', 'validators', 'psutil']
+            for dep in optional:
+                try:
+                    __import__(dep)
+                except ImportError:
+                    optional_deps.append(dep)
+            
+            if missing_deps:
+                return {
+                    'status': 'unhealthy',
+                    'message': f'Missing required dependencies: {", ".join(missing_deps)}',
+                    'details': {'missing': missing_deps}
+                }
+            
+            status_msg = "All required dependencies available"
+            if optional_deps:
+                status_msg += f", optional missing: {', '.join(optional_deps)}"
+            
+            return {
+                'status': 'healthy',
+                'message': status_msg,
+                'details': {'optional_missing': optional_deps}
+            }
+            
+        except Exception as e:
+            return {
+                'status': 'unhealthy',
+                'message': f'Dependency check failed: {e}',
+                'details': {'error': str(e)}
+            }
+    
+    async def _check_github_connectivity(self) -> Dict[str, Any]:
+        """Check GitHub API connectivity"""
+        try:
+            github_token = os.getenv("GITHUB_TOKEN")
+            if not github_token:
+                return {
+                    'status': 'degraded',
+                    'message': 'No GitHub token, cannot test connectivity',
+                    'details': {}
+                }
+            
+            try:
+                from github import Github
+                client = Github(github_token)
+                user = client.get_user()
+                rate_limit = client.get_rate_limit()
+                
+                return {
+                    'status': 'healthy',
+                    'message': f'Connected as {user.login}',
+                    'details': {
+                        'rate_limit_remaining': rate_limit.core.remaining,
+                        'rate_limit_total': rate_limit.core.limit
+                    }
+                }
+                
+            except ImportError:
+                return {
+                    'status': 'degraded',
+                    'message': 'PyGithub not available, GitHub features disabled',
+                    'details': {}
+                }
+                
+        except Exception as e:
+            return {
+                'status': 'unhealthy',
+                'message': f'GitHub connectivity check failed: {e}',
+                'details': {'error': str(e)}
+            }
+    
+    async def _check_performance(self) -> Dict[str, Any]:
+        """Check performance metrics"""
+        try:
+            stats = self.performance_monitor.get_statistics()
+            
+            if stats.get("message"):  # No metrics collected
+                return {
+                    'status': 'healthy',
+                    'message': 'No performance data yet',
+                    'details': {}
+                }
+            
+            success_rate = stats.get("success_rate", 100)
+            avg_duration = stats.get("average_duration", 0)
+            
+            if success_rate < 80:
+                status = 'degraded'
+                message = f'Low success rate: {success_rate:.1f}%'
+            elif avg_duration > 10:
+                status = 'degraded'
+                message = f'High average duration: {avg_duration:.2f}s'
+            else:
+                status = 'healthy'
+                message = f'Performance good: {success_rate:.1f}% success, {avg_duration:.2f}s avg'
+            
+            return {
+                'status': status,
+                'message': message,
+                'details': {
+                    'success_rate': success_rate,
+                    'average_duration': avg_duration
+                }
+            }
+            
+        except Exception as e:
+            return {
+                'status': 'unhealthy',
+                'message': f'Performance check failed: {e}',
+                'details': {'error': str(e)}
+            }
+    
     def _calculate_overall_status(self, results: Dict[str, HealthCheckResult]) -> str:
         """Calculate overall health status"""
         statuses = [result.status for result in results.values()]
@@ -558,10 +1054,12 @@ class RobustClaudeManager:
     """Robust Claude Manager Service with comprehensive error handling and monitoring"""
     
     def __init__(self, config_path: str = "config.json", log_level: str = "INFO"):
-        self.logger = RobustLogger("claude-manager-robust", log_level)
+        log_config = LogConfig(level=log_level, file_path="logs/claude-manager.log")
+        self.logger = RobustLogger("claude-manager-robust", log_config)
         self.error_handler = RobustErrorHandler(self.logger)
         self.config_manager = RobustConfigManager(config_path, self.logger)
         self.health_monitor = HealthMonitor(self.logger, self.config_manager)
+        self.performance_monitor = PerformanceMonitor(self.logger)
         
         # Load configuration
         self.config = self.config_manager.load_config()
@@ -575,6 +1073,12 @@ class RobustClaudeManager:
         """Setup signal handlers for graceful shutdown"""
         def signal_handler(signum, frame):
             self.logger.info(f"Received signal {signum}, initiating graceful shutdown")
+            
+            # Save any pending metrics or state
+            if self.performance_monitor:
+                stats = self.performance_monitor.get_statistics()
+                self.logger.info("Final performance statistics", **stats)
+            
             sys.exit(0)
         
         signal.signal(signal.SIGINT, signal_handler)
@@ -589,7 +1093,7 @@ class RobustClaudeManager:
             
             repos_to_scan = self.config['github']['reposToScan']
             scan_results = {
-                'timestamp': datetime.datetime.now().isoformat(),
+                'timestamp': datetime.now().isoformat(),
                 'operation': 'enhanced_repository_scan',
                 'repos_scanned': len(repos_to_scan),
                 'repos': [],
@@ -636,13 +1140,13 @@ class RobustClaudeManager:
                         'name': repo_name,
                         'status': 'failed',
                         'error': str(e),
-                        'scanned_at': datetime.datetime.now().isoformat(),
+                        'scanned_at': datetime.now().isoformat(),
                         'scan_duration': time.time() - repo_start_time
                     })
             
             scan_results['scan_duration'] = time.time() - operation_start
             scan_results['status'] = 'completed'
-            scan_results['success_rate'] = len([r for r in scan_results['repos'] if r['status'] == 'success']) / len(repos_to_scan)
+            scan_results['success_rate'] = len([r for r in scan_results['repos'] if r['status'] == 'success']) / len(repos_to_scan) if repos_to_scan else 0
             
             # Track performance
             self.logger.track_performance(
@@ -685,7 +1189,7 @@ class RobustClaudeManager:
         
         return {
             'name': repo_name,
-            'scanned_at': datetime.datetime.now().isoformat(),
+            'scanned_at': datetime.now().isoformat(),
             'todos_found': random.randint(0, 5),
             'issues_analyzed': random.randint(0, 10),
             'status': 'success',
@@ -706,7 +1210,7 @@ class RobustClaudeManager:
             result = {
                 'task': sanitized_task,
                 'executor': executor,
-                'started_at': datetime.datetime.now().isoformat(),
+                'started_at': datetime.now().isoformat(),
                 'status': 'in_progress',
                 'security_validated': True,
                 'monitoring_enabled': True,
@@ -724,7 +1228,7 @@ class RobustClaudeManager:
             
             result.update(execution_result)
             result['duration'] = time.time() - operation_start
-            result['completed_at'] = datetime.datetime.now().isoformat()
+            result['completed_at'] = datetime.now().isoformat()
             result['status'] = 'completed'
             
             # Track performance
@@ -773,7 +1277,7 @@ class RobustClaudeManager:
             steps_completed.append({
                 'step': step,
                 'duration': step_duration,
-                'completed_at': datetime.datetime.now().isoformat()
+                'completed_at': datetime.now().isoformat()
             })
             
             # Simulate potential failure in middle steps
@@ -790,7 +1294,7 @@ class RobustClaudeManager:
         health_results = await self.health_monitor.run_health_check()
         
         return {
-            'timestamp': datetime.datetime.now().isoformat(),
+            'timestamp': datetime.now().isoformat(),
             'overall_status': self.health_monitor._calculate_overall_status(health_results),
             'checks': {name: asdict(result) for name, result in health_results.items()},
             'performance_summary': self._get_performance_summary(),
@@ -799,20 +1303,7 @@ class RobustClaudeManager:
     
     def _get_performance_summary(self) -> Dict[str, Any]:
         """Get performance metrics summary"""
-        perf_data = self.logger.performance_data
-        
-        if not perf_data:
-            return {'total_operations': 0}
-        
-        recent_data = perf_data[-50:]  # Last 50 operations
-        
-        return {
-            'total_operations': len(perf_data),
-            'recent_operations': len(recent_data),
-            'average_duration': sum(op['duration'] for op in recent_data) / len(recent_data),
-            'slowest_operation': max(recent_data, key=lambda x: x['duration'])['operation'],
-            'fastest_operation': min(recent_data, key=lambda x: x['duration'])['operation']
-        }
+        return self.performance_monitor.get_statistics()
     
     def _get_error_summary(self) -> Dict[str, Any]:
         """Get error metrics summary"""
@@ -822,8 +1313,8 @@ class RobustClaudeManager:
             return {'total_errors': 0}
         
         recent_errors = [e for e in error_data if 
-                        datetime.datetime.fromisoformat(e.timestamp) > 
-                        datetime.datetime.now() - datetime.timedelta(hours=1)]
+                        datetime.fromisoformat(e.timestamp) > 
+                        datetime.now() - datetime.timedelta(hours=1)]
         
         error_types = {}
         for error in recent_errors:
@@ -855,203 +1346,334 @@ class RobustClaudeManager:
 # CLI INTERFACE
 # =============================================================================
 
-async def main():
-    """Main async entry point for robust Claude Manager"""
-    parser = argparse.ArgumentParser(
-        description="Claude Manager Service - Robust CLI (Generation 2)",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Enhanced Features:
-  • Comprehensive error handling with retry logic
-  • Structured logging with performance tracking
-  • Security validation and input sanitization  
-  • Advanced health monitoring and diagnostics
-  • Graceful shutdown and signal handling
-  • Configuration integrity checking
+# Initialize global components
+console = Console()
 
-Examples:
-  python3 robust_main.py status --detailed         # Detailed system status
-  python3 robust_main.py scan --output results.json # Scan with output
-  python3 robust_main.py execute "Fix bug" --verbose # Execute with logging
-  python3 robust_main.py health --format json      # Health check as JSON
-        """)
-    
-    parser.add_argument('command', 
-                       choices=['status', 'scan', 'execute', 'health', 'monitor'],
-                       help='Command to execute')
-    
-    parser.add_argument('task_description', 
-                       nargs='?', 
-                       help='Task description (for execute command)')
-    
-    parser.add_argument('--config', '-c',
-                       default='config.json',
-                       help='Configuration file path')
-    
-    parser.add_argument('--output', '-o',
-                       help='Output file for results (JSON format)')
-    
-    parser.add_argument('--verbose', '-v',
-                       action='store_true',
-                       help='Enable verbose output')
-    
-    parser.add_argument('--detailed', '-d',
-                       action='store_true',
-                       help='Show detailed information')
-    
-    parser.add_argument('--format', '-f',
-                       choices=['table', 'json'],
-                       default='table',
-                       help='Output format')
-    
-    parser.add_argument('--executor', '-e',
-                       choices=['auto', 'terragon', 'claude-flow'],
-                       default='auto',
-                       help='Task executor type')
-    
-    args = parser.parse_args()
-    
-    # Initialize robust manager
-    log_level = "DEBUG" if args.verbose else "INFO"
-    manager = RobustClaudeManager(args.config, log_level)
+# CLI Application using Typer
+app = typer.Typer(
+    name="claude-manager-robust",
+    help="Claude Manager Service - Generation 2: Robust Implementation",
+    add_completion=False,
+    rich_markup_mode="rich"
+)
+
+# Global manager instance
+manager: Optional[RobustClaudeManager] = None
+
+@app.callback()
+def init_manager(
+    config_file: str = typer.Option(
+        "config.json",
+        "--config",
+        "-c",
+        help="Configuration file path",
+    ),
+    verbose: bool = typer.Option(
+        False,
+        "--verbose",
+        "-v",
+        help="Enable verbose logging",
+    ),
+):
+    """Initialize the Claude Manager Service"""
+    global manager
     
     try:
-        if args.command == 'status':
-            print("📊 Claude Manager Service - Robust Status")
-            print("=" * 50)
-            
-            config = manager.config_manager.get_config()
-            
-            print(f"Configuration: ✓ Loaded and validated")
-            print(f"Security: ✓ Input validation enabled") 
-            print(f"Monitoring: ✓ Performance tracking active")
-            print(f"Error Handling: ✓ Retry logic enabled")
-            print(f"Logging: ✓ Structured logging to file")
-            
-            print(f"\nGitHub Configuration:")
-            print(f"  Username: {config['github']['username']}")
-            print(f"  Manager Repo: {config['github']['managerRepo']}")
-            print(f"  Repos to Scan: {len(config['github']['reposToScan'])}")
-            
-            if args.detailed:
-                for repo in config['github']['reposToScan']:
-                    print(f"    - {repo}")
-                
-                print(f"\nPerformance Summary:")
-                perf_summary = manager._get_performance_summary()
-                for key, value in perf_summary.items():
-                    print(f"  {key}: {value}")
-                
-                print(f"\nError Summary:")
-                error_summary = manager._get_error_summary()
-                for key, value in error_summary.items():
-                    print(f"  {key}: {value}")
+        log_level = "DEBUG" if verbose else "INFO"
+        manager = RobustClaudeManager(config_file, log_level)
         
-        elif args.command == 'scan':
-            results = await manager.scan_repositories(args.output)
-            
-            if args.format == 'json':
-                print(json.dumps(results, indent=2, default=str))
-            else:
-                print(f"🔍 Enhanced Repository Scan Results")
-                print(f"Duration: {results['scan_duration']:.2f}s")
-                print(f"Success Rate: {results['success_rate']:.1%}")
-                print(f"Repositories: {results['repos_scanned']}")
-                print(f"Errors: {len(results['errors'])}")
-                
-                if args.detailed:
-                    for repo in results['repos']:
-                        status_emoji = "✅" if repo['status'] == 'success' else "❌"
-                        print(f"  {status_emoji} {repo['name']} ({repo.get('scan_duration', 0):.2f}s)")
+    except Exception as e:
+        rprint(f"[red]Initialization failed: {e}[/red]")
+        raise typer.Exit(1)
+
+@app.command()
+def status(
+    detailed: bool = typer.Option(
+        False,
+        "--detailed",
+        "-d",
+        help="Show detailed information",
+    ),
+    format: str = typer.Option(
+        "table",
+        "--format",
+        "-f",
+        help="Output format (table/json)",
+    ),
+):
+    """Show service status"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    rprint("📊 Claude Manager Service - Robust Status")
+    rprint("=" * 50)
+    
+    config = manager.config_manager.get_config()
+    
+    rprint(f"Configuration: ✓ Loaded and validated")
+    rprint(f"Security: ✓ Input validation enabled") 
+    rprint(f"Monitoring: ✓ Performance tracking active")
+    rprint(f"Error Handling: ✓ Retry logic enabled")
+    rprint(f"Logging: ✓ Structured logging to file")
+    
+    rprint(f"\nGitHub Configuration:")
+    rprint(f"  Username: {config['github']['username']}")
+    rprint(f"  Manager Repo: {config['github']['managerRepo']}")
+    rprint(f"  Repos to Scan: {len(config['github']['reposToScan'])}")
+    
+    if detailed:
+        for repo in config['github']['reposToScan']:
+            rprint(f"    - {repo}")
         
-        elif args.command == 'execute':
-            if not args.task_description:
-                print("Error: Task description required for execute command")
-                parser.print_help()
-                sys.exit(1)
-            
-            results = await manager.execute_task(args.task_description, args.executor)
-            
-            if args.format == 'json':
-                print(json.dumps(results, indent=2, default=str))
-            else:
-                print(f"⚡ Enhanced Task Execution Results")
-                print(f"Task: {results['task']}")
-                print(f"Duration: {results['duration']:.2f}s")
-                print(f"Status: {results['status']}")
-                print(f"Steps: {len(results['steps_completed'])}")
-                
-                if args.detailed:
-                    for step in results['steps_completed']:
-                        print(f"  ✓ {step['step']} ({step['duration']:.3f}s)")
+        rprint(f"\nPerformance Summary:")
+        perf_summary = manager._get_performance_summary()
+        for key, value in perf_summary.items():
+            if key != "message":
+                rprint(f"  {key}: {value}")
         
-        elif args.command == 'health':
-            health_status = await manager.get_health_status()
+        rprint(f"\nError Summary:")
+        error_summary = manager._get_error_summary()
+        for key, value in error_summary.items():
+            rprint(f"  {key}: {value}")
+
+@app.command()
+def scan(
+    output: Optional[str] = typer.Option(
+        None,
+        "--output",
+        "-o",
+        help="Output file for results (JSON format)",
+    ),
+    format: str = typer.Option(
+        "table",
+        "--format",
+        "-f",
+        help="Output format (table/json)",
+    ),
+    detailed: bool = typer.Option(
+        False,
+        "--detailed",
+        "-d",
+        help="Show detailed information",
+    ),
+):
+    """Scan repositories for tasks"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    async def run_scan():
+        results = await manager.scan_repositories(output)
+        
+        if format == 'json':
+            rprint(json.dumps(results, indent=2, default=str))
+        else:
+            rprint(f"🔍 Enhanced Repository Scan Results")
+            rprint(f"Duration: {results['scan_duration']:.2f}s")
+            rprint(f"Success Rate: {results['success_rate']:.1%}")
+            rprint(f"Repositories: {results['repos_scanned']}")
+            rprint(f"Errors: {len(results['errors'])}")
             
-            if args.format == 'json':
-                print(json.dumps(health_status, indent=2, default=str))
-            else:
-                overall_emoji = {
+            if detailed:
+                for repo in results['repos']:
+                    status_emoji = "✅" if repo['status'] == 'success' else "❌"
+                    rprint(f"  {status_emoji} {repo['name']} ({repo.get('scan_duration', 0):.2f}s)")
+    
+    asyncio.run(run_scan())
+
+@app.command()
+def execute(
+    task_description: str = typer.Argument(..., help="Task description"),
+    executor: str = typer.Option(
+        "auto",
+        "--executor",
+        "-e",
+        help="Task executor type (auto/terragon/claude-flow)",
+    ),
+    format: str = typer.Option(
+        "table",
+        "--format",
+        "-f",
+        help="Output format (table/json)",
+    ),
+    detailed: bool = typer.Option(
+        False,
+        "--detailed",
+        "-d",
+        help="Show detailed information",
+    ),
+):
+    """Execute a task"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    async def run_execute():
+        results = await manager.execute_task(task_description, executor)
+        
+        if format == 'json':
+            rprint(json.dumps(results, indent=2, default=str))
+        else:
+            rprint(f"⚡ Enhanced Task Execution Results")
+            rprint(f"Task: {results['task']}")
+            rprint(f"Duration: {results['duration']:.2f}s")
+            rprint(f"Status: {results['status']}")
+            rprint(f"Steps: {len(results['steps_completed'])}")
+            
+            if detailed:
+                for step in results['steps_completed']:
+                    rprint(f"  ✓ {step['step']} ({step['duration']:.3f}s)")
+    
+    asyncio.run(run_execute())
+
+@app.command()
+def health(
+    format: str = typer.Option(
+        "table",
+        "--format",
+        "-f",
+        help="Output format (table/json)",
+    ),
+    detailed: bool = typer.Option(
+        False,
+        "--detailed",
+        "-d",
+        help="Show detailed information",
+    ),
+):
+    """Perform comprehensive health check"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    rprint("[bold blue]🏥 Performing comprehensive health check...[/bold blue]")
+    
+    async def run_health_check():
+        health_status = await manager.get_health_status()
+        
+        if format == 'json':
+            rprint(json.dumps(health_status, indent=2, default=str))
+        else:
+            overall_emoji = {
+                'healthy': '✅',
+                'degraded': '⚠️', 
+                'unhealthy': '❌'
+            }.get(health_status['overall_status'], '❓')
+            
+            rprint(f"🏥 Enhanced Health Check Results")
+            rprint(f"Overall Status: {overall_emoji} {health_status['overall_status'].upper()}")
+            
+            # Display results table
+            table = Table(title=f"System Health Report")
+            table.add_column("Check", style="cyan")
+            table.add_column("Status", style="bold")
+            table.add_column("Message", style="dim")
+            
+            for check_name, check_result in health_status['checks'].items():
+                status_emoji = {
                     'healthy': '✅',
-                    'degraded': '⚠️', 
+                    'degraded': '⚠️',
+                    'unhealthy': '❌'
+                }.get(check_result['status'], '❓')
+                
+                table.add_row(
+                    check_name.replace('_', ' ').title(),
+                    f"{status_emoji} {check_result['status']}",
+                    check_result['message']
+                )
+            
+            console.print(table)
+            
+            if detailed:
+                for check_name, check_result in health_status['checks'].items():
+                    rprint(f"\n{check_name.title()} Details:")
+                    rprint(f"  Duration: {check_result['duration']:.3f}s")
+                    for key, value in check_result['details'].items():
+                        rprint(f"  {key}: {value}")
+    
+    asyncio.run(run_health_check())
+
+@app.command()
+def monitor():
+    """Start continuous monitoring mode"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    rprint("📈 Starting continuous monitoring mode...")
+    rprint("Press Ctrl+C to stop")
+    
+    async def run_monitor():
+        try:
+            while True:
+                # Check for configuration changes
+                if manager.config_manager.watch_config_changes():
+                    rprint("⚙️  Configuration reloaded")
+                
+                # Periodic health check
+                health_status = await manager.get_health_status()
+                status_emoji = {
+                    'healthy': '✅',
+                    'degraded': '⚠️',
                     'unhealthy': '❌'
                 }.get(health_status['overall_status'], '❓')
                 
-                print(f"🏥 Enhanced Health Check Results")
-                print(f"Overall Status: {overall_emoji} {health_status['overall_status'].upper()}")
+                rprint(f"{datetime.now().strftime('%H:%M:%S')} {status_emoji} {health_status['overall_status']}")
                 
-                for check_name, check_result in health_status['checks'].items():
-                    status_emoji = {
-                        'healthy': '✅',
-                        'degraded': '⚠️',
-                        'unhealthy': '❌'
-                    }.get(check_result['status'], '❓')
-                    
-                    print(f"  {status_emoji} {check_name.title()}: {check_result['message']}")
-                    
-                    if args.detailed:
-                        print(f"    Duration: {check_result['duration']:.3f}s")
-                        for key, value in check_result['details'].items():
-                            print(f"    {key}: {value}")
+                await asyncio.sleep(30)  # Check every 30 seconds
+                
+        except KeyboardInterrupt:
+            rprint("\n⏸️  Monitoring stopped")
+    
+    try:
+        asyncio.run(run_monitor())
+    except KeyboardInterrupt:
+        rprint("\n⏸️  Monitoring stopped")
+
+@app.command()
+def metrics():
+    """Show performance metrics"""
+    if not manager:
+        raise typer.Exit(1)
+    
+    rprint("[bold blue]📊 Performance Metrics[/bold blue]")
+    
+    stats = manager.performance_monitor.get_statistics()
+    
+    if stats.get("message"):
+        rprint("[yellow]No metrics collected yet[/yellow]")
+        return
+    
+    # Display metrics table
+    table = Table(title="Performance Statistics")
+    table.add_column("Metric", style="cyan")
+    table.add_column("Value", style="green")
+    
+    table.add_row("Total Operations", str(stats["total_operations"]))
+    table.add_row("Successful Operations", str(stats["successful_operations"]))
+    table.add_row("Failed Operations", str(stats["failed_operations"]))
+    table.add_row("Success Rate", f"{stats['success_rate']:.1f}%")
+    table.add_row("Average Duration", f"{stats['average_duration']:.2f}s")
+    
+    if "average_successful_duration" in stats:
+        table.add_row("Avg Successful Duration", f"{stats['average_successful_duration']:.2f}s")
+    
+    console.print(table)
+    
+    # Show operation counts
+    if stats["operation_counts"]:
+        op_table = Table(title="Operation Counts")
+        op_table.add_column("Operation", style="cyan")
+        op_table.add_column("Count", style="yellow")
         
-        elif args.command == 'monitor':
-            print("📈 Starting continuous monitoring mode...")
-            print("Press Ctrl+C to stop")
-            
-            try:
-                while True:
-                    # Check for configuration changes
-                    if manager.config_manager.watch_config_changes():
-                        print("⚙️  Configuration reloaded")
-                    
-                    # Periodic health check
-                    health_status = await manager.get_health_status()
-                    status_emoji = {
-                        'healthy': '✅',
-                        'degraded': '⚠️',
-                        'unhealthy': '❌'
-                    }.get(health_status['overall_status'], '❓')
-                    
-                    print(f"{datetime.datetime.now().strftime('%H:%M:%S')} {status_emoji} {health_status['overall_status']}")
-                    
-                    await asyncio.sleep(30)  # Check every 30 seconds
-                    
-            except KeyboardInterrupt:
-                print("\n⏸️  Monitoring stopped")
-                
-    except Exception as e:
-        manager.logger.error("Command execution failed", exception=e)
-        print(f"❌ Error: {e}")
-        if args.verbose:
-            traceback.print_exc()
-        sys.exit(1)
+        for operation, count in stats["operation_counts"].items():
+            op_table.add_row(operation, str(count))
+        
+        console.print(op_table)
 
 if __name__ == "__main__":
     try:
-        asyncio.run(main())
+        app()
     except KeyboardInterrupt:
-        print("\n⏸️  Operation cancelled by user")
+        rprint("\n⏸️  Operation cancelled by user")
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        rprint(f"\n❌ Fatal error: {e}")
         sys.exit(1)
+```
