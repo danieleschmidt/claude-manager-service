@@ -1,0 +1,10 @@
+{
+  "welcome": "欢迎使用Claude管理服务",
+  "task_created": "任务已成功创建",
+  "task_failed": "任务执行失败",
+  "system_ready": "系统已准备就绪",
+  "configuration_loaded": "配置加载成功",
+  "validation_complete": "验证已完成",
+  "deployment_started": "部署过程已开始",
+  "deployment_complete": "部署成功完成"
+}

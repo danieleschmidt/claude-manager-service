@@ -1,0 +1,10 @@
+{
+  "welcome": "Claude Manager Serviceへようこそ",
+  "task_created": "タスクが正常に作成されました",
+  "task_failed": "タスクの実行に失敗しました",
+  "system_ready": "システムは動作準備完了です",
+  "configuration_loaded": "設定が正常に読み込まれました",
+  "validation_complete": "検証が完了しました",
+  "deployment_started": "デプロイメントプロセスが開始されました",
+  "deployment_complete": "デプロイメントが正常に完了しました"
+}

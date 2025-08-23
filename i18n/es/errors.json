@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "Entrada inválida proporcionada",
+  "error_authentication_failed": "Autenticación falló",
+  "error_access_denied": "Acceso denegado",
+  "error_resource_not_found": "Recurso no encontrado",
+  "error_server_error": "Error interno del servidor",
+  "error_timeout": "Tiempo de espera agotado",
+  "error_rate_limit": "Límite de tasa excedido",
+  "error_validation_failed": "Validación falló"
+}

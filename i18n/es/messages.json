@@ -1,0 +1,10 @@
+{
+  "welcome": "Bienvenido al Servicio de Gestión Claude",
+  "task_created": "La tarea se ha creado exitosamente",
+  "task_failed": "La ejecución de la tarea falló",
+  "system_ready": "El sistema está listo para operar",
+  "configuration_loaded": "Configuración cargada exitosamente",
+  "validation_complete": "Validación completada",
+  "deployment_started": "Proceso de despliegue iniciado",
+  "deployment_complete": "Despliegue completado exitosamente"
+}

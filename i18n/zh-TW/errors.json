@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "Invalid input provided",
+  "error_authentication_failed": "Authentication failed",
+  "error_access_denied": "Access denied",
+  "error_resource_not_found": "Resource not found",
+  "error_server_error": "Internal server error",
+  "error_timeout": "Request timeout",
+  "error_rate_limit": "Rate limit exceeded",
+  "error_validation_failed": "Validation failed"
+}

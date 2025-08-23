@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "無効な入力が提供されました",
+  "error_authentication_failed": "認証に失敗しました",
+  "error_access_denied": "アクセスが拒否されました",
+  "error_resource_not_found": "リソースが見つかりません",
+  "error_server_error": "内部サーバーエラー",
+  "error_timeout": "リクエストタイムアウト",
+  "error_rate_limit": "レート制限を超過しました",
+  "error_validation_failed": "検証に失敗しました"
+}

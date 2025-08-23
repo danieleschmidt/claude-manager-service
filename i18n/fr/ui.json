@@ -1,0 +1,16 @@
+{
+  "button_submit": "Soumettre",
+  "button_cancel": "Annuler",
+  "button_save": "Sauvegarder",
+  "button_delete": "Supprimer",
+  "label_username": "Nom d'utilisateur",
+  "label_password": "Mot de passe",
+  "label_email": "E-mail",
+  "placeholder_search": "Rechercher...",
+  "menu_dashboard": "Tableau de bord",
+  "menu_tasks": "Tâches",
+  "menu_settings": "Paramètres",
+  "status_active": "Actif",
+  "status_inactive": "Inactif",
+  "status_pending": "En attente"
+}

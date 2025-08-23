@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "提供了无效输入",
+  "error_authentication_failed": "身份验证失败",
+  "error_access_denied": "访问被拒绝",
+  "error_resource_not_found": "资源未找到",
+  "error_server_error": "内部服务器错误",
+  "error_timeout": "请求超时",
+  "error_rate_limit": "超出速率限制",
+  "error_validation_failed": "验证失败"
+}

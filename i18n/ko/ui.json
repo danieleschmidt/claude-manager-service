@@ -1,0 +1,16 @@
+{
+  "button_submit": "Submit",
+  "button_cancel": "Cancel",
+  "button_save": "Save",
+  "button_delete": "Delete",
+  "label_username": "Username",
+  "label_password": "Password",
+  "label_email": "Email",
+  "placeholder_search": "Search...",
+  "menu_dashboard": "Dashboard",
+  "menu_tasks": "Tasks",
+  "menu_settings": "Settings",
+  "status_active": "Active",
+  "status_inactive": "Inactive",
+  "status_pending": "Pending"
+}
