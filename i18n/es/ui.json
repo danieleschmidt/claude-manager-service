@@ -1,0 +1,16 @@
+{
+  "button_submit": "Enviar",
+  "button_cancel": "Cancelar",
+  "button_save": "Guardar",
+  "button_delete": "Eliminar",
+  "label_username": "Usuario",
+  "label_password": "Contraseña",
+  "label_email": "Correo electrónico",
+  "placeholder_search": "Buscar...",
+  "menu_dashboard": "Panel",
+  "menu_tasks": "Tareas",
+  "menu_settings": "Configuración",
+  "status_active": "Activo",
+  "status_inactive": "Inactivo",
+  "status_pending": "Pendiente"
+}

@@ -1,0 +1,101 @@
+[bandit]
+# Bandit security linter configuration
+
+# Directories to exclude from scanning
+exclude_dirs = [
+    "/tests",
+    "/venv",
+    "/env",
+    "/.venv",
+    "/.env",
+    "/build",
+    "/dist",
+    "/.git",
+    "/__pycache__"
+]
+
+# Test IDs to skip (comma-separated)
+# B101: assert_used - Allow asserts in test files
+# B601: paramiko_calls - Allow paramiko if used properly
+# B602: subprocess_popen_with_shell_equals_true - Allow when necessary
+skips = ["B101"]
+
+# Confidence levels to report
+# LOW, MEDIUM, HIGH
+confidence = ["HIGH", "MEDIUM"]
+
+# Format for output
+# Available formats: csv, custom, html, json, screen, txt, xml, yaml
+format = "json"
+
+# Output file (optional)
+# output = "bandit-report.json"
+
+# Severity levels to report
+# LOW, MEDIUM, HIGH
+level = ["LOW", "MEDIUM", "HIGH"]
+
+# Additional paths to scan
+paths = ["src"]
+
+# Tests to run (comma-separated test IDs)
+# Leave empty to run all tests
+tests = []
+
+# Plugin name patterns to load
+# Use this to enable specific plugins
+# plugins = ["bandit_plugin_name"]
+
+# Baseline file to compare against
+# baseline = "bandit-baseline.json"
+
+[bandit.assert_used]
+# Configuration for B101 test
+# Skip assert usage checks in test files
+skips = ["**/test_*.py", "**/*_test.py", "**/tests.py"]
+
+[bandit.hardcoded_bind_all_interfaces]
+# Configuration for B104 test
+# Allow binding to all interfaces in development
+# bind_all_interfaces = false
+
+[bandit.hardcoded_password_string]
+# Configuration for B105, B106, B107 tests
+# Patterns to ignore for hardcoded password detection
+word_list = [
+    "password",
+    "pass",
+    "passwd",
+    "pwd",
+    "secret",
+    "token",
+    "key",
+    "api_key",
+    "apikey"
+]
+
+[bandit.shell_injection]
+# Configuration for B602, B603, B604, B605, B606, B607 tests
+# Subprocess usage configuration
+# no_shell = true
+# shell = false
+
+[bandit.sql_injection]
+# Configuration for B608 test
+# SQL injection detection settings
+# strings_to_check = ["execute", "executemany", "cursor"]
+
+[bandit.request_with_no_cert_validation]
+# Configuration for B501 test
+# Allow requests without certificate validation in development
+# check_httpx = true
+
+[bandit.try_except_pass]
+# Configuration for B110 test
+# Allow try/except pass in specific cases
+# pass_patterns = ["pass", "..."]
+
+# Custom configurations for specific files or directories
+[bandit.any_other_function_with_shell_equals_true]
+# File-specific configurations
+# shell_ok = ["src/scripts/*.py"]

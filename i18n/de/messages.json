@@ -1,0 +1,10 @@
+{
+  "welcome": "Willkommen beim Claude Manager Service",
+  "task_created": "Aufgabe wurde erfolgreich erstellt",
+  "task_failed": "Aufgabenausführung fehlgeschlagen",
+  "system_ready": "System ist betriebsbereit",
+  "configuration_loaded": "Konfiguration erfolgreich geladen",
+  "validation_complete": "Validierung abgeschlossen",
+  "deployment_started": "Deployment-Prozess gestartet",
+  "deployment_complete": "Deployment erfolgreich abgeschlossen"
+}

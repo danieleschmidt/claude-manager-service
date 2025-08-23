@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "Entrée invalide fournie",
+  "error_authentication_failed": "Échec de l'authentification",
+  "error_access_denied": "Accès refusé",
+  "error_resource_not_found": "Ressource non trouvée",
+  "error_server_error": "Erreur interne du serveur",
+  "error_timeout": "Délai d'attente dépassé",
+  "error_rate_limit": "Limite de débit dépassée",
+  "error_validation_failed": "Échec de la validation"
+}

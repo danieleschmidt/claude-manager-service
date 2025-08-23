@@ -1,0 +1,10 @@
+{
+  "error_invalid_input": "Ungültige Eingabe bereitgestellt",
+  "error_authentication_failed": "Authentifizierung fehlgeschlagen",
+  "error_access_denied": "Zugriff verweigert",
+  "error_resource_not_found": "Ressource nicht gefunden",
+  "error_server_error": "Interner Serverfehler",
+  "error_timeout": "Anfrage-Timeout",
+  "error_rate_limit": "Rate-Limit überschritten",
+  "error_validation_failed": "Validierung fehlgeschlagen"
+}

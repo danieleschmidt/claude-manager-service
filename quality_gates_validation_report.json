@@ -1,0 +1,252 @@
+{
+  "overall_status": "fail",
+  "quality_score": 0.8722222222222222,
+  "execution_time": 0.09088397026062012,
+  "total_validations": 18,
+  "passed": 15,
+  "warnings": 1,
+  "failed": 2,
+  "critical_failures": 0,
+  "recommendations": [
+    "Quality gates are in good shape - consider advanced optimizations"
+  ],
+  "next_steps": [
+    "Fix failed validations before deployment",
+    "Re-run quality gates after fixes"
+  ],
+  "results": [
+    {
+      "gate": "testing",
+      "test_name": "test_files_found",
+      "severity": "pass",
+      "message": "Found 38 test files",
+      "details": {
+        "test_count": 38,
+        "test_files": [
+          "test_autonomous_system.py",
+          "test_merge_config.py",
+          "test_runner.py",
+          "test_security.py",
+          "tests/contract/test_api_contracts.py",
+          "tests/e2e/test_full_workflow.py",
+          "tests/integration/test_config_validation_integration.py",
+          "tests/integration/test_continuous_executor_integration.py",
+          "tests/integration/test_enhanced_error_handling_integration.py",
+          "tests/integration/test_enhanced_task_analyzer_integration.py"
+        ]
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.878925+00:00"
+    },
+    {
+      "gate": "testing",
+      "test_name": "test_assertion_density",
+      "severity": "pass",
+      "message": "Good assertion density: 2.0 assertions per test",
+      "details": {
+        "total_tests": 19,
+        "total_assertions": 38,
+        "avg_assertions_per_test": 2.0
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.879460+00:00"
+    },
+    {
+      "gate": "testing",
+      "test_name": "integration_tests_exist",
+      "severity": "pass",
+      "message": "Integration test directories found",
+      "details": {},
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.879535+00:00"
+    },
+    {
+      "gate": "security",
+      "test_name": "security_file_.bandit",
+      "severity": "pass",
+      "message": "Bandit security scanner configuration found",
+      "details": {
+        "file_path": ".bandit"
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.879599+00:00"
+    },
+    {
+      "gate": "security",
+      "test_name": "security_file_security.py",
+      "severity": "fail",
+      "message": "Security module not found",
+      "details": {
+        "recommendation": "Consider adding security.py for better security practices"
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.879650+00:00"
+    },
+    {
+      "gate": "security",
+      "test_name": "security_file_.safety",
+      "severity": "warning",
+      "message": "Safety dependency scanner configuration not found",
+      "details": {
+        "recommendation": "Consider adding .safety for better security practices"
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.879701+00:00"
+    },
+    {
+      "gate": "security",
+      "test_name": "hardcoded_secrets_scan",
+      "severity": "pass",
+      "message": "No obvious hardcoded secrets found in sample files",
+      "details": {},
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.911151+00:00"
+    },
+    {
+      "gate": "security",
+      "test_name": "secure_coding_practices",
+      "severity": "fail",
+      "message": "Found 2 potential security issues",
+      "details": {
+        "issues": [
+          "Dangerous function exec( found in deploy_autonomous_sdlc.py",
+          "Dangerous function exec( found in deployment_orchestrator.py"
+        ]
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.916044+00:00"
+    },
+    {
+      "gate": "performance",
+      "test_name": "performance_monitoring_exists",
+      "severity": "pass",
+      "message": "Found 5 performance monitoring files",
+      "details": {
+        "files": [
+          "src/database_performance_monitor.py",
+          "src/performance_monitor.py",
+          "tests/unit/test_performance_monitor.py",
+          "scripts/collect-metrics.py",
+          "src/dora_metrics.py"
+        ]
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.927530+00:00"
+    },
+    {
+      "gate": "performance",
+      "test_name": "basic_performance_benchmark",
+      "severity": "pass",
+      "message": "Good performance benchmark results (score: 100)",
+      "details": {
+        "performance_score": 100,
+        "cpu_time": 0.010847806930541992,
+        "memory_time": 0.008637428283691406,
+        "issues": []
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.947091+00:00"
+    },
+    {
+      "gate": "performance",
+      "test_name": "async_usage_analysis",
+      "severity": "pass",
+      "message": "Good async usage: 40.8% of functions are async",
+      "details": {
+        "async_files": 10,
+        "async_functions": 133,
+        "total_functions": 326,
+        "async_ratio": 0.40797546012269936
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.954910+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "doc_file_README_md",
+      "severity": "pass",
+      "message": "Project README exists and has content (31121 bytes)",
+      "details": {
+        "file_size": 31121
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.955560+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "doc_file_CHANGELOG_md",
+      "severity": "pass",
+      "message": "Change log exists and has content (1587 bytes)",
+      "details": {
+        "file_size": 1587
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.955600+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "doc_file_CONTRIBUTING_md",
+      "severity": "pass",
+      "message": "Contribution guidelines exists and has content (1645 bytes)",
+      "details": {
+        "file_size": 1645
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.955625+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "doc_file_LICENSE",
+      "severity": "pass",
+      "message": "License file exists and has content (1069 bytes)",
+      "details": {
+        "file_size": 1069
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.955649+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "doc_file_docs_API_md",
+      "severity": "pass",
+      "message": "API documentation exists and has content (8233 bytes)",
+      "details": {
+        "file_size": 8233
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.955674+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "readme_quality_analysis",
+      "severity": "pass",
+      "message": "Excellent README quality (score: 100)",
+      "details": {
+        "quality_score": 100,
+        "sections_found": [
+          "installation",
+          "usage",
+          "description",
+          "examples"
+        ],
+        "content_length": 30957
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.956226+00:00"
+    },
+    {
+      "gate": "documentation",
+      "test_name": "code_documentation_coverage",
+      "severity": "pass",
+      "message": "Excellent code documentation coverage: 86.0%",
+      "details": {
+        "total_functions": 43,
+        "documented_functions": 37,
+        "doc_ratio": 0.8604651162790697
+      },
+      "execution_time": 0.0,
+      "timestamp": "2025-08-23T13:56:16.962961+00:00"
+    }
+  ],
+  "generated_at": "2025-08-23T13:56:16.963241+00:00"
+}

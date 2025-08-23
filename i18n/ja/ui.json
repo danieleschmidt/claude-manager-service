@@ -1,0 +1,16 @@
+{
+  "button_submit": "送信",
+  "button_cancel": "キャンセル",
+  "button_save": "保存",
+  "button_delete": "削除",
+  "label_username": "ユーザー名",
+  "label_password": "パスワード",
+  "label_email": "メール",
+  "placeholder_search": "検索...",
+  "menu_dashboard": "ダッシュボード",
+  "menu_tasks": "タスク",
+  "menu_settings": "設定",
+  "status_active": "アクティブ",
+  "status_inactive": "非アクティブ",
+  "status_pending": "保留中"
+}
