@@ -25,8 +25,14 @@ try:
     import sys
     # Add src directory to path for absolute imports
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    if current_dir not in sys.path:
-        sys.path.insert(0, current_dir)
+    src_dir = current_dir
+    if src_dir not in sys.path:
+        sys.path.insert(0, src_dir)
+    
+    # Also add parent directory for project-level imports
+    parent_dir = os.path.dirname(current_dir)
+    if parent_dir not in sys.path:
+        sys.path.insert(0, parent_dir)
     
     from core_system import AutonomousSDLC as CoreSystem
     from services.configuration_service import ConfigurationService

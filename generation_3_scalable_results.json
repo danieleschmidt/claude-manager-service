@@ -1,0 +1,48 @@
+{
+  "generation": 3,
+  "tasks_found": 939,
+  "tasks_completed": 0,
+  "tasks_failed": 0,
+  "tasks_skipped": 0,
+  "execution_time": 0.36862969398498535,
+  "avg_task_duration": 0.0,
+  "throughput_tasks_per_second": 0.0,
+  "concurrent_executions": 6,
+  "cache_hit_rate": 0.0,
+  "memory_efficiency": 0.8495974918051631,
+  "cpu_utilization": 0.461,
+  "error_rate": 0.0,
+  "quality_score": 100.0,
+  "scalability_score": 16.991949836103263,
+  "errors": [],
+  "successes": [],
+  "warnings": [],
+  "metrics": {
+    "concurrent_executions": 6,
+    "cache_hits": 0,
+    "cache_misses": 0,
+    "batch_optimizations": 0,
+    "resource_optimizations": 0,
+    "max_concurrent": 6,
+    "resource_efficiency": 0.0
+  },
+  "security_checks_passed": 0,
+  "performance_metrics": {
+    "cache_hit_rate": 0.0,
+    "throughput": 0.0,
+    "avg_duration": 0.0,
+    "concurrent_executions": 6,
+    "resource_efficiency": 0.0
+  },
+  "resource_utilization": {
+    "cpu": 0.461,
+    "memory": 0.15040250819483691,
+    "cache": 0.0008
+  },
+  "optimization_gains": {
+    "throughput": 0.0,
+    "resource_efficiency": 127.43962377077446,
+    "concurrent_processing": 300,
+    "cache_performance": 0.0
+  }
+}

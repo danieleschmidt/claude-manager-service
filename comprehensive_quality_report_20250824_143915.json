@@ -1,0 +1,323 @@
+{
+  "timestamp": "2025-08-24T14:39:15.202594+00:00",
+  "overall_status": "warning",
+  "overall_score": 90.0,
+  "gates_passed": 8,
+  "gates_failed": 1,
+  "gates_warning": 1,
+  "execution_time": 7.095442056655884,
+  "gate_results": [
+    {
+      "gate_name": "Basic System Validation",
+      "status": "passed",
+      "score": 95.0,
+      "details": {
+        "python_version": "3.12.3",
+        "existing_files": [
+          "config.json",
+          "requirements.txt",
+          "src/main.py",
+          "simple_autonomous_main.py",
+          "robust_autonomous_main.py",
+          "scalable_autonomous_main.py"
+        ],
+        "missing_files": [],
+        "existing_dirs": [
+          "src",
+          "tests"
+        ],
+        "core_imports": "success"
+      },
+      "execution_time": 8.821487426757812e-05,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Code Quality Analysis",
+      "status": "passed",
+      "score": 100,
+      "details": {
+        "python_files_count": 171,
+        "total_lines": 12622,
+        "total_functions": 381,
+        "documented_functions": 320,
+        "documentation_ratio": 83.98950131233596,
+        "code_complexity": "substantial",
+        "error_handling_patterns": 21,
+        "error_handling": "good",
+        "modern_features": 18,
+        "modern_python": "excellent"
+      },
+      "execution_time": 0.03449678421020508,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Security Compliance",
+      "status": "failed",
+      "score": 45.0,
+      "details": {
+        "security_files": [],
+        "security_issues": [
+          "Dangerous function exec( in deploy_autonomous_sdlc.py",
+          "Dangerous function exec( in deployment_orchestrator.py",
+          "Dangerous function eval( in quality_gates_validation.py",
+          "Dangerous function exec( in quality_gates_validation.py",
+          "Dangerous function os.system( in quality_gates_validation.py",
+          "Dangerous function eval( in robust_autonomous_main.py",
+          "Dangerous function exec( in robust_autonomous_main.py",
+          "Potential hardcoded secret in comprehensive_quality_gates.py",
+          "Potential hardcoded secret in comprehensive_quality_gates.py",
+          "Potential hardcoded secret in comprehensive_quality_gates.py",
+          "Potential hardcoded secret in comprehensive_quality_gates.py",
+          "Dangerous function eval( in comprehensive_quality_gates.py",
+          "Dangerous function exec( in comprehensive_quality_gates.py",
+          "Dangerous function os.system( in comprehensive_quality_gates.py"
+        ],
+        "secret_scanning": "major_issues",
+        "permission_issues": [],
+        "file_permissions": "secure",
+        "security_imports": 1,
+        "security_libraries": "present"
+      },
+      "execution_time": 0.031069517135620117,
+      "errors": [
+        "Dangerous function exec( in deploy_autonomous_sdlc.py",
+        "Dangerous function exec( in deployment_orchestrator.py",
+        "Dangerous function eval( in quality_gates_validation.py",
+        "Dangerous function exec( in quality_gates_validation.py",
+        "Dangerous function os.system( in quality_gates_validation.py",
+        "Dangerous function eval( in robust_autonomous_main.py",
+        "Dangerous function exec( in robust_autonomous_main.py",
+        "Potential hardcoded secret in comprehensive_quality_gates.py",
+        "Potential hardcoded secret in comprehensive_quality_gates.py",
+        "Potential hardcoded secret in comprehensive_quality_gates.py",
+        "Potential hardcoded secret in comprehensive_quality_gates.py",
+        "Dangerous function eval( in comprehensive_quality_gates.py",
+        "Dangerous function exec( in comprehensive_quality_gates.py",
+        "Dangerous function os.system( in comprehensive_quality_gates.py"
+      ],
+      "warnings": []
+    },
+    {
+      "gate_name": "Performance Benchmarks",
+      "status": "passed",
+      "score": 90.0,
+      "details": {
+        "generation_1": {
+          "status": "passed",
+          "execution_time": 2.1314640045166016,
+          "performance_rating": "good"
+        },
+        "performance_files": [
+          "scalable_autonomous_main.py"
+        ],
+        "async_patterns": 12,
+        "performance_patterns": 6,
+        "async_usage": "extensive",
+        "performance_optimization": "implemented",
+        "memory_status": "healthy"
+      },
+      "execution_time": 2.1537437438964844,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Test Coverage Analysis",
+      "status": "warning",
+      "score": 80.0,
+      "details": {
+        "test_directories": [
+          "tests"
+        ],
+        "test_files_count": 34,
+        "test_coverage_level": "comprehensive",
+        "test_execution": "issues",
+        "test_error": "",
+        "testable_functions": 43,
+        "estimated_coverage": 100
+      },
+      "execution_time": 2.8159844875335693,
+      "errors": [],
+      "warnings": [
+        "Some tests failed or had issues"
+      ]
+    },
+    {
+      "gate_name": "Documentation Quality",
+      "status": "passed",
+      "score": 100,
+      "details": {
+        "documentation_files": [
+          "README.md",
+          "ARCHITECTURE.md",
+          "CONTRIBUTING.md",
+          "CODE_OF_CONDUCT.md"
+        ],
+        "readme_sections": 3,
+        "readme_length": 30957,
+        "readme_quality": "good",
+        "docs_directory_files": 34,
+        "docs_coverage": "comprehensive",
+        "total_functions": 199,
+        "documented_functions": 177,
+        "inline_documentation_ratio": 88.94472361809045,
+        "inline_docs_quality": "excellent"
+      },
+      "execution_time": 0.006985902786254883,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Deployment Readiness",
+      "status": "passed",
+      "score": 100,
+      "details": {
+        "deployment_files": [
+          "Dockerfile",
+          "docker-compose.yml",
+          "requirements.txt",
+          "config.json"
+        ],
+        "config_completeness": "3/3",
+        "configuration_status": "complete",
+        "requirements_count": 22,
+        "key_dependencies": "4/4",
+        "dependencies_status": "complete",
+        "ci_cd_setup": [],
+        "ci_cd_status": "none",
+        "environment_factors": [
+          "python_version_ok",
+          "virtual_env_active"
+        ],
+        "deployment_readiness_score": 110.0
+      },
+      "execution_time": 0.00038743019104003906,
+      "errors": [],
+      "warnings": [
+        "No CI/CD configuration found"
+      ]
+    },
+    {
+      "gate_name": "Global Compliance",
+      "status": "passed",
+      "score": 90.0,
+      "details": {
+        "i18n_files": 42,
+        "i18n_support": "comprehensive",
+        "compliance_files": [
+          "CODE_OF_CONDUCT.md",
+          "CONTRIBUTING.md",
+          "LICENSE"
+        ],
+        "compliance_documentation": "comprehensive",
+        "privacy_implementations": 1,
+        "privacy_awareness": "basic",
+        "platform_compatibility_indicators": [
+          "path_handling",
+          "encoding_handling"
+        ],
+        "cross_platform": "good",
+        "locale_handling": 4,
+        "temporal_handling": "comprehensive"
+      },
+      "execution_time": 0.007492780685424805,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Integration Testing",
+      "status": "passed",
+      "score": 100,
+      "details": {
+        "api_integrations": 9,
+        "api_integration_level": "comprehensive",
+        "database_integrations": 3,
+        "database_support": "implemented",
+        "async_patterns": 6,
+        "async_capability": "extensive",
+        "configuration_management": 10,
+        "config_handling": "comprehensive",
+        "error_handling": 4,
+        "error_handling_quality": "robust"
+      },
+      "execution_time": 0.013277292251586914,
+      "errors": [],
+      "warnings": []
+    },
+    {
+      "gate_name": "Final System Health",
+      "status": "passed",
+      "score": 100,
+      "details": {
+        "system_resources": {
+          "cpu_percent": 2.0,
+          "memory_percent": 15.1,
+          "disk_percent": 16.5900267424301,
+          "available_memory_gb": 3.268634796142578
+        },
+        "resource_health_score": 65,
+        "missing_critical_files": [],
+        "file_system_health": 40,
+        "python_executable": "healthy",
+        "network_connectivity": "available",
+        "system_stability": "recent_boot",
+        "system_uptime": "0.3 hours",
+        "health_status": "excellent",
+        "health_summary": "System is in excellent health"
+      },
+      "execution_time": 1.0084693431854248,
+      "errors": [],
+      "warnings": []
+    }
+  ],
+  "recommendations": [
+    "Address failures in Security Compliance: Dangerous function exec( in deploy_autonomous_sdlc.py; Dangerous function exec( in deployment_orchestrator.py"
+  ],
+  "compliance_status": {
+    "security": "review",
+    "performance": "passed",
+    "documentation": "passed",
+    "testing": "review"
+  },
+  "performance_metrics": {
+    "generation_1": {
+      "status": "passed",
+      "execution_time": 2.1314640045166016,
+      "performance_rating": "good"
+    },
+    "performance_files": [
+      "scalable_autonomous_main.py"
+    ],
+    "async_patterns": 12,
+    "performance_patterns": 6,
+    "async_usage": "extensive",
+    "performance_optimization": "implemented",
+    "memory_status": "healthy"
+  },
+  "security_metrics": {
+    "security_files": [],
+    "security_issues": [
+      "Dangerous function exec( in deploy_autonomous_sdlc.py",
+      "Dangerous function exec( in deployment_orchestrator.py",
+      "Dangerous function eval( in quality_gates_validation.py",
+      "Dangerous function exec( in quality_gates_validation.py",
+      "Dangerous function os.system( in quality_gates_validation.py",
+      "Dangerous function eval( in robust_autonomous_main.py",
+      "Dangerous function exec( in robust_autonomous_main.py",
+      "Potential hardcoded secret in comprehensive_quality_gates.py",
+      "Potential hardcoded secret in comprehensive_quality_gates.py",
+      "Potential hardcoded secret in comprehensive_quality_gates.py",
+      "Potential hardcoded secret in comprehensive_quality_gates.py",
+      "Dangerous function eval( in comprehensive_quality_gates.py",
+      "Dangerous function exec( in comprehensive_quality_gates.py",
+      "Dangerous function os.system( in comprehensive_quality_gates.py"
+    ],
+    "secret_scanning": "major_issues",
+    "permission_issues": [],
+    "file_permissions": "secure",
+    "security_imports": 1,
+    "security_libraries": "present"
+  },
+  "deployment_readiness": "needs_work"
+}

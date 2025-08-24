@@ -1,0 +1,39 @@
+{
+  "generation": 2,
+  "tasks_found": 1026,
+  "tasks_completed": 8,
+  "tasks_failed": 2,
+  "tasks_skipped": 0,
+  "execution_time": 4.5531957149505615,
+  "avg_task_duration": 0.29407377243041993,
+  "error_rate": 20.0,
+  "quality_score": 80.0,
+  "errors": [
+    "\u274c Security Check: Validate file permissions: Execution failed",
+    "\u274c Address FIXME: in ./SECURITY_ISSUES.md:2358: Execution failed"
+  ],
+  "successes": [
+    "\u2705 Security Check: Scan for hardcoded secrets",
+    "\u2705 Security Check: Check for unsafe function usage",
+    "\u2705 Address FIXME: in ./AUTONOMOUS_BACKLOG_GUIDE.md:345",
+    "\u2705 Address FIXME: in ./SECURITY_ISSUES.md:8",
+    "\u2705 Address FIXME: in ./SECURITY_ISSUES.md:83",
+    "\u2705 Address FIXME: in ./SECURITY_ISSUES.md:258",
+    "\u2705 Address FIXME: in ./SECURITY_ISSUES.md:2433",
+    "\u2705 Address FIXME: in ./SECURITY_ISSUES.md:2608"
+  ],
+  "warnings": [],
+  "metrics": {
+    "total_attempted": 10,
+    "retry_count": 0
+  },
+  "security_checks_passed": 3,
+  "performance_metrics": {
+    "total_execution_time": 4.5626890659332275,
+    "average_task_duration": 0.29407377243041993,
+    "fastest_task": 0.20282268524169922,
+    "slowest_task": 0.5064139366149902,
+    "success_rate": 1.0,
+    "tasks_per_second": 2.1916900002377555
+  }
+}
