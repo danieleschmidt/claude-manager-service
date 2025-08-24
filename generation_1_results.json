@@ -1,40 +1,15 @@
 {
-  "cycle_start": "2025-08-11T22:39:01.103840+00:00",
-  "generations": [
-    {
-      "generation": 1,
-      "tasks_processed": 10,
-      "tasks_completed": 0,
-      "tasks_failed": 10,
-      "execution_time": 0.0004863739013671875,
-      "quality_score": 0.0,
-      "errors": [
-        "\u274c Failed: Address FIXME in quantum_cli.py",
-        "\u274c Failed: Address FIXME in orchestrator.py",
-        "\u274c Failed: Address FIXME in sample_data.py",
-        "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-        "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-        "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-        "\u274c Failed: Address FIXME in AUTONOMOUS_BACKLOG_GUIDE.md",
-        "\u274c Failed: Address FIXME in value_discovery_engine.py",
-        "\u274c Failed: Address FIXME in robust_system.py",
-        "\u274c Failed: Address FIXME in task_prioritization.py"
-      ],
-      "achievements": []
-    }
-  ],
-  "total_achievements": [],
-  "total_errors": [
-    "\u274c Failed: Address FIXME in quantum_cli.py",
-    "\u274c Failed: Address FIXME in orchestrator.py",
-    "\u274c Failed: Address FIXME in sample_data.py",
-    "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-    "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-    "\u274c Failed: Address FIXME in SECURITY_ISSUES.md",
-    "\u274c Failed: Address FIXME in AUTONOMOUS_BACKLOG_GUIDE.md",
-    "\u274c Failed: Address FIXME in value_discovery_engine.py",
-    "\u274c Failed: Address FIXME in robust_system.py",
-    "\u274c Failed: Address FIXME in task_prioritization.py"
-  ],
-  "cycle_summary": {}
+  "generation": 1,
+  "tasks_found": 1017,
+  "tasks_completed": 5,
+  "tasks_failed": 0,
+  "execution_time": 1.778214454650879,
+  "errors": [],
+  "successes": [
+    "Completed: Address TODO: in ./AUTONOMOUS_BACKLOG_GUIDE.md:344",
+    "Completed: Address FIXME: in ./AUTONOMOUS_BACKLOG_GUIDE.md:345",
+    "Completed: Address TODO: in ./BACKLOG.md:150",
+    "Completed: Address TODO: in ./BACKLOG.md:153",
+    "Completed: Address TODO: in ./PERFORMANCE_OPPORTUNITIES.md:145"
+  ]
 }
