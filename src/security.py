@@ -48,6 +48,34 @@ class WeakTokenError(TokenValidationError):
 
 class ExpiredTokenError(TokenValidationError):
     """Token appears to be expired or using deprecated format"""
+
+
+class SecurityValidator:
+    """Main security validation class for compatibility with test imports"""
+    
+    def __init__(self, config: Optional[dict] = None):
+        self.config = config or {}
+        self.logger = logger
+    
+    def validate_token(self, token: str, token_type: str = "github") -> bool:
+        """Validate token format and strength"""
+        try:
+            return validate_token(token, token_type)
+        except Exception as e:
+            self.logger.error(f"Token validation failed: {e}")
+            return False
+    
+    def sanitize_input(self, input_data: str) -> str:
+        """Sanitize user input"""
+        return sanitize_input(input_data)
+    
+    def validate_file_path(self, file_path: str) -> bool:
+        """Validate file path for security"""
+        try:
+            return is_safe_path(file_path)
+        except Exception as e:
+            self.logger.error(f"File path validation failed: {e}")
+            return False
     pass
 
 
