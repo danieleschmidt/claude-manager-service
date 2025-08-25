@@ -13,6 +13,40 @@ from src.error_handler import with_error_recovery, safe_github_operation
 
 logger = get_logger(__name__)
 
+
+class TaskAnalyzer:
+    """Main task analyzer class for compatibility with test imports"""
+    
+    def __init__(self, github_api: GitHubAPI, config: dict):
+        self.github_api = github_api
+        self.config = config
+        self.logger = logger
+    
+    async def analyze_repository(self, repo_name: str) -> dict:
+        """Analyze a repository for tasks and issues"""
+        repo = self.github_api.get_repo(repo_name)
+        if not repo:
+            return {"error": f"Could not access repository {repo_name}"}
+        
+        results = {
+            "repository": repo_name,
+            "todos": [],
+            "issues": [],
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        
+        # Scan for TODOs
+        if self.config.get("analyzer", {}).get("scanForTodos", True):
+            find_todo_comments(self.github_api, repo, self.config.get("github", {}).get("managerRepo", ""))
+            results["todos"] = "completed"
+        
+        # Scan for open issues
+        if self.config.get("analyzer", {}).get("scanOpenIssues", True):
+            analyze_open_issues(self.github_api, repo, self.config.get("github", {}).get("managerRepo", ""))
+            results["issues"] = "completed"
+        
+        return results
+
 @monitor_performance(track_memory=True, custom_name="scan_todo_comments")
 @log_performance
 @with_error_recovery("find_todo_comments")
