@@ -70,6 +70,11 @@ class TaskError(EnhancedError):
     pass
 
 
+class ScalingError(EnhancedError):
+    """Scaling operation error"""
+    pass
+
+
 class JsonParsingError(EnhancedError):
     """Specific error for JSON parsing failures"""
     def __init__(self, message: str, file_path: str, original_error: Exception):
@@ -430,17 +435,29 @@ class ErrorTracker:
             return list(self.recent_errors)[-count:]
 
 
-def collect_error_context(error: Exception, context: Dict[str, Any]) -> ErrorContext:
+def collect_error_context(error: Exception = None, context: Dict[str, Any] = None, operation: str = None, module: str = None, additional_data: Dict = None) -> ErrorContext:
     """
     Collect full error context for enhanced error reporting
     
     Args:
         error: Original exception
         context: Additional context information
+        operation: Operation name  
+        module: Module name
+        additional_data: Additional context data
         
     Returns:
         ErrorContext with full information
     """
+    # Support both calling patterns
+    if context is None:
+        context = {}
+    if operation:
+        context['operation'] = operation
+    if module:
+        context['module'] = module  
+    if additional_data:
+        context.update(additional_data)
     return ErrorContext(error, context)
 
 
@@ -582,18 +599,21 @@ def safe_github_operation(operation: str):
     return github_api_operation(operation)
 
 
-def retry_on_failure(max_retries: int = 3, delay: float = 1.0):
+def retry_on_failure(max_attempts: int = 3, max_retries: int = None, delay: float = 1.0):
     """Legacy retry decorator - provides basic retry functionality"""
+    # Support both parameter names for backward compatibility
+    if max_retries is not None:
+        max_attempts = max_retries
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             last_exception = None
-            for attempt in range(max_retries + 1):
+            for attempt in range(max_attempts):
                 try:
                     return func(*args, **kwargs)
                 except Exception as e:
                     last_exception = e
-                    if attempt < max_retries:
+                    if attempt < max_attempts - 1:
                         time.sleep(delay * (attempt + 1))
                     else:
                         raise last_exception
@@ -617,8 +637,16 @@ def handle_general_error(func: Callable) -> Callable:
     return with_enhanced_error_handling("general_operation")(func)
 
 
-def with_fallback(fallback_value=None):
-    """Legacy fallback decorator"""
+def with_fallback(primary_operation=None, fallback_operation=None, operation_name: str = "operation", fallback_value=None):
+    """Legacy fallback decorator with function support"""
+    if primary_operation and fallback_operation:
+        # Direct function call mode
+        try:
+            return primary_operation()
+        except Exception:
+            return fallback_operation()
+    
+    # Decorator mode
     def decorator(func: Callable) -> Callable:
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -656,8 +684,16 @@ class CircuitBreaker:
             raise
 
 
-def generate_error_summary(errors: List[Dict]) -> str:
-    """Generate error summary from error list"""
+def generate_error_summary(error_or_errors, context: Dict = None) -> str:
+    """Generate error summary from error list or single error"""
+    # Handle single error with context
+    if isinstance(error_or_errors, Exception):
+        if context:
+            return f"Error in {context.get('operation', 'unknown')}: {str(error_or_errors)}"
+        return f"Error: {str(error_or_errors)}"
+    
+    # Handle error list
+    errors = error_or_errors
     if not errors:
         return "No errors recorded"
     

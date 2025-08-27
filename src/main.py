@@ -34,13 +34,13 @@ try:
     if parent_dir not in sys.path:
         sys.path.insert(0, parent_dir)
     
-    from core_system import AutonomousSDLC as CoreSystem
-    from services.configuration_service import ConfigurationService
-    from services.database_service import DatabaseService
-    from autonomous_status_reporter import AutonomousStatusReporter
-    from continuous_backlog_executor import ContinuousBacklogExecutor
-    from health_check import HealthCheck
-    from logger import setup_logger
+    from .core_system import AutonomousSDLC as CoreSystem
+    from .services.configuration_service import ConfigurationService
+    from .services.database_service import DatabaseService
+    from .autonomous_status_reporter import AutonomousStatusReporter
+    from .continuous_backlog_executor import ContinuousBacklogExecutor
+    from .health_check import HealthChecker as HealthCheck
+    from .logger import setup_logger
     # Quantum CLI import (with fallback)
     try:
         from quantum_cli import main as quantum_main
